@@ -15,7 +15,7 @@ img:"milk.jpg"
 {
 name:"Lipstick",
 price:500,
-img:"lipstic.jpg"
+img:"lipstick.jpg"
 },
 
 {
