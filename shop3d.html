@@ -2,9 +2,10 @@
 <html>
 
 <head>
-<title>Wholesome 3D Shop</title>
+<title>Wholesome 3D Supermarket</title>
 
 <style>
+
 body{
 margin:0;
 overflow:hidden;
@@ -19,6 +20,7 @@ padding:8px;
 border-radius:5px;
 font-family:Arial;
 }
+
 </style>
 
 </head>
@@ -34,8 +36,7 @@ W A S D = Move
 <script>
 
 const scene = new THREE.Scene();
-scene.background = new THREE.Color(0x87ceeb); // sky color
-
+scene.background = new THREE.Color(0x87ceeb);
 
 const camera = new THREE.PerspectiveCamera(
 75,
@@ -57,7 +58,7 @@ scene.add(light);
 
 
 // FLOOR
-const floorGeo = new THREE.PlaneGeometry(50,50);
+const floorGeo = new THREE.PlaneGeometry(120,120);
 const floorMat = new THREE.MeshStandardMaterial({color:0x808080});
 
 const floor = new THREE.Mesh(floorGeo,floorMat);
@@ -66,38 +67,81 @@ floor.rotation.x = -Math.PI/2;
 scene.add(floor);
 
 
-// SHELF
-const shelfGeo = new THREE.BoxGeometry(4,2,1);
-const shelfMat = new THREE.MeshStandardMaterial({color:0x8B4513});
+// SHELF FUNCTION
+function createShelf(x,z){
 
-const shelf = new THREE.Mesh(shelfGeo,shelfMat);
-shelf.position.set(0,1,-5);
+const geo = new THREE.BoxGeometry(4,2,1);
+const mat = new THREE.MeshStandardMaterial({color:0x8B4513});
+
+const shelf = new THREE.Mesh(geo,mat);
+shelf.position.set(x,1,z);
 
 scene.add(shelf);
 
+}
+
+
+// CREATE AISLES
+createShelf(-10,-10)
+createShelf(0,-10)
+createShelf(10,-10)
+
+createShelf(-10,-20)
+createShelf(0,-20)
+createShelf(10,-20)
+
+createShelf(-10,-30)
+createShelf(0,-30)
+createShelf(10,-30)
+
+
+// PRODUCT BOX FUNCTION
+function createProduct(x,y,z,color){
+
+const geo = new THREE.BoxGeometry(0.6,0.6,0.6);
+const mat = new THREE.MeshStandardMaterial({color:color});
+
+const box = new THREE.Mesh(geo,mat);
+
+box.position.set(x,y,z);
+
+scene.add(box);
+
+}
+
+
+// PRODUCTS
+createProduct(-10,2,-10,0xff0000)
+createProduct(0,2,-10,0x00ff00)
+createProduct(10,2,-10,0x0000ff)
+
+createProduct(-10,2,-20,0xffff00)
+createProduct(0,2,-20,0xff00ff)
+createProduct(10,2,-20,0x00ffff)
+
 
 // CAMERA
-camera.position.set(0,2,5);
-camera.lookAt(0,1,-5);
+camera.position.set(0,2,5)
 
 
 // MOVEMENT
-let keys = {};
+let keys = {}
 
 document.addEventListener("keydown",e=>{
-keys[e.key.toLowerCase()] = true;
-});
+keys[e.key.toLowerCase()] = true
+})
 
 document.addEventListener("keyup",e=>{
-keys[e.key.toLowerCase()] = false;
-});
+keys[e.key.toLowerCase()] = false
+})
+
 
 function move(){
 
-if(keys["w"]) camera.position.z -= 0.1;
-if(keys["s"]) camera.position.z += 0.1;
-if(keys["a"]) camera.position.x -= 0.1;
-if(keys["d"]) camera.position.x += 0.1;
+if(keys["w"]) camera.position.z -= 0.2
+if(keys["s"]) camera.position.z += 0.2
+if(keys["a"]) camera.position.x -= 0.2
+if(keys["d"]) camera.position.x += 0.2
 
 }
 
@@ -105,15 +149,15 @@ if(keys["d"]) camera.position.x += 0.1;
 // LOOP
 function animate(){
 
-requestAnimationFrame(animate);
+requestAnimationFrame(animate)
 
-move();
+move()
 
-renderer.render(scene,camera);
+renderer.render(scene,camera)
 
 }
 
-animate();
+animate()
 
 </script>
 
