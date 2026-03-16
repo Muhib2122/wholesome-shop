@@ -1,12 +1,10 @@
 <!DOCTYPE html>
 <html>
-
 <head>
 
 <title>Wholesome 3D Shop</title>
 
 <style>
-
 body{
 margin:0;
 overflow:hidden;
@@ -18,10 +16,9 @@ top:10px;
 left:10px;
 background:white;
 padding:10px;
-border-radius:6px;
+border-radius:5px;
 font-family:Arial;
 }
-
 </style>
 
 </head>
@@ -29,99 +26,81 @@ font-family:Arial;
 <body>
 
 <div id="info">
-W A S D = Move<br>
-Mouse = Look Around
+W A S D = Move
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/three@0.158.0/build/three.min.js"></script>
 
 <script>
 
-let scene = new THREE.Scene();
+const scene = new THREE.Scene();
 
-let camera = new THREE.PerspectiveCamera(
+const camera = new THREE.PerspectiveCamera(
 75,
 window.innerWidth/window.innerHeight,
 0.1,
 1000
 );
 
-let renderer = new THREE.WebGLRenderer();
-
-renderer.setSize(window.innerWidth, window.innerHeight);
+const renderer = new THREE.WebGLRenderer();
+renderer.setSize(window.innerWidth,window.innerHeight);
 
 document.body.appendChild(renderer.domElement);
 
 
-let light = new THREE.PointLight(0xffffff,1);
 
+// LIGHT
+const light = new THREE.PointLight(0xffffff,1);
 light.position.set(10,10,10);
-
 scene.add(light);
 
 
-let floorGeometry = new THREE.PlaneGeometry(50,50);
+// FLOOR
+const floorGeo = new THREE.PlaneGeometry(50,50);
+const floorMat = new THREE.MeshStandardMaterial({color:0x777777});
 
-let floorMaterial = new THREE.MeshStandardMaterial({color:0x808080});
-
-let floor = new THREE.Mesh(floorGeometry,floorMaterial);
-
+const floor = new THREE.Mesh(floorGeo,floorMat);
 floor.rotation.x = -Math.PI/2;
 
 scene.add(floor);
 
 
-function createShelf(x,z){
+// SHELF
+const shelfGeo = new THREE.BoxGeometry(4,2,1);
+const shelfMat = new THREE.MeshStandardMaterial({color:0x8B4513});
 
-let geometry = new THREE.BoxGeometry(4,2,1);
-
-let material = new THREE.MeshStandardMaterial({color:0x8B4513});
-
-let shelf = new THREE.Mesh(geometry,material);
-
-shelf.position.set(x,1,z);
+const shelf = new THREE.Mesh(shelfGeo,shelfMat);
+shelf.position.set(0,1,-5);
 
 scene.add(shelf);
 
-}
 
-createShelf(0,-5);
-createShelf(6,-5);
-createShelf(-6,-5);
-createShelf(0,-10);
-
-
+// CAMERA
 camera.position.set(0,2,5);
 
 
+// MOVEMENT
 let keys = {};
 
-document.addEventListener("keydown",(e)=>{
-
+document.addEventListener("keydown",e=>{
 keys[e.key.toLowerCase()] = true;
-
 });
 
-document.addEventListener("keyup",(e)=>{
-
+document.addEventListener("keyup",e=>{
 keys[e.key.toLowerCase()] = false;
-
 });
-
 
 function move(){
 
 if(keys["w"]) camera.position.z -= 0.1;
-
 if(keys["s"]) camera.position.z += 0.1;
-
 if(keys["a"]) camera.position.x -= 0.1;
-
 if(keys["d"]) camera.position.x += 0.1;
 
 }
 
 
+// LOOP
 function animate(){
 
 requestAnimationFrame(animate);
@@ -137,5 +116,4 @@ animate();
 </script>
 
 </body>
-
 </html>
