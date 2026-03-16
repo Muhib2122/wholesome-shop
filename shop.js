@@ -1,19 +1,23 @@
-const productContainer = document.getElementById("products")
+const productContainer = document.getElementById("products");
 
 products.forEach(product => {
 
-let div = document.createElement("div")
+let div = document.createElement("div");
 
-div.className="product"
+div.className = "product";
 
 div.innerHTML = `
+<img src="${product.img}" class="product-img">
+
 <h3>${product.name}</h3>
-<p>Price: ${product.price} BDT</p>
+
+<p>${product.price} BDT</p>
+
 <button onclick="addToCart('${product.name}',${product.price})">
 Add to Cart
 </button>
-`
+`;
 
-productContainer.appendChild(div)
+productContainer.appendChild(div);
 
-})
+});
