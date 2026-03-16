@@ -12,8 +12,6 @@ alert(name + " added to cart")
 
 function goCheckout(){
 
-localStorage.setItem("cart",JSON.stringify(cart))
-
-window.location="checkout.html"
+window.location.href = "checkout.html"
 
 }
