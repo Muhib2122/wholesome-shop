@@ -2,32 +2,134 @@
 <html>
 
 <head>
-<title>Checkout - Wholesome</title>
+
+<title>Payment</title>
+
+<style>
+
+body{
+font-family:Arial;
+background:#f5f5f5;
+display:flex;
+justify-content:center;
+padding:40px;
+}
+
+.box{
+
+background:white;
+width:400px;
+padding:25px;
+border-radius:10px;
+box-shadow:0 5px 20px rgba(0,0,0,0.2);
+
+}
+
+h2{
+text-align:center;
+}
+
+.item{
+display:flex;
+justify-content:space-between;
+margin:6px 0;
+}
+
+.total{
+margin-top:10px;
+font-weight:bold;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+}
+
+button{
+width:100%;
+padding:12px;
+margin-top:15px;
+background:#ff6f00;
+border:none;
+color:white;
+cursor:pointer;
+}
+
+</style>
+
 </head>
 
 <body>
 
-<h2>Checkout Page</h2>
+<div class="box">
 
-<p>Payment Method</p>
+<h2>Payment Slip</h2>
+
+<div id="items"></div>
+
+<div class="total" id="total"></div>
+
+<br>
+
+<p><b>Payment Method</b></p>
 
 <p>bKash: 01764262579</p>
 <p>Nagad: 01764262579</p>
 
-<input placeholder="Transaction ID">
+<input id="trx" placeholder="Transaction ID">
 
-<br><br>
+<button onclick="confirmOrder()">Confirm Order</button>
 
-<button onclick="order()">Confirm Order</button>
+</div>
+
 
 <script>
 
-function order(){
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-alert("Order placed successfully")
+let total = 0;
 
-window.location.href = "index.html"
+let itemsDiv = document.getElementById("items");
+
+cart.forEach(item => {
+
+let div = document.createElement("div");
+
+div.className="item";
+
+div.innerHTML = `
+<span>${item.name}</span>
+<span>${item.price} BDT</span>
+`;
+
+itemsDiv.appendChild(div);
+
+total += item.price;
+
+});
+
+document.getElementById("total").innerText = "Total: " + total + " BDT";
+
+function confirmOrder(){
+
+let trx = document.getElementById("trx").value;
+
+if(trx==""){
+alert("Enter transaction ID");
+return;
+}
+
+alert("Order Successful!");
+
+localStorage.removeItem("cart");
+
+window.location.href="index.html";
 
 }
 
 </script>
+
+</body>
+
+</html>
