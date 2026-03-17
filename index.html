@@ -5,31 +5,68 @@
 
 <title>Wholesome Super Shop</title>
 
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <link rel="stylesheet" href="style.css">
 
 </head>
 
 <body>
 
-<header>
-<h1>Wholesome</h1>
-</header>
 
-<!-- CART SECTION -->
-<div id="cart">
+<!-- NAVBAR -->
 
-🛒 Cart Items: <span id="cart-count">0</span>
+<div class="navbar">
 
-<br><br>
+<div class="logo">Wholesome</div>
 
-<button onclick="goCheckout()">Checkout</button>
+<input class="search" placeholder="Search products">
+
+<div class="cart" onclick="openCart()">
+🛒 <span id="cart-count">0</span>
+</div>
 
 </div>
 
-<!-- PRODUCTS -->
-<div id="products"></div>
+
+<!-- CART PANEL -->
+
+<div id="cartPanel" class="cart-panel">
+
+<h2>Your Cart</h2>
+
+<div id="cartItems"></div>
+
+<h3 id="total"></h3>
+
+<button onclick="closeCart()">Close</button>
+
+</div>
+
+
+
+<!-- MAIN -->
+
+<div class="container">
+
+<div class="categories">
+
+<h3>Categories</h3>
+
+<ul>
+
+<li onclick="filterCategory('all')">All</li>
+<li onclick="filterCategory('groceries')">Groceries</li>
+<li onclick="filterCategory('makeup')">Makeup</li>
+<li onclick="filterCategory('clothing')">Clothing</li>
+
+</ul>
+
+</div>
+
+<div id="products" class="products"></div>
+
+</div>
+
+
 
 <script src="products.js"></script>
 <script src="cart.js"></script>
