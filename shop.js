@@ -1,26 +1,33 @@
+// WAIT UNTIL PAGE LOAD
+document.addEventListener("DOMContentLoaded", function(){
+
 const container = document.getElementById("products");
 
-// get data
-let allProducts = JSON.parse(localStorage.getItem("products")) || [];
+// SAFE LOAD (always fresh)
+function loadProducts(){
+return JSON.parse(localStorage.getItem("products")) || [];
+}
 
-// ⭐ rating function
+// ⭐ rating
 function stars(n){
 let s="";
 for(let i=0;i<n;i++) s+="⭐";
 return s;
 }
 
-// render products
-function renderProducts(list){
+// RENDER
+function renderProducts(){
+
+let allProducts = loadProducts();
 
 container.innerHTML = "";
 
-if(list.length === 0){
+if(allProducts.length === 0){
 container.innerHTML = "<h2 style='padding:20px'>No Products Found</h2>";
 return;
 }
 
-list.forEach(p => {
+allProducts.forEach(p => {
 
 let div = document.createElement("div");
 
@@ -47,32 +54,82 @@ container.appendChild(div);
 
 }
 
-// 🔍 search
-document.getElementById("search").addEventListener("input", function(){
+// 🔍 SEARCH
+let search = document.getElementById("search");
+
+if(search){
+search.addEventListener("input", function(){
 
 let v = this.value.toLowerCase();
+
+let allProducts = loadProducts();
 
 let filtered = allProducts.filter(p =>
 p.name.toLowerCase().includes(v)
 );
 
-renderProducts(filtered);
+container.innerHTML = "";
+
+filtered.forEach(p => {
+
+container.innerHTML += `
+<div class="product">
+<img src="${p.img}" class="product-img"
+onerror="this.src='https://via.placeholder.com/150'">
+
+<h3>${p.name}</h3>
+<p>${p.price} BDT</p>
+
+<div class="rating">${stars(p.rating || 4)}</div>
+
+<button onclick="addToCart('${p.name}', ${p.price})">
+Add to Cart
+</button>
+</div>
+`;
 
 });
 
-// 📂 category filter
-function filterCategory(cat){
+});
+}
+
+// 📂 CATEGORY
+window.filterCategory = function(cat){
+
+let allProducts = loadProducts();
 
 if(cat === "all"){
-renderProducts(allProducts);
+renderProducts();
 return;
 }
 
 let filtered = allProducts.filter(p => p.category === cat);
 
-renderProducts(filtered);
+container.innerHTML = "";
+
+filtered.forEach(p => {
+
+container.innerHTML += `
+<div class="product">
+<img src="${p.img}" class="product-img"
+onerror="this.src='https://via.placeholder.com/150'">
+
+<h3>${p.name}</h3>
+<p>${p.price} BDT</p>
+
+<div class="rating">${stars(p.rating || 4)}</div>
+
+<button onclick="addToCart('${p.name}', ${p.price})">
+Add to Cart
+</button>
+</div>
+`;
+
+});
 
 }
 
-// initial load
-renderProducts(allProducts);
+// INITIAL LOAD
+renderProducts();
+
+});
