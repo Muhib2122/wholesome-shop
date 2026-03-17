@@ -37,8 +37,18 @@ category:"clothing"
 
 ];
 
-// 🔥 GET ADMIN PRODUCTS
+// ADMIN PRODUCTS
 let stored = JSON.parse(localStorage.getItem("products")) || [];
 
-// 🔥 MERGE BOTH
-const products = [...defaultProducts, ...stored];
+// MERGE
+const products = [...defaultProducts];
+
+stored.forEach(newP => {
+
+let exists = products.find(p => p.name === newP.name);
+
+if(!exists){
+products.push(newP);
+}
+
+});
