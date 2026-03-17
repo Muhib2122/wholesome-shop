@@ -1,33 +1,43 @@
-const products = [
+let defaultProducts = [
 
 {
 name:"Rice",
 price:120,
-img:"rice.jpg"
+img:"rice.jpg",
+category:"groceries"
 },
 
 {
 name:"Milk",
 price:80,
-img:"milk.jpg"
+img:"milk.jpg",
+category:"groceries"
 },
 
 {
 name:"Lipstick",
 price:500,
-img:"lipstick.jpg"
+img:"lipstick.jpg",
+category:"makeup"
 },
 
 {
 name:"Shari",
 price:2500,
-img:"shari.jpg"
+img:"shari.jpg",
+category:"clothing"
 },
 
 {
 name:"Shirt",
 price:1200,
-img:"shirt.jpg"
+img:"shirt.jpg",
+category:"clothing"
 }
 
-]
+];
+
+// 🔥 LOAD FROM STORAGE
+let stored = JSON.parse(localStorage.getItem("products"));
+
+const products = stored && stored.length ? stored : defaultProducts;
