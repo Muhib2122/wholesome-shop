@@ -1,51 +1,68 @@
-const productContainer = document.getElementById("products");
+const container = document.getElementById("products");
 
-function renderProducts(data){
+// Load products (default + admin added)
+let defaultProducts = products;
+let adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || [];
 
-productContainer.innerHTML = "";
+let allProducts = [...defaultProducts, ...adminProducts];
 
-data.forEach((product,index) => {
+// Render function
+function renderProducts(list){
 
-let rating = localStorage.getItem(product.name+"_rating") || 0;
+container.innerHTML = "";
+
+list.forEach(product => {
 
 let div = document.createElement("div");
+
 div.className = "product";
 
 div.innerHTML = `
-
-<img src="${product.img}" class="product-img"
-onerror="this.src='https://via.placeholder.com/150'">
+<img src="${product.img}" class="product-img">
 
 <h3>${product.name}</h3>
 
 <p>${product.price} BDT</p>
 
-<p>⭐ ${rating}/5</p>
-
-<select onchange="rateProduct('${product.name}',this.value)">
-<option>Rate</option>
-<option value="1">1</option>
-<option value="2">2</option>
-<option value="3">3</option>
-<option value="4">4</option>
-<option value="5">5</option>
-</select>
-
-<button onclick="addToCart('${product.name}',${product.price})">
+<button onclick="addToCart('${product.name}', ${product.price})">
 Add to Cart
 </button>
-
 `;
 
-productContainer.appendChild(div);
+container.appendChild(div);
 
 });
 
 }
 
-function rateProduct(name,value){
-localStorage.setItem(name+"_rating", value);
-location.reload();
+// Search
+document.getElementById("search").addEventListener("input", function(){
+
+let value = this.value.toLowerCase();
+
+let filtered = allProducts.filter(p =>
+p.name.toLowerCase().includes(value)
+);
+
+renderProducts(filtered);
+
+});
+
+// Category filter
+function filterCategory(cat){
+
+if(cat === "all"){
+renderProducts(allProducts);
+return;
 }
 
-renderProducts(products);
+let filtered = allProducts.filter(p =>
+p.category && p.category.toLowerCase() === cat
+);
+
+renderProducts(filtered);
+
+}
+
+// Initial render
+renderProducts(allProducts);
