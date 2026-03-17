@@ -15,15 +15,14 @@
 
 <input type="text" id="search" class="search" placeholder="Search products">
 
-<div>
-🛒 <span id="cart-count">0</span>
+<div class="nav-btns">
+<span>🛒 <span id="cart-count">0</span></span>
 
 <button onclick="toggleCart()">Cart</button>
 
 <a href="checkout.html">
 <button>Checkout</button>
 </a>
-
 </div>
 
 </div>
@@ -31,24 +30,25 @@
 <!-- MAIN -->
 <div class="main">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
 <h3>Categories</h3>
+
 <p onclick="filterCategory('all')">All</p>
 <p onclick="filterCategory('groceries')">Groceries</p>
 <p onclick="filterCategory('makeup')">Makeup</p>
 <p onclick="filterCategory('clothing')">Clothing</p>
 </div>
 
+<!-- PRODUCTS GRID -->
 <div id="products" class="products"></div>
 
 </div>
 
 <!-- SIDE CART -->
 <div id="sideCart" class="side-cart">
-
 <h3>Your Cart</h3>
 <div id="cart-items"></div>
-
 </div>
 
 <!-- POPUP -->
@@ -56,7 +56,7 @@
 
 <script src="products.js"></script>
 <script src="cart.js"></script>
-<script src="shop.js?v=10"></script>
+<script src="shop.js?v=99"></script>
 
 </body>
 </html>
