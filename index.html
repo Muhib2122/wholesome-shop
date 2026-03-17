@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <title>Wholesome</title>
 <link rel="stylesheet" href="style.css">
@@ -7,34 +8,56 @@
 
 <body>
 
+<!-- NAVBAR -->
 <div class="navbar">
+
 <div class="logo">🛒 Wholesome</div>
 
-<input type="text" id="search" class="search" placeholder="Search products">
+<input 
+type="text" 
+id="search" 
+class="search" 
+placeholder="Search products"
+>
 
 <div>
 🛒 <span id="cart-count">0</span>
-<a href="cart.html"><button>Cart</button></a>
-<a href="checkout.html"><button>Checkout</button></a>
-</div>
+
+<a href="cart.html">
+<button>Cart</button>
+</a>
+
+<a href="checkout.html">
+<button>Checkout</button>
+</a>
+
 </div>
 
+</div>
+
+<!-- MAIN -->
 <div class="main">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
+
 <h3>Categories</h3>
+
 <p onclick="filterCategory('all')">All</p>
 <p onclick="filterCategory('groceries')">Groceries</p>
 <p onclick="filterCategory('makeup')">Makeup</p>
 <p onclick="filterCategory('clothing')">Clothing</p>
 <p onclick="filterCategory('home')">Home</p>
 <p onclick="filterCategory('toys')">Toys</p>
+
 </div>
 
+<!-- PRODUCTS -->
 <div id="products" class="products"></div>
 
 </div>
 
+<!-- SCRIPTS -->
 <script src="products.js"></script>
 <script src="cart.js"></script>
 <script src="shop.js"></script>
