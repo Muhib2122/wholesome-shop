@@ -2,12 +2,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
 const container = document.getElementById("products");
 
-// LOAD PRODUCTS
 function loadProducts(){
 return JSON.parse(localStorage.getItem("products")) || [];
 }
 
-// ⭐ RATING
 function stars(n){
 let s="";
 for(let i=0;i<n;i++) s+="⭐";
@@ -17,76 +15,90 @@ return s;
 // RENDER
 function renderProducts(list){
 
-container.innerHTML = "";
+container.innerHTML="";
 
-if(list.length === 0){
-container.innerHTML = "<h2 style='padding:20px'>No Products Found</h2>";
-return;
-}
+list.forEach(p=>{
 
-list.forEach(p => {
+container.innerHTML += `
+<div class="product">
 
-let div = document.createElement("div");
-
-div.className = "product";
-
-div.innerHTML = `
 <img src="${p.img}" class="product-img"
+onclick='openPopup(${JSON.stringify(p)})'
 onerror="this.src='https://via.placeholder.com/150'">
 
 <h3>${p.name}</h3>
-
 <p>${p.price} BDT</p>
 
-<div class="rating">${stars(p.rating || 4)}</div>
+<div class="rating">${stars(p.rating||4)}</div>
 
-<button onclick="addToCart('${p.name}', ${p.price})">
+<button onclick="addToCart('${p.name}',${p.price})">
 Add to Cart
 </button>
+
+</div>
 `;
 
-container.appendChild(div);
-
 });
 
 }
 
-// INITIAL LOAD
 renderProducts(loadProducts());
 
-// 🔍 SEARCH
-let search = document.getElementById("search");
+// POPUP
+window.openPopup=function(p){
 
-if(search){
-search.addEventListener("input", function(){
+let popup=document.getElementById("popup");
 
-let v = this.value.toLowerCase();
+popup.style.display="flex";
 
-let allProducts = loadProducts();
+popup.innerHTML=`
+<div class="popup-box">
 
-let filtered = allProducts.filter(p =>
-p.name.toLowerCase().includes(v)
-);
+<img src="${p.img}">
 
-renderProducts(filtered);
+<h2>${p.name}</h2>
+<p>${p.price} BDT</p>
 
-});
+<button onclick="addToCart('${p.name}',${p.price})">
+Add to Cart
+</button>
+
+<button onclick="closePopup()">Close</button>
+
+</div>
+`;
+
 }
 
-// 📂 CATEGORY FILTER (GLOBAL)
-window.filterCategory = function(cat){
+window.closePopup=function(){
+document.getElementById("popup").style.display="none";
+}
 
-let allProducts = loadProducts();
+// SEARCH
+document.getElementById("search").addEventListener("input",function(){
 
-if(cat === "all"){
-renderProducts(allProducts);
+let v=this.value.toLowerCase();
+
+let f=loadProducts().filter(p=>p.name.toLowerCase().includes(v));
+
+renderProducts(f);
+
+});
+
+// CATEGORY
+window.filterCategory=function(cat){
+
+let all=loadProducts();
+
+if(cat==="all"){
+renderProducts(all);
 return;
 }
 
-let filtered = allProducts.filter(p => p.category === cat);
+let f=all.filter(p=>p.category===cat);
 
-renderProducts(filtered);
+renderProducts(f);
 
-};
+}
 
 });
