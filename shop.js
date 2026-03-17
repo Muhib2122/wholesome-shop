@@ -1,48 +1,72 @@
-const products = JSON.parse(localStorage.getItem("products")) || [
+const container = document.getElementById("products");
 
-{
-id:1,
-name:"Rice",
-price:120,
-img:"rice.jpg",
-category:"groceries"
-},
+// load from storage only
+let allProducts = JSON.parse(localStorage.getItem("products")) || [];
 
-{
-id:2,
-name:"Milk",
-price:80,
-img:"milk.jpg",
-category:"groceries"
-},
+function renderProducts(list){
 
-{
-id:3,
-name:"Lipstick",
-price:500,
-img:"lipstick.jpg",
-category:"makeup"
-},
+container.innerHTML = "";
 
-{
-id:4,
-name:"Shari",
-price:2500,
-img:"shari.jpg",
-category:"clothing"
-},
-
-{
-id:5,
-name:"Shirt",
-price:1200,
-img:"shirt.jpg",
-category:"clothing"
+if(list.length === 0){
+container.innerHTML = "<h2>No Products Found</h2>";
+return;
 }
 
-];
+list.forEach(product => {
 
-// 🔥 save initial if empty
-if(!localStorage.getItem("products")){
-localStorage.setItem("products", JSON.stringify(products));
+let div = document.createElement("div");
+
+div.className = "product";
+
+div.innerHTML = `
+<img src="${product.img}" class="product-img"
+onerror="this.src='https://via.placeholder.com/150'">
+
+<h3>${product.name}</h3>
+
+<p>${product.price} BDT</p>
+
+<button onclick="addToCart('${product.name}', ${product.price})">
+Add to Cart
+</button>
+`;
+
+container.appendChild(div);
+
+});
+
 }
+
+// search
+let search = document.getElementById("search");
+
+if(search){
+search.addEventListener("input", function(){
+
+let value = this.value.toLowerCase();
+
+let filtered = allProducts.filter(p =>
+p.name.toLowerCase().includes(value)
+);
+
+renderProducts(filtered);
+
+});
+}
+
+// category
+function filterCategory(cat){
+
+if(cat === "all"){
+renderProducts(allProducts);
+return;
+}
+
+let filtered = allProducts.filter(p => p.category === cat);
+
+renderProducts(filtered);
+
+}
+
+// first load
+renderProducts(allProducts);
