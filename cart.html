@@ -10,9 +10,11 @@
 
 <h2 style="text-align:center;">Your Cart</h2>
 
-<div id="cart-box" style="max-width:600px;margin:auto;"></div>
+<div id="cart-items" style="padding:20px;"></div>
 
-<div style="text-align:center;margin-top:20px;">
+<h3 id="total" style="text-align:center;"></h3>
+
+<div style="text-align:center;">
 <button onclick="goCheckout()">Checkout</button>
 </div>
 
@@ -20,37 +22,49 @@
 
 <script>
 
+function renderCart(){
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let box = document.getElementById("cart-box");
+
+let container = document.getElementById("cart-items");
+let totalEl = document.getElementById("total");
+
+container.innerHTML = "";
+
+if(cart.length === 0){
+container.innerHTML = "<p style='text-align:center;'>Cart is empty</p>";
+totalEl.innerText = "";
+return;
+}
 
 let total = 0;
 
-if(cart.length === 0){
-box.innerHTML = "<h3 style='text-align:center;'>Cart is empty</h3>";
-}
-
 cart.forEach((item,index)=>{
 
-let div = document.createElement("div");
-
-div.style = "background:white;padding:15px;margin:10px;display:flex;justify-content:space-between;";
-
-div.innerHTML = `
-<span>${item.name} (${item.price} BDT)</span>
-<button onclick="removeFromCart(${index})">Remove</button>
+container.innerHTML += `
+<div style="background:white; padding:10px; margin:10px;">
+<b>${item.name}</b> - ${item.price} BDT
+<br><br>
+<button onclick="removeItem(${index})">Remove</button>
+</div>
 `;
-
-box.appendChild(div);
 
 total += item.price;
 
 });
 
-let totalDiv = document.createElement("h3");
-totalDiv.innerText = "Total: " + total + " BDT";
-totalDiv.style.textAlign = "center";
+totalEl.innerText = "Total: " + total + " BDT";
 
-box.appendChild(totalDiv);
+}
+
+function removeItem(i){
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+cart.splice(i,1);
+localStorage.setItem("cart", JSON.stringify(cart));
+renderCart();
+}
+
+renderCart();
 
 </script>
 
