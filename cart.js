@@ -43,3 +43,36 @@ let container = document.getElementById("cart-items");
 if(!container) return;
 
 container.innerHTML =
+function renderCart(){
+let container = document.getElementById("cart-items");
+
+if(!container) return;
+
+container.innerHTML = "";
+
+let total = 0;
+
+cart.forEach((item, index) => {
+
+total += item.price;
+
+container.innerHTML += `
+<div style="border:1px solid #ccc; margin:10px; padding:10px;">
+${item.name} - ${item.price} BDT
+<button onclick="removeItem(${index})">Remove</button>
+</div>
+`;
+
+});
+
+document.getElementById("total").innerText = "Total: " + total + " BDT";
+
+}
+
+function goCheckout(){
+window.location.href = "checkout.html";
+}
+
+// load
+renderCart();
+updateCartCount();
