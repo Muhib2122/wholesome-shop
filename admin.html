@@ -20,26 +20,25 @@
 
 <hr>
 
-<h3>Manage Products</h3>
 <div id="list"></div>
 
 <script>
 
-function loadProducts(){
+function load(){
 return JSON.parse(localStorage.getItem("products")) || [];
 }
 
-function saveProducts(data){
+function save(data){
 localStorage.setItem("products", JSON.stringify(data));
-renderList();
+render();
 }
 
-// add
+// ADD
 function addProduct(){
 
-let products = loadProducts();
+let data = load();
 
-let newProduct = {
+let newItem = {
 id: Date.now(),
 name: document.getElementById("name").value,
 price: Number(document.getElementById("price").value),
@@ -47,53 +46,47 @@ img: document.getElementById("img").value,
 category: document.getElementById("category").value
 };
 
-products.push(newProduct);
-saveProducts(products);
+data.push(newItem);
+save(data);
 
 alert("Added");
 }
 
-// delete
+// DELETE
 function deleteProduct(id){
 
-let products = loadProducts();
+let data = load().filter(p => p.id !== id);
+save(data);
 
-products = products.filter(p => p.id !== id);
-
-saveProducts(products);
 }
 
-// edit
+// EDIT
 function editProduct(id){
 
-let products = loadProducts();
+let data = load();
 
-let p = products.find(x=>x.id===id);
+let p = data.find(x => x.id === id);
 
-let newName = prompt("Name", p.name);
-let newPrice = prompt("Price", p.price);
-let newImg = prompt("Image URL", p.img);
+p.name = prompt("Name", p.name);
+p.price = Number(prompt("Price", p.price));
+p.img = prompt("Image", p.img);
 
-p.name = newName;
-p.price = Number(newPrice);
-p.img = newImg;
-
-saveProducts(products);
+save(data);
 }
 
-// render list
-function renderList(){
+// RENDER
+function render(){
 
-let products = loadProducts();
+let data = load();
 
 let div = document.getElementById("list");
 
 div.innerHTML = "";
 
-products.forEach(p=>{
+data.forEach(p=>{
 
 div.innerHTML += `
-<div style="margin:10px;padding:10px;border:1px solid #ccc;">
+<div style="border:1px solid #ccc;margin:10px;padding:10px;">
 <img src="${p.img}" width="50"
 onerror="this.src='https://via.placeholder.com/50'"><br>
 
@@ -108,7 +101,7 @@ ${p.name} - ${p.price} BDT<br>
 
 }
 
-renderList();
+render();
 
 </script>
 
