@@ -1,120 +1,43 @@
-body{
-margin:0;
-font-family:Arial;
-background:#eef3f7;
-}
-
-/* NAVBAR */
-.navbar{
-background:#5bb4d8;
-padding:15px 25px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-color:white;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-.logo{
-font-size:22px;
-font-weight:bold;
-}
-
-.search{
-padding:10px;
-width:350px;
-border:none;
-border-radius:6px;
-outline:none;
-}
-
-/* MAIN */
-.main{
-display:flex;
-}
-
-/* SIDEBAR */
-.sidebar{
-width:220px;
+/* SIDE CART */
+.side-cart{
+position:fixed;
+right:-300px;
+top:0;
+width:300px;
+height:100%;
 background:white;
+box-shadow:-2px 0 10px rgba(0,0,0,0.2);
 padding:20px;
-box-shadow:0 0 10px rgba(0,0,0,0.05);
+transition:0.3s;
+overflow:auto;
 }
 
-.sidebar p{
-cursor:pointer;
-padding:8px;
-border-radius:5px;
+.side-cart.active{
+right:0;
 }
 
-.sidebar p:hover{
-background:#5bb4d8;
-color:white;
-}
-
-/* GRID */
-.products{
-flex:1;
-display:grid;
-grid-template-columns:repeat(auto-fill,minmax(230px,1fr));
-gap:20px;
-padding:20px;
-}
-
-/* CARD */
-.product{
-background:white;
-border-radius:12px;
-overflow:hidden;
-box-shadow:0 4px 12px rgba(0,0,0,0.08);
-transition:all 0.3s ease;
-}
-
-.product:hover{
-transform:translateY(-8px);
-box-shadow:0 10px 25px rgba(0,0,0,0.15);
-}
-
-/* IMAGE */
-.product-img{
+/* POPUP */
+.popup{
+position:fixed;
+top:0;
+left:0;
 width:100%;
-height:170px;
+height:100%;
+background:rgba(0,0,0,0.5);
+display:none;
+justify-content:center;
+align-items:center;
+}
+
+.popup-box{
+background:white;
+padding:20px;
+width:300px;
+text-align:center;
+}
+
+.popup-box img{
+width:100%;
+height:200px;
 object-fit:cover;
-}
-
-/* TEXT */
-.product h3{
-margin:10px;
-font-size:16px;
-}
-
-.product p{
-margin:10px;
-font-weight:bold;
-color:#007bff;
-}
-
-/* RATING */
-.rating{
-margin-left:10px;
-color:gold;
-}
-
-/* BUTTON */
-.product button{
-margin:10px;
-width:calc(100% - 20px);
-padding:10px;
-background:#5bb4d8;
-border:none;
-color:white;
-border-radius:6px;
-cursor:pointer;
-font-weight:bold;
-transition:0.2s;
-}
-
-.product button:hover{
-background:#3a9ec4;
-transform:scale(1.03);
 }
