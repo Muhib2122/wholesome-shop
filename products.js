@@ -1,4 +1,4 @@
-const products = JSON.parse(localStorage.getItem("products")) || [
+const defaultProducts = [
 
 {
 id:1,
@@ -42,7 +42,7 @@ category:"clothing"
 
 ];
 
-// 🔥 save initial if empty
+// 🔥 FIRST TIME LOAD ONLY
 if(!localStorage.getItem("products")){
-localStorage.setItem("products", JSON.stringify(products));
+localStorage.setItem("products", JSON.stringify(defaultProducts));
 }
