@@ -8,54 +8,38 @@
 
 <body>
 
-<div class="navbar">
-<div class="logo">🛍 Wholesome</div>
-<input class="search" placeholder="Search products">
-<div class="cart-icon" onclick="openCart()">
-🛒 <span id="cart-count">0</span>
-</div>
-</div>
+<header>
+<h2>Wholesome</h2>
 
-<!-- CART -->
-<div id="cartPanel" class="cart-panel">
-<h2>Your Cart</h2>
-<div id="cartItems"></div>
-<h3 id="total"></h3>
-<button onclick="goCheckout()">Checkout</button>
-<button onclick="closeCart()">Close</button>
-</div>
+<input id="search" onkeyup="searchProduct()" placeholder="Search products">
 
-<!-- POPUP -->
-<div id="popup" class="popup">
-<div class="popup-content">
-<span onclick="closePopup()">❌</span>
-<img id="pop-img">
-<h2 id="pop-name"></h2>
-<p id="pop-price"></p>
-<div id="rating"></div>
-<button id="addBtn">Add to Cart</button>
-</div>
-</div>
+<button onclick="sortPrice()">Sort Price</button>
+
+</header>
 
 <div class="container">
 
-<div class="categories">
+<!-- SIDEBAR -->
+<div class="sidebar">
 <h3>Categories</h3>
+
 <ul>
 <li onclick="filterCategory('all')">All</li>
 <li onclick="filterCategory('groceries')">Groceries</li>
 <li onclick="filterCategory('makeup')">Makeup</li>
 <li onclick="filterCategory('clothing')">Clothing</li>
 </ul>
+
 </div>
 
-<div id="products" class="products"></div>
+<!-- PRODUCTS -->
+<div class="products" id="products"></div>
 
 </div>
 
 <script src="products.js"></script>
-<script src="cart.js"></script>
 <script src="shop.js"></script>
 
 </body>
+
 </html>
