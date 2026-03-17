@@ -1,15 +1,16 @@
 const container = document.getElementById("products");
 
+// get data
 let allProducts = JSON.parse(localStorage.getItem("products")) || [];
 
-// ⭐ rating
+// ⭐ rating function
 function stars(n){
 let s="";
 for(let i=0;i<n;i++) s+="⭐";
 return s;
 }
 
-// render
+// render products
 function renderProducts(list){
 
 container.innerHTML = "";
@@ -33,7 +34,7 @@ onerror="this.src='https://via.placeholder.com/150'">
 
 <p>${p.price} BDT</p>
 
-<div>${stars(p.rating || 4)}</div>
+<div class="rating">${stars(p.rating || 4)}</div>
 
 <button onclick="addToCart('${p.name}', ${p.price})">
 Add to Cart
@@ -46,32 +47,32 @@ container.appendChild(div);
 
 }
 
-// search
+// 🔍 search
 document.getElementById("search").addEventListener("input", function(){
 
 let v = this.value.toLowerCase();
 
-let f = allProducts.filter(p =>
+let filtered = allProducts.filter(p =>
 p.name.toLowerCase().includes(v)
 );
 
-renderProducts(f);
+renderProducts(filtered);
 
 });
 
-// category
+// 📂 category filter
 function filterCategory(cat){
 
-if(cat==="all"){
+if(cat === "all"){
 renderProducts(allProducts);
 return;
 }
 
-let f = allProducts.filter(p => p.category === cat);
+let filtered = allProducts.filter(p => p.category === cat);
 
-renderProducts(f);
+renderProducts(filtered);
 
 }
 
-// load
+// initial load
 renderProducts(allProducts);
