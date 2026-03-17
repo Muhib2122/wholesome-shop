@@ -1,56 +1,23 @@
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+<!DOCTYPE html>
+<html>
 
-// ADD
-function addToCart(name, price){
-cart.push({name, price});
-localStorage.setItem("cart", JSON.stringify(cart));
-updateCartCount();
-alert("Added to cart");
-}
+<head>
+<title>Cart</title>
+</head>
 
-// COUNT
-function updateCartCount(){
-let count = cart.length;
-let el = document.getElementById("cart-count");
-if(el) el.innerText = count;
-}
+<body>
 
-// REMOVE
-function removeItem(index){
-cart.splice(index,1);
-localStorage.setItem("cart", JSON.stringify(cart));
-renderCart();
-updateCartCount();
-}
+<h2 style="text-align:center;">Your Cart</h2>
 
-// RENDER CART
-function renderCart(){
+<div id="cart-items"></div>
 
-let container = document.getElementById("cart-items");
-if(!container) return;
+<h3 id="total" style="text-align:center;"></h3>
 
-container.innerHTML = "";
-
-let total = 0;
-
-cart.forEach((item, index)=>{
-
-total += item.price;
-
-container.innerHTML += `
-<div style="border:1px solid #ccc; margin:10px; padding:10px;">
-${item.name} - ${item.price} BDT
-<button onclick="removeItem(${index})">Remove</button>
+<div style="text-align:center;">
+<a href="checkout.html"><button>Checkout</button></a>
 </div>
-`;
 
-});
+<script src="cart.js"></script>
 
-let totalEl = document.getElementById("total");
-if(totalEl) totalEl.innerText = "Total: " + total + " BDT";
-
-}
-
-// LOAD
-renderCart();
-updateCartCount();
+</body>
+</html>
