@@ -1,152 +1,33 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-
-<title>Payment Slip</title>
-
-<link rel="stylesheet" href="style.css">
-
-<style>
-
-body{
-font-family: Arial;
-background:#f4f4f4;
-display:flex;
-justify-content:center;
-padding:40px;
-}
-
-.invoice{
-
-background:white;
-width:500px;
-padding:30px;
-border-radius:10px;
-box-shadow:0 5px 20px rgba(0,0,0,0.2);
-
-}
-
-h2{
-text-align:center;
-}
-
-.row{
-display:flex;
-justify-content:space-between;
-margin:8px 0;
-}
-
-.total{
-border-top:2px solid #ddd;
-margin-top:10px;
-padding-top:10px;
-font-weight:bold;
-font-size:18px;
-}
-
-.payment{
-margin-top:20px;
-background:#f9f9f9;
-padding:15px;
-border-radius:8px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-}
-
-button{
-width:100%;
-padding:12px;
-margin-top:15px;
-background:#28a745;
-border:none;
-color:white;
-font-size:16px;
-cursor:pointer;
-}
-
-</style>
-
-</head>
-
-<body>
-
-<div class="invoice">
-
-<h2>Wholesome Payment Slip</h2>
-
-<div id="items"></div>
-
-<div class="total" id="total"></div>
-
-<div class="payment">
-
-<p><b>Payment Method</b></p>
-
-<p>bKash: 01764262579</p>
-<p>Nagad: 01764262579</p>
-
-<input id="trx" placeholder="Enter Transaction ID">
-
-<button onclick="confirmOrder()">Confirm Payment</button>
-
-</div>
-
-</div>
-
-<script>
-
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-let itemsDiv = document.getElementById("items");
+// UPDATE COUNT
+function updateCartCount(){
+let el = document.getElementById("cart-count");
+if(el){
+el.innerText = cart.length;
+}
+}
 
-let total = 0;
+// SAVE
+function saveCart(){
+localStorage.setItem("cart", JSON.stringify(cart));
+updateCartCount();
+}
 
-cart.forEach(item => {
+// ADD
+function addToCart(name,price){
 
-let row = document.createElement("div");
+cart.push({name,price});
 
-row.className = "row";
+saveCart();
 
-row.innerHTML = `
-<span>${item.name}</span>
-<span>${item.price} BDT</span>
-`;
-
-itemsDiv.appendChild(row);
-
-total += item.price;
-
-});
-
-document.getElementById("total").innerText = "Total Amount: " + total + " BDT";
-
-function confirmOrder(){
-
-let trx = document.getElementById("trx").value;
-
-if(trx==""){
-
-alert("Please enter transaction ID");
-
-return;
+alert(name + " added");
 
 }
 
-alert("Payment submitted successfully!");
-
-localStorage.removeItem("cart");
-
-window.location.href="index.html";
-
+// GO CHECKOUT
+function goCheckout(){
+window.location.href = "checkout.html";
 }
 
-</script>
-
-</body>
-
-</html>
+updateCartCount();
