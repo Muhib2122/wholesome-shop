@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <head>
 <title>Wholesome</title>
 <link rel="stylesheet" href="style.css">
@@ -8,29 +9,35 @@
 <body>
 
 <header>
-<h2>Wholesome</h2>
+
+<div class="logo">Wholesome</div>
 
 <input id="search" onkeyup="searchProduct()" placeholder="Search products">
 
-<div>
+<div class="nav-right">
 🛒 <span id="cart-count">0</span>
 <button onclick="goCart()">Cart</button>
 <button onclick="goCheckout()">Checkout</button>
 </div>
+
 </header>
 
 <div class="container">
 
+<!-- SIDEBAR -->
 <div class="sidebar">
 <h3>Categories</h3>
+
 <ul>
 <li onclick="filterCategory('all')">All</li>
 <li onclick="filterCategory('groceries')">Groceries</li>
 <li onclick="filterCategory('makeup')">Makeup</li>
 <li onclick="filterCategory('clothing')">Clothing</li>
 </ul>
+
 </div>
 
+<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 </div>
@@ -40,4 +47,5 @@
 <script src="shop.js"></script>
 
 </body>
+
 </html>
