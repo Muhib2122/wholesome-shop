@@ -1,72 +1,114 @@
 <!DOCTYPE html>
 <html>
-
-<head>
-<title>Admin Panel</title>
-<link rel="stylesheet" href="style.css">
-</head>
-
 <body>
 
-<h2 style="text-align:center;">Admin Panel</h2>
+<h2>Admin Panel</h2>
 
-<div style="width:300px;margin:auto;">
-
-<input id="name" placeholder="Product Name"><br><br>
-
-<input id="price" placeholder="Price"><br><br>
-
-<input id="img" placeholder="Image URL"><br><br>
+<input id="name" placeholder="Name"><br>
+<input id="price" placeholder="Price"><br>
+<input id="img" placeholder="Image URL"><br>
 
 <select id="category">
 <option value="groceries">Groceries</option>
 <option value="makeup">Makeup</option>
 <option value="clothing">Clothing</option>
-<option value="home">Home</option>
-<option value="toys">Toys</option>
-</select><br><br>
+</select>
+
+<br><br>
 
 <button onclick="addProduct()">Add Product</button>
 
-</div>
+<hr>
+
+<h3>Manage Products</h3>
+<div id="list"></div>
 
 <script>
 
+function loadProducts(){
+return JSON.parse(localStorage.getItem("products")) || [];
+}
+
+function saveProducts(data){
+localStorage.setItem("products", JSON.stringify(data));
+renderList();
+}
+
+// add
 function addProduct(){
 
-let name = document.getElementById("name").value;
-let price = document.getElementById("price").value;
-let img = document.getElementById("img").value;
-let category = document.getElementById("category").value;
+let products = loadProducts();
 
-// validation
-if(!name || !price || !img){
-alert("Fill all fields");
-return;
+let newProduct = {
+id: Date.now(),
+name: document.getElementById("name").value,
+price: Number(document.getElementById("price").value),
+img: document.getElementById("img").value,
+category: document.getElementById("category").value
+};
+
+products.push(newProduct);
+saveProducts(products);
+
+alert("Added");
 }
 
-// load old products
-let products = JSON.parse(localStorage.getItem("adminProducts")) || [];
+// delete
+function deleteProduct(id){
 
-// push new
-products.push({
-name:name,
-price:Number(price),
-img:img,
-category:category
+let products = loadProducts();
+
+products = products.filter(p => p.id !== id);
+
+saveProducts(products);
+}
+
+// edit
+function editProduct(id){
+
+let products = loadProducts();
+
+let p = products.find(x=>x.id===id);
+
+let newName = prompt("Name", p.name);
+let newPrice = prompt("Price", p.price);
+let newImg = prompt("Image URL", p.img);
+
+p.name = newName;
+p.price = Number(newPrice);
+p.img = newImg;
+
+saveProducts(products);
+}
+
+// render list
+function renderList(){
+
+let products = loadProducts();
+
+let div = document.getElementById("list");
+
+div.innerHTML = "";
+
+products.forEach(p=>{
+
+div.innerHTML += `
+<div style="margin:10px;padding:10px;border:1px solid #ccc;">
+<img src="${p.img}" width="50"
+onerror="this.src='https://via.placeholder.com/50'"><br>
+
+${p.name} - ${p.price} BDT<br>
+
+<button onclick="editProduct(${p.id})">Edit</button>
+<button onclick="deleteProduct(${p.id})">Delete</button>
+</div>
+`;
+
 });
 
-// save
-localStorage.setItem("adminProducts", JSON.stringify(products));
-
-alert("Product Added Successfully");
-
-// clear input
-document.getElementById("name").value="";
-document.getElementById("price").value="";
-document.getElementById("img").value="";
-
 }
+
+renderList();
 
 </script>
 
