@@ -1,65 +1,48 @@
-const container = document.getElementById("products");
+const products = JSON.parse(localStorage.getItem("products")) || [
 
-// ✅ Load products safely
-let defaultProducts = typeof products !== "undefined" ? products : [];
-let adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || [];
+{
+id:1,
+name:"Rice",
+price:120,
+img:"rice.jpg",
+category:"groceries"
+},
 
-// ✅ Merge both
-let allProducts = [...defaultProducts, ...adminProducts];
+{
+id:2,
+name:"Milk",
+price:80,
+img:"milk.jpg",
+category:"groceries"
+},
 
-// ✅ Render products
-function renderProducts(list){
+{
+id:3,
+name:"Lipstick",
+price:500,
+img:"lipstick.jpg",
+category:"makeup"
+},
 
-container.innerHTML = "";
+{
+id:4,
+name:"Shari",
+price:2500,
+img:"shari.jpg",
+category:"clothing"
+},
 
-if(list.length === 0){
-container.innerHTML = "<h3 style='text-align:center;'>No products found</h3>";
-return;
+{
+id:5,
+name:"Shirt",
+price:1200,
+img:"shirt.jpg",
+category:"clothing"
 }
 
-list.forEach(product => {
+];
 
-let div = document.createElement("div");
-
-div.className = "product";
-
-div.innerHTML = `
-<img src="${product.img}" class="product-img">
-
-<h3>${product.name}</h3>
-
-<p>${product.price} BDT</p>
-
-<button onclick="addToCart('${product.name}', ${product.price})">
-Add to Cart
-</button>
-`;
-
-container.appendChild(div);
-
-});
-
+// 🔥 save initial if empty
+if(!localStorage.getItem("products")){
+localStorage.setItem("products", JSON.stringify(products));
 }
-
-// ✅ Search system
-let searchInput = document.getElementById("search");
-
-if(searchInput){
-searchInput.addEventListener("input", function(){
-
-let value = this.value.toLowerCase();
-
-let filtered = allProducts.filter(p =>
-p.name.toLowerCase().includes(value)
-);
-
-renderProducts(filtered);
-
-});
-}
-
-// ✅ Category filter
-function filterCategory(cat){
-
-if(cat === "all"){
-renderProducts(allProducts
