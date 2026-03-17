@@ -1,86 +1,24 @@
-<!DOCTYPE html>
-<html>
-
-<head>
-<title>Checkout</title>
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
-<style>
-body{font-family:Arial;background:#f5f5f5;padding:20px;}
-.box{background:white;padding:20px;max-width:600px;margin:auto;}
-.item{display:flex;justify-content:space-between;margin:10px 0;}
-button{margin-top:10px;padding:10px;background:#ff6f00;color:white;border:none;}
-</style>
-
-</head>
-
-<body>
-
-<div class="box">
-
-<h2>Checkout</h2>
-
-<div id="items"></div>
-<h3 id="total"></h3>
-
-<h3>Payment</h3>
-<p>bKash: 01764262579</p>
-
-<input id="trx" placeholder="Transaction ID">
-
-<button onclick="confirmOrder()">Confirm Order</button>
-
-</div>
-
-<script>
-
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let total = 0;
-let container = document.getElementById("items");
-
-cart.forEach(item=>{
-container.innerHTML += `
-<div class="item">
-<span>${item.name}</span>
-<span>${item.price} BDT</span>
-</div>`;
-total += item.price;
-});
-
-document.getElementById("total").innerText = "Total: " + total + " BDT";
-
-function confirmOrder(){
-
-let trx = document.getElementById("trx").value;
-
-if(!trx){
-alert("Enter Transaction ID");
-return;
-}
-
-generatePDF();
-
-localStorage.removeItem("cart");
-
-alert("Order placed");
-
-window.location.href="index.html";
-
-}
-
 function generatePDF(){
 
 const { jsPDF } = window.jspdf;
 
 let doc = new jsPDF();
 
-doc.text("Wholesome Invoice",20,20);
+doc.setFontSize(18);
+doc.text("Wholesome Shop",20,20);
 
-let y=40;
+doc.setFontSize(12);
+
+let y = 40;
+
+doc.text("Product",20,y);
+doc.text("Price",120,y);
+
+y+=10;
 
 cart.forEach(item=>{
-doc.text(item.name+" - "+item.price+" BDT",20,y);
+doc.text(item.name,20,y);
+doc.text(item.price+" BDT",120,y);
 y+=10;
 });
 
@@ -89,8 +27,3 @@ doc.text("Total: "+total+" BDT",20,y+10);
 doc.save("invoice.pdf");
 
 }
-
-</script>
-
-</body>
-</html>
