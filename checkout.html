@@ -3,43 +3,73 @@
 
 <head>
 <title>Checkout</title>
+<link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
+<div class="navbar">
+<div class="logo">Wholesome</div>
+</div>
+
+<div style="padding:30px">
+
 <h2>Checkout</h2>
 
-<button onclick="generatePDF()">Download Invoice (PDF)</button>
+<input id="trx" placeholder="Enter Transaction ID" style="padding:10px;width:250px">
+
+<br><br>
+
+<button onclick="payNow()">Confirm Payment</button>
+
+</div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
-function generatePDF(){
+function payNow(){
+
+let trx = document.getElementById("trx").value;
+
+if(trx === ""){
+alert("Enter Transaction ID");
+return;
+}
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+if(cart.length === 0){
+alert("Cart Empty");
+return;
+}
 
 const { jsPDF } = window.jspdf;
 let doc = new jsPDF();
 
-doc.setFontSize(20);
-doc.text("Wholesome Shop", 20, 20);
+doc.setFontSize(18);
+doc.text("Wholesome Shop Invoice", 20, 20);
 
 doc.setFontSize(12);
 
 let y = 40;
 let total = 0;
 
-cart.forEach(item => {
-doc.text(item.name, 20, y);
-doc.text(item.price + " BDT", 150, y);
-y += 10;
-total += item.price;
+cart.forEach(item=>{
+doc.text(item.name,20,y);
+doc.text(item.price+" BDT",150,y);
+y+=10;
+total+=item.price;
 });
 
-doc.text("Total: " + total + " BDT", 20, y + 10);
+doc.text("Total: "+total+" BDT",20,y+10);
+doc.text("Transaction ID: "+trx,20,y+20);
 
+// AUTO DOWNLOAD
 doc.save("invoice.pdf");
+
+// CLEAR CART AFTER PAYMENT
+localStorage.removeItem("cart");
 
 }
 
