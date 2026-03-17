@@ -1,12 +1,10 @@
 const container = document.getElementById("products");
 
-// Load products (default + admin added)
-let defaultProducts = products;
+// admin + default merge
 let adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || [];
+let allProducts = [...products, ...adminProducts];
 
-let allProducts = [...defaultProducts, ...adminProducts];
-
-// Render function
+// render
 function renderProducts(list){
 
 container.innerHTML = "";
@@ -35,7 +33,7 @@ container.appendChild(div);
 
 }
 
-// Search
+// search
 document.getElementById("search").addEventListener("input", function(){
 
 let value = this.value.toLowerCase();
@@ -48,7 +46,7 @@ renderProducts(filtered);
 
 });
 
-// Category filter
+// category
 function filterCategory(cat){
 
 if(cat === "all"){
@@ -57,12 +55,12 @@ return;
 }
 
 let filtered = allProducts.filter(p =>
-p.category && p.category.toLowerCase() === cat
+p.category === cat
 );
 
 renderProducts(filtered);
 
 }
 
-// Initial render
+// load
 renderProducts(allProducts);
