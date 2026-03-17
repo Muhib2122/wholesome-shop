@@ -1,35 +1,45 @@
 <!DOCTYPE html>
 <html>
 
+<head>
+<title>Checkout</title>
+</head>
+
 <body>
 
 <h2>Checkout</h2>
 
-<button onclick="generateInvoice()">Download Invoice</button>
+<button onclick="generatePDF()">Download Invoice (PDF)</button>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
-function generateInvoice(){
+function generatePDF(){
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-let text = "Invoice\n\n";
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
 
+doc.setFontSize(20);
+doc.text("Wholesome Shop", 20, 20);
+
+doc.setFontSize(12);
+
+let y = 40;
 let total = 0;
 
 cart.forEach(item => {
-text += item.name + " - " + item.price + " BDT\n";
+doc.text(item.name, 20, y);
+doc.text(item.price + " BDT", 150, y);
+y += 10;
 total += item.price;
 });
 
-text += "\nTotal: " + total + " BDT";
+doc.text("Total: " + total + " BDT", 20, y + 10);
 
-let blob = new Blob([text], {type:"text/plain"});
-
-let link = document.createElement("a");
-link.href = URL.createObjectURL(blob);
-link.download = "invoice.txt";
-link.click();
+doc.save("invoice.pdf");
 
 }
 
