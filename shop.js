@@ -1,32 +1,37 @@
 const container = document.getElementById("products");
 
-// load from storage only
+// ONE SOURCE
 let allProducts = JSON.parse(localStorage.getItem("products")) || [];
 
+// ⭐ rating
+function stars(n){
+let s="";
+for(let i=0;i<n;i++) s+="⭐";
+return s;
+}
+
+// render
 function renderProducts(list){
 
 container.innerHTML = "";
 
-if(list.length === 0){
-container.innerHTML = "<h2>No Products Found</h2>";
-return;
-}
-
-list.forEach(product => {
+list.forEach(p => {
 
 let div = document.createElement("div");
 
 div.className = "product";
 
 div.innerHTML = `
-<img src="${product.img}" class="product-img"
+<img src="${p.img}" class="product-img"
 onerror="this.src='https://via.placeholder.com/150'">
 
-<h3>${product.name}</h3>
+<h3>${p.name}</h3>
 
-<p>${product.price} BDT</p>
+<p>${p.price} BDT</p>
 
-<button onclick="addToCart('${product.name}', ${product.price})">
+<div>${stars(p.rating || 4)}</div>
+
+<button onclick="addToCart('${p.name}', ${p.price})">
 Add to Cart
 </button>
 `;
@@ -38,35 +43,31 @@ container.appendChild(div);
 }
 
 // search
-let search = document.getElementById("search");
+document.getElementById("search").addEventListener("input", function(){
 
-if(search){
-search.addEventListener("input", function(){
+let v = this.value.toLowerCase();
 
-let value = this.value.toLowerCase();
-
-let filtered = allProducts.filter(p =>
-p.name.toLowerCase().includes(value)
+let f = allProducts.filter(p =>
+p.name.toLowerCase().includes(v)
 );
 
-renderProducts(filtered);
+renderProducts(f);
 
 });
-}
 
 // category
 function filterCategory(cat){
 
-if(cat === "all"){
+if(cat==="all"){
 renderProducts(allProducts);
 return;
 }
 
-let filtered = allProducts.filter(p => p.category === cat);
+let f = allProducts.filter(p => p.category === cat);
 
-renderProducts(filtered);
+renderProducts(f);
 
 }
 
-// first load
+// load
 renderProducts(allProducts);
