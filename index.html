@@ -9,17 +9,20 @@
 <body>
 
 <header>
+
 <h2>Wholesome</h2>
 
 <input id="search" onkeyup="searchProduct()" placeholder="Search products">
 
-<button onclick="sortPrice()">Sort Price</button>
+<div>
+🛒 <span id="cart-count">0</span>
+<button onclick="goCheckout()">Checkout</button>
+</div>
 
 </header>
 
 <div class="container">
 
-<!-- SIDEBAR -->
 <div class="sidebar">
 <h3>Categories</h3>
 
@@ -32,12 +35,13 @@
 
 </div>
 
-<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 </div>
 
+<!-- JS ORDER IMPORTANT -->
 <script src="products.js"></script>
+<script src="cart.js"></script>
 <script src="shop.js"></script>
 
 </body>
