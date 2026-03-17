@@ -10,6 +10,19 @@ updateCart();
 
 }
 
+
+// REMOVE ITEM FUNCTION
+function removeItem(index){
+
+cart.splice(index,1);
+
+localStorage.setItem("cart", JSON.stringify(cart));
+
+updateCart();
+
+}
+
+
 function updateCart(){
 
 document.getElementById("cart-count").innerText = cart.length;
@@ -19,10 +32,14 @@ cartItems.innerHTML = "";
 
 let total = 0;
 
-cart.forEach(item => {
+cart.forEach((item,index) => {
 
 let div = document.createElement("div");
-div.innerText = item.name + " - " + item.price + " BDT";
+
+div.innerHTML = `
+${item.name} - ${item.price} BDT
+<button onclick="removeItem(${index})">❌</button>
+`;
 
 cartItems.appendChild(div);
 
@@ -34,9 +51,11 @@ document.getElementById("total").innerText = "Total: " + total + " BDT";
 
 }
 
+
 function openCart(){
 
 document.getElementById("cartPanel").classList.add("open");
+
 updateCart();
 
 }
