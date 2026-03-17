@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html>
+
 <body>
 
 <h2>Admin Panel</h2>
@@ -12,6 +13,8 @@
 <option value="groceries">Groceries</option>
 <option value="makeup">Makeup</option>
 <option value="clothing">Clothing</option>
+<option value="home">Home</option>
+<option value="toys">Toys</option>
 </select>
 
 <br><br>
@@ -38,30 +41,30 @@ function addProduct(){
 
 let data = load();
 
-let newItem = {
+let item = {
 id: Date.now(),
 name: document.getElementById("name").value,
 price: Number(document.getElementById("price").value),
 img: document.getElementById("img").value,
-category: document.getElementById("category").value
+category: document.getElementById("category").value,
+rating:4
 };
 
-data.push(newItem);
+data.push(item);
 save(data);
 
 alert("Added");
+
 }
 
 // DELETE
-function deleteProduct(id){
-
+function del(id){
 let data = load().filter(p => p.id !== id);
 save(data);
-
 }
 
 // EDIT
-function editProduct(id){
+function edit(id){
 
 let data = load();
 
@@ -69,7 +72,7 @@ let p = data.find(x => x.id === id);
 
 p.name = prompt("Name", p.name);
 p.price = Number(prompt("Price", p.price));
-p.img = prompt("Image", p.img);
+p.img = prompt("Image URL", p.img);
 
 save(data);
 }
@@ -92,8 +95,8 @@ onerror="this.src='https://via.placeholder.com/50'"><br>
 
 ${p.name} - ${p.price} BDT<br>
 
-<button onclick="editProduct(${p.id})">Edit</button>
-<button onclick="deleteProduct(${p.id})">Delete</button>
+<button onclick="edit(${p.id})">Edit</button>
+<button onclick="del(${p.id})">Delete</button>
 </div>
 `;
 
