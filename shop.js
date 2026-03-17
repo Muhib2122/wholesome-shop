@@ -1,13 +1,21 @@
 const container = document.getElementById("products");
 
-// admin + default merge
+// ✅ Load products safely
+let defaultProducts = typeof products !== "undefined" ? products : [];
 let adminProducts = JSON.parse(localStorage.getItem("adminProducts")) || [];
-let allProducts = [...products, ...adminProducts];
 
-// render
+// ✅ Merge both
+let allProducts = [...defaultProducts, ...adminProducts];
+
+// ✅ Render products
 function renderProducts(list){
 
 container.innerHTML = "";
+
+if(list.length === 0){
+container.innerHTML = "<h3 style='text-align:center;'>No products found</h3>";
+return;
+}
 
 list.forEach(product => {
 
@@ -33,8 +41,11 @@ container.appendChild(div);
 
 }
 
-// search
-document.getElementById("search").addEventListener("input", function(){
+// ✅ Search system
+let searchInput = document.getElementById("search");
+
+if(searchInput){
+searchInput.addEventListener("input", function(){
 
 let value = this.value.toLowerCase();
 
@@ -45,22 +56,10 @@ p.name.toLowerCase().includes(value)
 renderProducts(filtered);
 
 });
+}
 
-// category
+// ✅ Category filter
 function filterCategory(cat){
 
 if(cat === "all"){
-renderProducts(allProducts);
-return;
-}
-
-let filtered = allProducts.filter(p =>
-p.category === cat
-);
-
-renderProducts(filtered);
-
-}
-
-// load
-renderProducts(allProducts);
+renderProducts(allProducts
