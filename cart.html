@@ -1,33 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>Cart</title>
+<link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<h2 style="text-align:center;">Your Cart</h2>
+
+<div id="cart-box" style="max-width:600px;margin:auto;"></div>
+
+<script src="cart.js"></script>
+
+<script>
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let box = document.getElementById("cart-box");
 
-// UPDATE COUNT
-function updateCartCount(){
-let el = document.getElementById("cart-count");
-if(el){
-el.innerText = cart.length;
-}
-}
+let total = 0;
 
-// SAVE
-function saveCart(){
-localStorage.setItem("cart", JSON.stringify(cart));
-updateCartCount();
-}
+cart.forEach((item,index)=>{
 
-// ADD
-function addToCart(name,price){
+box.innerHTML += `
+<div style="background:white;padding:15px;margin:10px;display:flex;justify-content:space-between;">
+<span>${item.name} (${item.price} BDT)</span>
+<button onclick="removeFromCart(${index})">Remove</button>
+</div>
+`;
 
-cart.push({name,price});
+total += item.price;
 
-saveCart();
+});
 
-alert(name + " added");
+box.innerHTML += `<h3>Total: ${total} BDT</h3>`;
 
-}
+</script>
 
-// GO CHECKOUT
-function goCheckout(){
-window.location.href = "checkout.html";
-}
-
-updateCartCount();
+</body>
+</html>
