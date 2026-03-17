@@ -1,21 +1,34 @@
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-function saveCart(){
-localStorage.setItem("cart", JSON.stringify(cart));
+// 🔥 UPDATE COUNT
+function updateCartCount(){
+let el = document.getElementById("cart-count");
+if(el){
+el.innerText = cart.length;
+}
 }
 
+// 🔥 SAVE
+function saveCart(){
+localStorage.setItem("cart", JSON.stringify(cart));
+updateCartCount();
+}
+
+// 🔥 ADD TO CART
 function addToCart(name,price){
 
 cart.push({name,price});
 
 saveCart();
 
-document.getElementById("cart-count").innerText = cart.length;
-
-alert(name + " added");
+alert(name + " added to cart");
 
 }
 
+// 🔥 GO CHECKOUT
 function goCheckout(){
 window.location.href = "checkout.html";
 }
+
+// LOAD COUNT ON START
+updateCartCount();
