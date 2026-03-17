@@ -4,45 +4,14 @@
 <head>
 <title>Checkout</title>
 
-<style>
-
-body{
-font-family:Arial;
-background:#f5f5f5;
-padding:20px;
-}
-
-.box{
-background:white;
-padding:20px;
-max-width:600px;
-margin:auto;
-box-shadow:0 5px 20px rgba(0,0,0,0.2);
-}
-
-.item{
-display:flex;
-justify-content:space-between;
-margin:10px 0;
-}
-
-.total{
-font-weight:bold;
-margin-top:20px;
-}
-
-button{
-margin-top:15px;
-padding:10px;
-background:#ff6f00;
-color:white;
-border:none;
-cursor:pointer;
-}
-
-</style>
-
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+<style>
+body{font-family:Arial;background:#f5f5f5;padding:20px;}
+.box{background:white;padding:20px;max-width:600px;margin:auto;}
+.item{display:flex;justify-content:space-between;margin:10px 0;}
+button{margin-top:10px;padding:10px;background:#ff6f00;color:white;border:none;}
+</style>
 
 </head>
 
@@ -52,14 +21,11 @@ cursor:pointer;
 
 <h2>Checkout</h2>
 
-<div id="cart-items"></div>
-
-<div class="total" id="total"></div>
+<div id="items"></div>
+<h3 id="total"></h3>
 
 <h3>Payment</h3>
-
 <p>bKash: 01764262579</p>
-<p>Nagad: 01764262579</p>
 
 <input id="trx" placeholder="Transaction ID">
 
@@ -70,30 +36,20 @@ cursor:pointer;
 <script>
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-let container = document.getElementById("cart-items");
-
 let total = 0;
+let container = document.getElementById("items");
 
-// SHOW ITEMS
-cart.forEach(item => {
-
+cart.forEach(item=>{
 container.innerHTML += `
 <div class="item">
 <span>${item.name}</span>
 <span>${item.price} BDT</span>
-</div>
-`;
-
+</div>`;
 total += item.price;
-
 });
 
-// SHOW TOTAL
 document.getElementById("total").innerText = "Total: " + total + " BDT";
 
-
-// CONFIRM ORDER
 function confirmOrder(){
 
 let trx = document.getElementById("trx").value;
@@ -107,14 +63,12 @@ generatePDF();
 
 localStorage.removeItem("cart");
 
-alert("Order placed!");
+alert("Order placed");
 
-window.location.href = "index.html";
+window.location.href="index.html";
 
 }
 
-
-// PDF INVOICE
 function generatePDF(){
 
 const { jsPDF } = window.jspdf;
@@ -123,14 +77,14 @@ let doc = new jsPDF();
 
 doc.text("Wholesome Invoice",20,20);
 
-let y = 40;
+let y=40;
 
 cart.forEach(item=>{
-doc.text(item.name + " - " + item.price + " BDT",20,y);
+doc.text(item.name+" - "+item.price+" BDT",20,y);
 y+=10;
 });
 
-doc.text("Total: " + total + " BDT",20,y+10);
+doc.text("Total: "+total+" BDT",20,y+10);
 
 doc.save("invoice.pdf");
 
@@ -139,5 +93,4 @@ doc.save("invoice.pdf");
 </script>
 
 </body>
-
 </html>
