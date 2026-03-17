@@ -1,14 +1,13 @@
-// WAIT UNTIL PAGE LOAD
 document.addEventListener("DOMContentLoaded", function(){
 
 const container = document.getElementById("products");
 
-// SAFE LOAD (always fresh)
+// LOAD PRODUCTS
 function loadProducts(){
 return JSON.parse(localStorage.getItem("products")) || [];
 }
 
-// ⭐ rating
+// ⭐ RATING
 function stars(n){
 let s="";
 for(let i=0;i<n;i++) s+="⭐";
@@ -16,18 +15,16 @@ return s;
 }
 
 // RENDER
-function renderProducts(){
-
-let allProducts = loadProducts();
+function renderProducts(list){
 
 container.innerHTML = "";
 
-if(allProducts.length === 0){
+if(list.length === 0){
 container.innerHTML = "<h2 style='padding:20px'>No Products Found</h2>";
 return;
 }
 
-allProducts.forEach(p => {
+list.forEach(p => {
 
 let div = document.createElement("div");
 
@@ -54,6 +51,9 @@ container.appendChild(div);
 
 }
 
+// INITIAL LOAD
+renderProducts(loadProducts());
+
 // 🔍 SEARCH
 let search = document.getElementById("search");
 
@@ -68,68 +68,25 @@ let filtered = allProducts.filter(p =>
 p.name.toLowerCase().includes(v)
 );
 
-container.innerHTML = "";
-
-filtered.forEach(p => {
-
-container.innerHTML += `
-<div class="product">
-<img src="${p.img}" class="product-img"
-onerror="this.src='https://via.placeholder.com/150'">
-
-<h3>${p.name}</h3>
-<p>${p.price} BDT</p>
-
-<div class="rating">${stars(p.rating || 4)}</div>
-
-<button onclick="addToCart('${p.name}', ${p.price})">
-Add to Cart
-</button>
-</div>
-`;
-
-});
+renderProducts(filtered);
 
 });
 }
 
-// 📂 CATEGORY
+// 📂 CATEGORY FILTER (GLOBAL)
 window.filterCategory = function(cat){
 
 let allProducts = loadProducts();
 
 if(cat === "all"){
-renderProducts();
+renderProducts(allProducts);
 return;
 }
 
 let filtered = allProducts.filter(p => p.category === cat);
 
-container.innerHTML = "";
+renderProducts(filtered);
 
-filtered.forEach(p => {
-
-container.innerHTML += `
-<div class="product">
-<img src="${p.img}" class="product-img"
-onerror="this.src='https://via.placeholder.com/150'">
-
-<h3>${p.name}</h3>
-<p>${p.price} BDT</p>
-
-<div class="rating">${stars(p.rating || 4)}</div>
-
-<button onclick="addToCart('${p.name}', ${p.price})">
-Add to Cart
-</button>
-</div>
-`;
-
-});
-
-}
-
-// INITIAL LOAD
-renderProducts();
+};
 
 });
