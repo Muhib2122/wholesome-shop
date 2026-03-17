@@ -1,4 +1,4 @@
-let defaultProducts = [
+const defaultProducts = [
 
 {
 name:"Rice",
@@ -37,7 +37,8 @@ category:"clothing"
 
 ];
 
-// 🔥 LOAD FROM STORAGE
-let stored = JSON.parse(localStorage.getItem("products"));
+// 🔥 GET ADMIN PRODUCTS
+let stored = JSON.parse(localStorage.getItem("products")) || [];
 
-const products = stored && stored.length ? stored : defaultProducts;
+// 🔥 MERGE BOTH
+const products = [...defaultProducts, ...stored];
