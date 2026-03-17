@@ -1,6 +1,5 @@
 const container = document.getElementById("products");
 
-// ONE SOURCE
 let allProducts = JSON.parse(localStorage.getItem("products")) || [];
 
 // ⭐ rating
@@ -14,6 +13,11 @@ return s;
 function renderProducts(list){
 
 container.innerHTML = "";
+
+if(list.length === 0){
+container.innerHTML = "<h2 style='padding:20px'>No Products Found</h2>";
+return;
+}
 
 list.forEach(p => {
 
