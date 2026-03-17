@@ -1,58 +1,39 @@
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// ADD TO CART
+// ADD
 function addToCart(name, price){
-
 cart.push({name, price});
-
 localStorage.setItem("cart", JSON.stringify(cart));
-
 updateCartCount();
-
 alert("Added to cart");
-
 }
 
-// CART COUNT (navbar)
+// COUNT
 function updateCartCount(){
-
 let count = cart.length;
-
-document.getElementById("cart-count").innerText = count;
-
+let el = document.getElementById("cart-count");
+if(el) el.innerText = count;
 }
 
-// REMOVE ITEM
+// REMOVE
 function removeItem(index){
-
 cart.splice(index,1);
-
 localStorage.setItem("cart", JSON.stringify(cart));
-
 renderCart();
-
 updateCartCount();
-
 }
 
-// RENDER CART PAGE
+// RENDER CART
 function renderCart(){
 
 let container = document.getElementById("cart-items");
-
-if(!container) return;
-
-container.innerHTML =
-function renderCart(){
-let container = document.getElementById("cart-items");
-
 if(!container) return;
 
 container.innerHTML = "";
 
 let total = 0;
 
-cart.forEach((item, index) => {
+cart.forEach((item, index)=>{
 
 total += item.price;
 
@@ -65,14 +46,11 @@ ${item.name} - ${item.price} BDT
 
 });
 
-document.getElementById("total").innerText = "Total: " + total + " BDT";
+let totalEl = document.getElementById("total");
+if(totalEl) totalEl.innerText = "Total: " + total + " BDT";
 
 }
 
-function goCheckout(){
-window.location.href = "checkout.html";
-}
-
-// load
+// LOAD
 renderCart();
 updateCartCount();
