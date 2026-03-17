@@ -1,56 +1,57 @@
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// ADD
 function addToCart(name, price){
-cart.push({name, price});
-localStorage.setItem("cart", JSON.stringify(cart));
-updateCartCount();
-alert("Added to cart");
-}
-
-// COUNT
-function updateCartCount(){
-let count = cart.length;
-let el = document.getElementById("cart-count");
-if(el) el.innerText = count;
-}
-
-// REMOVE
-function removeItem(index){
-cart.splice(index,1);
-localStorage.setItem("cart", JSON.stringify(cart));
+cart.push({name,price});
+localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 updateCartCount();
+}
+
+// SIDE CART
+function toggleCart(){
+
+let cartBox=document.getElementById("sideCart");
+
+cartBox.classList.toggle("active");
+
+renderCart();
+
 }
 
 // RENDER CART
 function renderCart(){
 
-let container = document.getElementById("cart-items");
-if(!container) return;
+let box=document.getElementById("cart-items");
 
-container.innerHTML = "";
+if(!box) return;
 
-let total = 0;
+box.innerHTML="";
 
-cart.forEach((item, index)=>{
+cart.forEach((i,index)=>{
 
-total += item.price;
-
-container.innerHTML += `
-<div style="border:1px solid #ccc; margin:10px; padding:10px;">
-${item.name} - ${item.price} BDT
+box.innerHTML+=`
+<div>
+${i.name} - ${i.price}
 <button onclick="removeItem(${index})">Remove</button>
 </div>
 `;
 
 });
 
-let totalEl = document.getElementById("total");
-if(totalEl) totalEl.innerText = "Total: " + total + " BDT";
-
 }
 
-// LOAD
+// REMOVE
+function removeItem(i){
+cart.splice(i,1);
+localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
+updateCartCount();
+}
+
+// COUNT
+function updateCartCount(){
+let el=document.getElementById("cart-count");
+if(el) el.innerText=cart.length;
+}
+
 updateCartCount();
