@@ -1,49 +1,43 @@
 <!DOCTYPE html>
 <html>
-
 <head>
-<title>Wholesome Shop</title>
+<title>Wholesome</title>
 <link rel="stylesheet" href="style.css">
 </head>
 
 <body>
 
 <header>
-
 <h2>Wholesome</h2>
 
 <input id="search" onkeyup="searchProduct()" placeholder="Search products">
 
 <div>
 🛒 <span id="cart-count">0</span>
+<button onclick="goCart()">Cart</button>
 <button onclick="goCheckout()">Checkout</button>
 </div>
-
 </header>
 
 <div class="container">
 
 <div class="sidebar">
 <h3>Categories</h3>
-
 <ul>
 <li onclick="filterCategory('all')">All</li>
 <li onclick="filterCategory('groceries')">Groceries</li>
 <li onclick="filterCategory('makeup')">Makeup</li>
 <li onclick="filterCategory('clothing')">Clothing</li>
 </ul>
-
 </div>
 
 <div class="products" id="products"></div>
 
 </div>
 
-<!-- JS ORDER IMPORTANT -->
 <script src="products.js"></script>
 <script src="cart.js"></script>
 <script src="shop.js"></script>
 
 </body>
-
 </html>
