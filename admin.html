@@ -1,65 +1,54 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin</title>
-</head>
-
 <body>
 
-<h2>Admin Panel</h2>
+<h2>Admin</h2>
 
-<input id="name" placeholder="Name">
-<input id="price" placeholder="Price">
-<input id="image" placeholder="Image URL">
+<input id="n" placeholder="Name">
+<input id="p" placeholder="Price">
+<input id="i" placeholder="Image URL">
 
-<button onclick="addProduct()">Add</button>
+<button onclick="add()">Add</button>
 
 <h3>Products</h3>
-<div id="products"></div>
+<div id="pro"></div>
+
+<h3>Orders</h3>
+<div id="ord"></div>
 
 <script>
 
-const URL = "https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
 // ADD
-function addProduct(){
-
-let n=name.value;
-let p=price.value;
-let i=image.value;
-
+function add(){
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-name:{stringValue:n},
-price:{integerValue:String(p)},
-image:{stringValue:i}
+name:{stringValue:n.value},
+price:{integerValue:String(p.value)},
+image:{stringValue:i.value}
 }
 })
-})
-.then(()=>loadProducts());
+}).then(loadPro);
 }
 
-// LOAD
-async function loadProducts(){
+// LOAD PRODUCTS
+async function loadPro(){
+let r=await fetch(URL+"/products");
+let d=await r.json();
 
-let res = await fetch(URL+"/products");
-let data = await res.json();
+pro.innerHTML="";
 
-let div = document.getElementById("products");
-div.innerHTML="";
+d.documents?.forEach(x=>{
+let id=x.name.split("/").pop();
+let f=x.fields;
 
-data.documents?.forEach(d=>{
-
-let id = d.name.split("/").pop();
-let f=d.fields;
-
-div.innerHTML+=`
+pro.innerHTML+=`
 <div>
-<b>${f.name.stringValue}</b> - ${f.price.integerValue}
+${f.name.stringValue} - ${f.price.integerValue}
 <button onclick="del('${id}')">Delete</button>
 </div>
 `;
@@ -68,14 +57,43 @@ div.innerHTML+=`
 
 // DELETE
 function del(id){
-
-fetch(URL+"/products/"+id,{
-method:"DELETE"
-})
-.then(()=>loadProducts());
+fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-loadProducts();
+// LOAD ORDERS
+async function loadOrd(){
+let r=await fetch(URL+"/orders");
+let d=await r.json();
+
+ord.innerHTML="";
+
+d.documents?.forEach(x=>{
+let id=x.name.split("/").pop();
+let f=x.fields;
+
+ord.innerHTML+=`
+<div>
+TX: ${f.txid.stringValue}
+Status: ${f.status.stringValue}
+<button onclick="approve('${id}')">Approve</button>
+</div>
+`;
+});
+}
+
+// APPROVE
+function approve(id){
+fetch(URL+"/orders/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{status:{stringValue:"approved"}}
+})
+}).then(loadOrd);
+}
+
+loadPro();
+loadOrd();
 
 </script>
 
