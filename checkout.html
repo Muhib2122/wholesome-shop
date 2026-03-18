@@ -6,25 +6,26 @@
 <title>Checkout</title>
 
 <style>
-body { font-family:Arial; background:#f5f5f5; padding:10px; }
+body { font-family:Arial; background:#f0f9ff; padding:10px; }
 
 table { width:100%; border-collapse: collapse; }
-th { background:#ff6a00; color:white; }
+th { background:#38bdf8; color:white; }
 td,th { padding:6px; border:1px solid #ccc; text-align:center; }
 
 .bkash {
-  background:#e2136e;
-  color:white;
+  background:white;
+  border-radius:10px;
   padding:10px;
-  border-radius:8px;
   margin-top:15px;
+  text-align:center;
+  box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
 button {
   width:100%;
   padding:10px;
   margin-top:10px;
-  background:#ff6a00;
+  background:#38bdf8;
   color:white;
   border:none;
 }
@@ -53,8 +54,9 @@ button {
 
 <!-- 🔥 bKash UI -->
 <div class="bkash">
-  Send Money to: <b>01XXXXXXXXX</b><br>
-  Then enter TX ID below
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/BKash_Logo.svg/2560px-BKash_Logo.svg.png" width="120"><br><br>
+  Send Money: <b>01764262579</b><br>
+  Enter TX ID below
 </div>
 
 <input id="txid" placeholder="Enter TX ID" style="width:100%;padding:8px;">
@@ -90,7 +92,7 @@ document.getElementById("subtotal").innerText="Subtotal: "+subtotal;
 document.getElementById("vat").innerText="VAT (4%): "+vat.toFixed(2);
 document.getElementById("total").innerText="Total: "+total.toFixed(2);
 
-// 🔥 Premium Invoice
+// Invoice
 function confirmOrder(){
   let tx=document.getElementById("txid").value;
   if(!tx) return alert("TX ID lagbe!");
@@ -98,23 +100,16 @@ function confirmOrder(){
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  let y=20;
-  doc.setFontSize(16);
-  doc.text("Wholesome Shop Invoice", 50, y);
-
-  y+=10;
-  doc.setFontSize(12);
+  doc.text("Wholesome Shop Invoice", 50, 20);
+  let y=30;
 
   cart.forEach(i=>{
     doc.text(`${i.name} x${i.qty}`,10,y);
     y+=8;
   });
 
-  y+=5;
-  doc.text("Subtotal: "+subtotal,10,y); y+=8;
-  doc.text("VAT: "+vat.toFixed(2),10,y); y+=8;
-  doc.text("Total: "+total.toFixed(2),10,y); y+=8;
-  doc.text("TXID: "+tx,10,y);
+  doc.text("Total: "+total,10,y+10);
+  doc.text("TXID: "+tx,10,y+20);
 
   doc.save("invoice.pdf");
 
