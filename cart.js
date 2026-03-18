@@ -1,48 +1,49 @@
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-function addToCart(name, price){
-cart.push({name,price});
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
-updateCartCount();
+function addToCart(name, price) {
+  cart.push({ name, price });
+  localStorage.setItem("cart", JSON.stringify(cart));
+  updateCartCount();
 }
 
-function toggleCart(){
-let cartBox=document.getElementById("sideCart");
-cartBox.classList.toggle("active");
-renderCart();
+function updateCartCount() {
+  document.getElementById("cart-count").innerText = cart.length;
 }
 
-function renderCart(){
-
-let box=document.getElementById("cart-items");
-
-if(!box) return;
-
-box.innerHTML="";
-
-cart.forEach((item,index)=>{
-
-box.innerHTML+=`
-<div>
-<span>${item.name} - ${item.price}</span>
-<button onclick="removeItem(${index})">Remove</button>
-</div>
-`;
-
-});
+function toggleCart() {
+  document.getElementById("cartPanel").classList.toggle("active");
+  renderCart();
 }
 
-function removeItem(i){
-cart.splice(i,1);
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
-updateCartCount();
+function renderCart() {
+  let container = document.getElementById("cart-items");
+  let total = 0;
+
+  container.innerHTML = "";
+
+  cart.forEach((item, index) => {
+    total += item.price;
+
+    container.innerHTML += `
+      <p>
+        ${item.name} - ${item.price} BDT 
+        <button onclick="removeItem(${index})">Remove</button>
+      </p>
+    `;
+  });
+
+  document.getElementById("total").innerText = "Total: " + total + " BDT";
 }
 
-function updateCartCount(){
-let el=document.getElementById("cart-count");
-if(el) el.innerText=cart.length;
+function removeItem(index) {
+  cart.splice(index, 1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+  updateCartCount();
+}
+
+function goCheckout() {
+  alert("Checkout system next step e add korbo 🔥");
 }
 
 updateCartCount();
