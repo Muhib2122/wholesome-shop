@@ -5,10 +5,60 @@
 <title>Checkout</title>
 
 <style>
-body{font-family:Arial;background:#f0f9ff;padding:10px;}
-table{width:100%;background:white;border-collapse:collapse;}
-th,td{padding:8px;border:1px solid #ddd;text-align:center;}
-button{background:#38bdf8;color:white;border:none;padding:10px;width:100%;}
+body{
+font-family:Arial;
+background:#f0f9ff;
+margin:0;
+padding:10px;
+}
+
+h2{
+text-align:center;
+}
+
+table{
+width:100%;
+background:#fff;
+border-collapse:collapse;
+margin-top:10px;
+}
+
+th,td{
+padding:8px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+.summary{
+margin-top:15px;
+font-size:18px;
+}
+
+.pay-box{
+text-align:center;
+margin:25px 0;
+background:#fff;
+padding:15px;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+font-size:16px;
+}
+
+button{
+width:100%;
+padding:12px;
+background:#38bdf8;
+color:#fff;
+border:none;
+margin-top:10px;
+font-size:16px;
+cursor:pointer;
+}
 </style>
 </head>
 
@@ -25,58 +75,100 @@ button{background:#38bdf8;color:white;border:none;padding:10px;width:100%;}
 </tr>
 </table>
 
-<h3 id="total"></h3>
-
-<div style="text-align:center;margin:20px;">
-<img src="bkash.jpg" width="120"><br>
-bKash: 01764262579
+<div class="summary">
+<b id="subtotal"></b><br>
+<b id="vat"></b><br>
+<b id="grand"></b>
 </div>
 
-<input id="tx" placeholder="Enter TX ID" style="width:100%;padding:8px;">
+<div class="pay-box">
 
-<button onclick="confirmOrder()">Confirm</button>
+<img src="https://muhib2122.github.io/wholesome-shop/bkash.png" width="120"><br><br>
+
+<b>bKash Send Money</b><br>
+<b>01764262579</b>
+
+</div>
+
+<input id="tx" placeholder="Enter TX ID">
+
+<button onclick="confirmOrder()">Confirm Order</button>
 
 <script>
 
+// LOAD CART
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 let table = document.getElementById("table");
-let total=0;
 
-cart.forEach(i=>{
-let t=i.price*i.qty;
-total+=t;
+let subtotal = 0;
 
-table.innerHTML+=`
+// RENDER CART
+cart.forEach(item=>{
+let total = item.price * item.qty;
+subtotal += total;
+
+table.innerHTML += `
 <tr>
-<td>${i.name}</td>
-<td>${i.price}</td>
-<td>${i.qty}</td>
-<td>${t}</td>
+<td>${item.name}</td>
+<td>${item.price}</td>
+<td>${item.qty}</td>
+<td>${total}</td>
 </tr>
 `;
 });
 
-document.getElementById("total").innerText="Total: "+total;
+// CALCULATION
+let vat = subtotal * 0.04;
+let grand = subtotal + vat;
 
+document.getElementById("subtotal").innerText = "Subtotal: " + subtotal;
+document.getElementById("vat").innerText = "VAT (4%): " + vat.toFixed(2);
+document.getElementById("grand").innerText = "Total: " + grand.toFixed(2);
+
+
+// 🔥 CONFIRM ORDER
 function confirmOrder(){
 
-let tx = document.getElementById("tx").value;
+let tx = document.getElementById("tx").value.trim();
+
+if(cart.length === 0){
+alert("Cart empty ❌");
+return;
+}
+
+if(!tx){
+alert("Enter TX ID ❌");
+return;
+}
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx},
-amount:{integerValue:total},
-status:{stringValue:"pending"}
+amount:{integerValue:Math.round(grand)},
+status:{stringValue:"pending"},
+time:{stringValue:new Date().toLocaleString()}
 }
 })
-}).then(()=>{
-alert("Order Done ✅");
+})
+.then(res=>res.json())
+.then(data=>{
+console.log(data);
+
+alert("Order Submitted ✅");
+
 localStorage.removeItem("cart");
-location.href="index.html";
+
+window.location.href="index.html";
+})
+.catch(err=>{
+console.error(err);
+alert("Order Failed ❌");
 });
 
 }
