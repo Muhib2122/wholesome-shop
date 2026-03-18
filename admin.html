@@ -35,6 +35,22 @@ margin-bottom:15px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
+/* DASHBOARD */
+.dashboard{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.box{
+flex:1;
+background:#38bdf8;
+color:white;
+padding:15px;
+border-radius:10px;
+text-align:center;
+}
+
 /* INPUT */
 input{
 padding:8px;
@@ -52,20 +68,17 @@ cursor:pointer;
 margin:3px;
 }
 
-/* COLORS */
 .addBtn{background:#38bdf8;color:white;}
 .updateBtn{background:#22c55e;color:white;}
 .deleteBtn{background:#ef4444;color:white;}
 .approveBtn{background:#16a34a;color:white;}
 .declineBtn{background:#dc2626;color:white;}
 
-/* PRODUCT ITEM */
 .item{
 border-bottom:1px solid #ddd;
 padding:10px 0;
 }
 
-/* ORDER BOX */
 .order{
 background:#f0f9ff;
 padding:10px;
@@ -78,9 +91,21 @@ margin:8px 0;
 
 <body>
 
-<div class="header">Admin Panel</div>
+<div class="header">Admin Dashboard</div>
 
 <div class="container">
+
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Dashboard</h3>
+
+<div class="dashboard">
+<div class="box" id="totalSales">Total Sales: 0</div>
+<div class="box" id="totalOrders">Orders: 0</div>
+<div class="box" id="pendingCount">Pending: 0</div>
+</div>
+
+</div>
 
 <!-- ADD PRODUCT -->
 <div class="card">
@@ -101,8 +126,18 @@ margin:8px 0;
 
 <!-- ORDERS -->
 <div class="card">
-<h3>Orders</h3>
-<div id="ord"></div>
+<h3>Pending Orders ⏳</h3>
+<div id="pending"></div>
+</div>
+
+<div class="card">
+<h3>Approved Orders ✅</h3>
+<div id="approved"></div>
+</div>
+
+<div class="card">
+<h3>Declined Orders ❌</h3>
+<div id="declined"></div>
 </div>
 
 </div>
@@ -111,7 +146,7 @@ margin:8px 0;
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// ADD
+// ADD PRODUCT
 function add(){
 fetch(URL+"/products",{
 method:"POST",
@@ -139,7 +174,6 @@ let f=x.fields;
 
 pro.innerHTML+=`
 <div class="item">
-
 <img src="${f.image.stringValue}" width="60"><br>
 
 <input id="name_${id}" value="${f.name.stringValue}">
@@ -148,15 +182,14 @@ pro.innerHTML+=`
 
 <br>
 
-<button class="updateBtn" onclick="updatePro('${id}')">✏️ Update</button>
-<button class="deleteBtn" onclick="del('${id}')">🗑 Delete</button>
-
+<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑</button>
 </div>
 `;
 });
 }
 
-// UPDATE
+// UPDATE PRODUCT
 function updatePro(id){
 let name=document.getElementById("name_"+id).value;
 let price=document.getElementById("price_"+id).value;
@@ -180,37 +213,57 @@ function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-// LOAD ORDERS
-async function loadOrd(){
+// LOAD ORDERS + DASHBOARD
+async function loadOrders(){
+
 let r=await fetch(URL+"/orders");
 let d=await r.json();
 
-ord.innerHTML="";
+pending.innerHTML="";
+approved.innerHTML="";
+declined.innerHTML="";
 
-if(!d.documents){
-ord.innerHTML="No orders";
-return;
-}
+let totalSales=0;
+let totalOrders=0;
+let pendingC=0;
+
+if(!d.documents)return;
 
 d.documents.forEach(x=>{
 let id=x.name.split("/").pop();
 let f=x.fields;
 
-ord.innerHTML+=`
+let tx=f.txid?.stringValue || "";
+let amount=parseInt(f.amount?.integerValue || 0);
+let status=f.status?.stringValue || "pending";
+
+totalOrders++;
+
+if(status==="approved") totalSales+=amount;
+if(status==="pending") pendingC++;
+
+let html=`
 <div class="order">
+TX: ${tx}<br>
+Amount: ${amount}<br>
+Status: ${status}<br>
 
-<b>TX:</b> ${f.txid?.stringValue || ""}<br>
-<b>Amount:</b> ${f.amount?.integerValue || ""}<br>
-<b>Status:</b> ${f.status?.stringValue || ""}
-
-<br><br>
-
-<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅ Approve</button>
-<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌ Decline</button>
-
+<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅</button>
+<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌</button>
 </div>
 `;
+
+if(status==="pending") pending.innerHTML+=html;
+else if(status==="approved") approved.innerHTML+=html;
+else declined.innerHTML+=html;
+
 });
+
+// DASHBOARD UPDATE
+totalSales.innerText="Total Sales: "+totalSales;
+totalOrders.innerText="Orders: "+totalOrders;
+pendingCount.innerText="Pending: "+pendingC;
+
 }
 
 // UPDATE ORDER
@@ -221,11 +274,11 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{status:{stringValue:status}}
 })
-}).then(loadOrd);
+}).then(loadOrders);
 }
 
 loadPro();
-loadOrd();
+loadOrders();
 
 </script>
 
