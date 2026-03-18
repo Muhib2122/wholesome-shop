@@ -20,7 +20,7 @@
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// ADD PRODUCT
+// ADD
 function add(){
 fetch(URL+"/products",{
 method:"POST",
@@ -47,12 +47,37 @@ let id=x.name.split("/").pop();
 let f=x.fields;
 
 pro.innerHTML+=`
-<div>
-<img src="${f.image.stringValue}" width="50">
-${f.name.stringValue} - ${f.price.integerValue}
+<div style="border:1px solid #ccc;margin:5px;padding:5px;">
+<img src="${f.image.stringValue}" width="50"><br>
+
+<input id="name_${id}" value="${f.name.stringValue}">
+<input id="price_${id}" value="${f.price.integerValue}">
+<input id="img_${id}" value="${f.image.stringValue}">
+
+<br>
+<button onclick="updatePro('${id}')">Update</button>
 <button onclick="del('${id}')">Delete</button>
 </div>`;
 });
+}
+
+// UPDATE PRODUCT 🔥
+function updatePro(id){
+let name=document.getElementById("name_"+id).value;
+let price=document.getElementById("price_"+id).value;
+let img=document.getElementById("img_"+id).value;
+
+fetch(URL+"/products/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:name},
+price:{integerValue:String(price)},
+image:{stringValue:img}
+}
+})
+}).then(loadPro);
 }
 
 // DELETE
@@ -60,39 +85,38 @@ function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-// LOAD ORDERS
+// LOAD ORDERS 🔥
 async function loadOrd(){
 let r=await fetch(URL+"/orders");
 let d=await r.json();
 
 ord.innerHTML="";
 
-d.documents?.forEach(x=>{
+if(!d.documents){
+ord.innerHTML="No orders";
+return;
+}
+
+d.documents.forEach(x=>{
 let id=x.name.split("/").pop();
 let f=x.fields;
 
 ord.innerHTML+=`
-<div>
-TX: ${f.txid.stringValue} |
-Amount: ${f.amount.integerValue} |
-Status: ${f.status.stringValue}
-<button onclick="approve('${id}')">Approve</button>
-<button onclick="decline('${id}')">Decline</button>
+<div style="border:1px solid #999;margin:5px;padding:5px;">
+TX: ${f.txid?.stringValue || ""}
+<br>
+Amount: ${f.amount?.integerValue || ""}
+<br>
+Status: ${f.status?.stringValue || ""}
+<br>
+<button onclick="updateOrder('${id}','approved')">Approve</button>
+<button onclick="updateOrder('${id}','declined')">Decline</button>
 </div>`;
 });
 }
 
-// APPROVE
-function approve(id){
-update(id,"approved");
-}
-
-// DECLINE
-function decline(id){
-update(id,"declined");
-}
-
-function update(id,status){
+// UPDATE ORDER
+function updateOrder(id,status){
 fetch(URL+"/orders/"+id,{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
