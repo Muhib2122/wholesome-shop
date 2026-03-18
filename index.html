@@ -5,15 +5,113 @@
 <title>Wholesome Shop</title>
 
 <style>
-body{font-family:Arial;background:#f0f9ff;margin:0}
-.header{background:#38bdf8;color:#fff;padding:15px;text-align:center}
-.products{display:flex;gap:15px;padding:15px;flex-wrap:wrap}
-.card{background:#fff;padding:10px;border-radius:10px;width:150px;text-align:center}
-.card img{width:100%;height:100px;object-fit:cover}
-button{background:#38bdf8;color:#fff;border:none;padding:5px 10px;margin-top:5px}
-.cart-btn{position:fixed;right:20px;top:20px;background:#0ea5e9;color:#fff;padding:10px;border-radius:50%}
-.cart{position:fixed;right:-300px;top:0;width:300px;height:100%;background:#fff;padding:10px;transition:.3s;overflow:auto}
-.cart.show{right:0}
+body{
+font-family:Arial;
+margin:0;
+background:#f0f9ff;
+}
+
+.header{
+background:#38bdf8;
+color:white;
+padding:15px;
+text-align:center;
+font-size:20px;
+}
+
+/* PRODUCTS */
+.products{
+display:flex;
+gap:15px;
+padding:15px;
+flex-wrap:wrap;
+}
+
+.card{
+background:white;
+padding:10px;
+border-radius:10px;
+width:150px;
+text-align:center;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card img{
+width:100%;
+height:100px;
+object-fit:cover;
+}
+
+button{
+background:#38bdf8;
+color:white;
+border:none;
+padding:6px 10px;
+margin-top:5px;
+cursor:pointer;
+}
+
+/* CART BUTTON */
+.cart-btn{
+position:fixed;
+right:20px;
+top:20px;
+background:#0ea5e9;
+color:white;
+padding:14px;
+border-radius:50%;
+font-size:18px;
+cursor:pointer;
+box-shadow:0 0 10px #38bdf8;
+}
+
+/* OVERLAY */
+#overlay{
+position:fixed;
+top:0;
+left:0;
+width:100%;
+height:100%;
+background:rgba(0,0,0,0.5);
+display:none;
+z-index:1000;
+}
+
+/* CART */
+.cart{
+position:fixed;
+right:-320px;
+top:0;
+width:320px;
+height:100%;
+background:white;
+padding:10px;
+transition:all 0.4s cubic-bezier(.68,-0.55,.27,1.55);
+overflow:auto;
+z-index:1001;
+}
+
+.cart.show{
+right:0;
+}
+
+/* CART ITEMS */
+.item{
+border-bottom:1px solid #ddd;
+padding:8px 0;
+}
+
+.qty-btn{
+background:#0ea5e9;
+padding:2px 8px;
+margin:0 3px;
+}
+
+.remove{
+background:red;
+padding:2px 6px;
+margin-left:5px;
+}
 </style>
 </head>
 
@@ -25,52 +123,123 @@ button{background:#38bdf8;color:#fff;border:none;padding:5px 10px;margin-top:5px
 
 <div id="products" class="products"></div>
 
+<div id="overlay" onclick="toggleCart()"></div>
+
+<!-- CART -->
 <div id="cart" class="cart">
+
+<div style="display:flex;justify-content:space-between;align-items:center;">
 <h3>Cart</h3>
+<button onclick="toggleCart()" style="background:red;width:40px;">✖</button>
+</div>
+
 <div id="cartItems"></div>
-<h4 id="cartTotal"></h4>
+
+<h3 id="cartTotal"></h3>
+
 <button onclick="goCheckout()">Checkout</button>
+
 </div>
 
 <script>
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
+// 🔥 TOGGLE CART
 function toggleCart(){
-document.getElementById("cart").classList.toggle("show");
+
+let c = document.getElementById("cart");
+let o = document.getElementById("overlay");
+
+c.classList.toggle("show");
+
+if(c.classList.contains("show")){
+o.style.display="block";
+}else{
+o.style.display="none";
+}
+
 renderCart();
 }
 
-function addToCart(name, price){
-let found = cart.find(i=>i.name===name);
-if(found){found.qty++}
+// 🔥 ADD
+function addToCart(name,price){
+
+let f = cart.find(i=>i.name===name);
+
+if(f){f.qty++}
 else{cart.push({name,price,qty:1})}
+
+saveCart();
+}
+
+// 🔥 SAVE
+function saveCart(){
 localStorage.setItem("cart", JSON.stringify(cart));
 renderCart();
 }
 
+// 🔥 REMOVE ITEM
+function removeItem(name){
+cart = cart.filter(i=>i.name!==name);
+saveCart();
+}
+
+// 🔥 INCREASE
+function inc(name){
+let f = cart.find(i=>i.name===name);
+f.qty++;
+saveCart();
+}
+
+// 🔥 DECREASE
+function dec(name){
+let f = cart.find(i=>i.name===name);
+if(f.qty>1){f.qty--}
+saveCart();
+}
+
+// 🔥 RENDER CART
 function renderCart(){
+
 let div = document.getElementById("cartItems");
 div.innerHTML="";
+
 let total=0;
 
 cart.forEach(i=>{
-total+=i.price*i.qty;
+
+total += i.price*i.qty;
+
 div.innerHTML+=`
-<p>${i.name} (${i.qty}) - ${i.price*i.qty}</p>
+<div class="item">
+<b>${i.name}</b><br>
+
+<button class="qty-btn" onclick="dec('${i.name}')">-</button>
+${i.qty}
+<button class="qty-btn" onclick="inc('${i.name}')">+</button>
+
+= ${i.price*i.qty}
+
+<button class="remove" onclick="removeItem('${i.name}')">❌</button>
+</div>
 `;
 });
 
 document.getElementById("cartTotal").innerText="Total: "+total;
+
 }
 
+// 🔥 CHECKOUT
 function goCheckout(){
 location.href="checkout.html";
 }
 
-// 🔥 Load products
+// 🔥 LOAD PRODUCTS
 async function loadProducts(){
 
 let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
+
 let data = await res.json();
 
 let container = document.getElementById("products");
@@ -82,6 +251,7 @@ return;
 }
 
 data.documents.forEach(doc=>{
+
 let p = doc.fields;
 
 container.innerHTML+=`
@@ -92,11 +262,13 @@ container.innerHTML+=`
 <button onclick="addToCart('${p.name.stringValue}', ${p.price.integerValue})">Add</button>
 </div>
 `;
+
 });
 
 }
 
 loadProducts();
+
 </script>
 
 </body>
