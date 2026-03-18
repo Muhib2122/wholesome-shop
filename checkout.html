@@ -1,7 +1,6 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
 
@@ -15,10 +14,9 @@ td,th { padding:6px; border:1px solid #ccc; text-align:center; }
 .bkash {
   background:white;
   border-radius:10px;
-  padding:10px;
+  padding:15px;
   margin-top:15px;
   text-align:center;
-  box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
 button {
@@ -45,6 +43,7 @@ button {
 <th>Total</th>
 </tr>
 </thead>
+
 <tbody id="tbody"></tbody>
 </table>
 
@@ -52,69 +51,74 @@ button {
 <h4 id="vat"></h4>
 <h3 id="total"></h3>
 
-<!-- 🔥 bKash UI -->
+<!-- 🔥 BKASH -->
 <div class="bkash">
-  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/6/68/BKash_Logo.svg/2560px-BKash_Logo.svg.png" width="120"><br><br>
-  Send Money: <b>01764262579</b><br>
-  Enter TX ID below
+  <img src="https://i.ibb.co/7W0KX3P/bkash.png" width="120"><br><br>
+  <b>bKash Send Money</b><br>
+  01764262579
 </div>
 
-<input id="txid" placeholder="Enter TX ID" style="width:100%;padding:8px;">
+<input id="txid" placeholder="Enter TX ID" style="width:100%;padding:10px;">
 
 <button onclick="confirmOrder()">Confirm Order</button>
 
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<!-- Firebase -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-<script>
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
+const firebaseConfig = {
+  apiKey: "AIzaSyXXXX",
+  authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
+  projectId: "wholesome-shop-f4d0f"
+};
 
-let subtotal=0;
-let tbody=document.getElementById("tbody");
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+let subtotal = 0;
+let tbody = document.getElementById("tbody");
 
 cart.forEach(i=>{
-  let qty=i.qty||1;
-  let t=i.price*qty;
-  subtotal+=t;
+  let t = i.price * i.qty;
+  subtotal += t;
 
-  tbody.innerHTML+=`
+  tbody.innerHTML += `
   <tr>
     <td>${i.name}</td>
     <td>${i.price}</td>
-    <td>${qty}</td>
+    <td>${i.qty}</td>
     <td>${t}</td>
   </tr>`;
 });
 
-let vat=subtotal*0.04;
-let total=subtotal+vat;
+let vat = subtotal * 0.04;
+let total = subtotal + vat;
 
-document.getElementById("subtotal").innerText="Subtotal: "+subtotal;
-document.getElementById("vat").innerText="VAT (4%): "+vat.toFixed(2);
-document.getElementById("total").innerText="Total: "+total.toFixed(2);
+document.getElementById("subtotal").innerText = "Subtotal: " + subtotal;
+document.getElementById("vat").innerText = "VAT (4%): " + vat.toFixed(2);
+document.getElementById("total").innerText = "Total: " + total.toFixed(2);
 
-// Invoice
-function confirmOrder(){
-  let tx=document.getElementById("txid").value;
+// 🔥 SAVE ORDER
+window.confirmOrder = async () => {
+  let tx = document.getElementById("txid").value;
   if(!tx) return alert("TX ID lagbe!");
 
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  doc.text("Wholesome Shop Invoice", 50, 20);
-  let y=30;
-
-  cart.forEach(i=>{
-    doc.text(`${i.name} x${i.qty}`,10,y);
-    y+=8;
+  await addDoc(collection(db,"orders"),{
+    cart,
+    total,
+    txid: tx,
+    status: "pending",
+    time: new Date()
   });
 
-  doc.text("Total: "+total,10,y+10);
-  doc.text("TXID: "+tx,10,y+20);
-
-  doc.save("invoice.pdf");
+  alert("Order submitted! Waiting for admin approval.");
 
   localStorage.removeItem("cart");
-}
+  window.location.href="index.html";
+};
 </script>
 
 </body>
