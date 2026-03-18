@@ -11,7 +11,6 @@ font-family:sans-serif;
 background:#e0f2fe;
 }
 
-/* HEADER */
 .header{
 background:#0ea5e9;
 color:white;
@@ -21,12 +20,10 @@ font-size:20px;
 font-weight:bold;
 }
 
-/* CONTAINER */
 .container{
 padding:15px;
 }
 
-/* CARD */
 .card{
 background:white;
 padding:15px;
@@ -35,7 +32,6 @@ margin-bottom:15px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* DASHBOARD */
 .dashboard{
 display:flex;
 gap:10px;
@@ -49,23 +45,24 @@ color:white;
 padding:15px;
 border-radius:10px;
 text-align:center;
+font-weight:bold;
 }
 
-/* INPUT */
 input{
-padding:8px;
-margin:5px;
-border-radius:6px;
+padding:10px;
+margin:5px 0;
+width:100%;
+border-radius:8px;
 border:1px solid #ccc;
 }
 
-/* BUTTON */
 button{
-padding:6px 10px;
+padding:8px 12px;
 border:none;
-border-radius:6px;
+border-radius:8px;
 cursor:pointer;
-margin:3px;
+margin:5px 3px;
+font-weight:bold;
 }
 
 .addBtn{background:#38bdf8;color:white;}
@@ -76,14 +73,19 @@ margin:3px;
 
 .item{
 border-bottom:1px solid #ddd;
-padding:10px 0;
+padding:12px 0;
 }
 
 .order{
 background:#f0f9ff;
-padding:10px;
+padding:12px;
+border-radius:10px;
+margin:10px 0;
+}
+
+img{
 border-radius:8px;
-margin:8px 0;
+margin-bottom:5px;
 }
 
 </style>
@@ -115,7 +117,7 @@ margin:8px 0;
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
 
-<button class="addBtn" onclick="add()">➕ Add</button>
+<button class="addBtn" onclick="add()">➕ Add Product</button>
 </div>
 
 <!-- PRODUCTS -->
@@ -148,6 +150,11 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 // ADD PRODUCT
 function add(){
+if(!n.value || !p.value || !i.value){
+alert("Fill all fields");
+return;
+}
+
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -158,7 +165,10 @@ price:{integerValue:String(p.value)},
 image:{stringValue:i.value}
 }
 })
-}).then(loadPro);
+}).then(()=>{
+n.value=""; p.value=""; i.value="";
+loadPro();
+});
 }
 
 // LOAD PRODUCTS
@@ -174,16 +184,14 @@ let f=x.fields;
 
 pro.innerHTML+=`
 <div class="item">
-<img src="${f.image.stringValue}" width="60"><br>
+<img src="${f.image.stringValue}" width="70">
 
 <input id="name_${id}" value="${f.name.stringValue}">
 <input id="price_${id}" value="${f.price.integerValue}">
 <input id="img_${id}" value="${f.image.stringValue}">
 
-<br>
-
-<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
-<button class="deleteBtn" onclick="del('${id}')">🗑</button>
+<button class="updateBtn" onclick="updatePro('${id}')">✏️ Update</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑 Delete</button>
 </div>
 `;
 });
@@ -208,12 +216,12 @@ image:{stringValue:img}
 }).then(loadPro);
 }
 
-// DELETE
+// DELETE PRODUCT
 function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-// LOAD ORDERS + DASHBOARD
+// LOAD ORDERS
 async function loadOrders(){
 
 let r=await fetch(URL+"/orders");
@@ -233,23 +241,25 @@ d.documents.forEach(x=>{
 let id=x.name.split("/").pop();
 let f=x.fields;
 
-let tx=f.txid?.stringValue || "";
+let tx=f.txid?.stringValue || "N/A";
 let amount=parseInt(f.amount?.integerValue || 0);
 let status=f.status?.stringValue || "pending";
 
+if(amount===0) amount="N/A";
+
 totalOrders++;
 
-if(status==="approved") totalSales+=amount;
+if(status==="approved" && amount!=="N/A") totalSales+=amount;
 if(status==="pending") pendingC++;
 
 let html=`
 <div class="order">
-TX: ${tx}<br>
-Amount: ${amount}<br>
-Status: ${status}<br>
+<b>TX:</b> ${tx}<br>
+<b>Amount:</b> ${amount}<br>
+<b>Status:</b> ${status}<br><br>
 
-<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅</button>
-<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌</button>
+<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅ Approve</button>
+<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌ Decline</button>
 </div>
 `;
 
@@ -266,17 +276,22 @@ pendingCount.innerText="Pending: "+pendingC;
 
 }
 
-// UPDATE ORDER
+// ✅ FIXED UPDATE ORDER (MAIN FIX)
 function updateOrder(id,status){
-fetch(URL+"/orders/"+id,{
+
+fetch(URL+"/orders/"+id+"?updateMask.fieldPaths=status",{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-fields:{status:{stringValue:status}}
+fields:{
+status:{stringValue:status}
+}
 })
 }).then(loadOrders);
+
 }
 
+// INIT
 loadPro();
 loadOrders();
 
