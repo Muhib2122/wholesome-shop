@@ -1,78 +1,96 @@
 <!DOCTYPE html>
 <html>
-
 <head>
+<meta charset="UTF-8">
 <title>Checkout</title>
-<link rel="stylesheet" href="style.css">
+
+<style>
+body { font-family: Arial; background:#e6f3ff; padding:20px; }
+
+table { width:100%; border-collapse: collapse; }
+th { background:#4da6ff; color:white; }
+td,th { padding:10px; text-align:center; border:1px solid #ccc; }
+
+button {
+  background:#4da6ff;
+  color:white;
+  padding:10px;
+  border:none;
+}
+</style>
 </head>
 
 <body>
 
-<div class="navbar">
-<div class="logo">Wholesome</div>
-</div>
-
-<div style="padding:30px">
-
 <h2>Checkout</h2>
 
-<input id="trx" placeholder="Enter Transaction ID" style="padding:10px;width:250px">
+<table id="table">
+<thead>
+<tr>
+<th>Product</th>
+<th>Price</th>
+<th>Qty</th>
+<th>Total</th>
+</tr>
+</thead>
+<tbody></tbody>
+</table>
 
-<br><br>
+<h3 id="subtotal"></h3>
+<h3 id="vat"></h3>
+<h2 id="total"></h2>
 
-<button onclick="payNow()">Confirm Payment</button>
-
-</div>
+<input id="txid" placeholder="TX ID">
+<button onclick="confirmOrder()">Confirm</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-
-function payNow(){
-
-let trx = document.getElementById("trx").value;
-
-if(trx === ""){
-alert("Enter Transaction ID");
-return;
-}
-
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-if(cart.length === 0){
-alert("Cart Empty");
-return;
-}
-
-const { jsPDF } = window.jspdf;
-let doc = new jsPDF();
-
-doc.setFontSize(18);
-doc.text("Wholesome Shop Invoice", 20, 20);
-
-doc.setFontSize(12);
-
-let y = 40;
-let total = 0;
+let tbody = document.querySelector("tbody");
+let subtotal = 0;
 
 cart.forEach(item=>{
-doc.text(item.name,20,y);
-doc.text(item.price+" BDT",150,y);
-y+=10;
-total+=item.price;
+  let t = item.price * item.qty;
+  subtotal += t;
+
+  tbody.innerHTML += `
+  <tr>
+    <td>${item.name}</td>
+    <td>${item.price}</td>
+    <td>${item.qty}</td>
+    <td>${t}</td>
+  </tr>`;
 });
 
-doc.text("Total: "+total+" BDT",20,y+10);
-doc.text("Transaction ID: "+trx,20,y+20);
+let vat = subtotal * 0.04;
+let total = subtotal + vat;
 
-// AUTO DOWNLOAD
-doc.save("invoice.pdf");
+document.getElementById("subtotal").innerText = "Subtotal: "+subtotal;
+document.getElementById("vat").innerText = "VAT: "+vat.toFixed(2);
+document.getElementById("total").innerText = "Total: "+total.toFixed(2);
 
-// CLEAR CART AFTER PAYMENT
-localStorage.removeItem("cart");
+function confirmOrder(){
+  let tx = document.getElementById("txid").value;
+  if(!tx) return alert("Enter TXID");
 
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  let y=20;
+  doc.text("Invoice",80,y); y+=10;
+
+  cart.forEach(i=>{
+    doc.text(`${i.name} x${i.qty}`,10,y);
+    y+=10;
+  });
+
+  doc.text("Total: "+total,10,y); y+=10;
+  doc.text("TXID: "+tx,10,y);
+
+  doc.save("invoice.pdf");
 }
-
 </script>
 
 </body>
