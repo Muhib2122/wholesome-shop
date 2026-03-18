@@ -2,100 +2,101 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Wholesome Shop</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Wholesome Shop</title>
 
   <style>
-    body {
-      margin: 0;
-      font-family: Arial;
-      background: #f4f6f8;
+    body{
+      margin:0;
+      font-family:Arial;
+      background:#f4f6f8;
     }
 
-    header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      background: #5aa9c9;
-      padding: 15px;
-      color: white;
+    /* HEADER */
+    header{
+      display:flex;
+      justify-content:space-between;
+      align-items:center;
+      background:#5aa9c9;
+      padding:15px;
+      color:white;
     }
 
-    header input {
-      padding: 8px;
-      width: 250px;
-      border-radius: 5px;
-      border: none;
+    header input{
+      padding:8px;
+      width:250px;
+      border:none;
+      border-radius:5px;
     }
 
-    .cart-btn {
-      cursor: pointer;
+    /* LAYOUT */
+    .container{
+      display:flex;
     }
 
-    .container {
-      display: flex;
+    /* SIDEBAR */
+    .sidebar{
+      width:200px;
+      background:#eee;
+      padding:20px;
     }
 
-    .sidebar {
-      width: 200px;
-      background: #eee;
-      padding: 20px;
+    /* PRODUCTS */
+    .products{
+      flex:1;
+      display:grid;
+      grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+      gap:20px;
+      padding:20px;
     }
 
-    .products {
-      flex: 1;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-      gap: 20px;
-      padding: 20px;
+    .card{
+      background:white;
+      padding:10px;
+      border-radius:10px;
+      box-shadow:0 2px 5px rgba(0,0,0,0.1);
+      text-align:center;
     }
 
-    .card {
-      background: white;
-      padding: 10px;
-      border-radius: 10px;
-      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    .card img{
+      width:100%;
+      height:150px;
+      object-fit:cover;
+      border-radius:8px;
     }
 
-    .card img {
-      width: 100%;
-      height: 150px;
-      object-fit: cover;
-      border-radius: 8px;
-    }
-
-    button {
-      background: #5aa9c9;
-      color: white;
-      border: none;
-      padding: 8px;
-      width: 100%;
-      border-radius: 5px;
-      cursor: pointer;
+    button{
+      background:#5aa9c9;
+      color:white;
+      border:none;
+      padding:8px;
+      width:100%;
+      border-radius:5px;
+      cursor:pointer;
     }
 
     /* CART PANEL */
-    #cartPanel {
-      position: fixed;
-      right: -300px;
-      top: 0;
-      width: 300px;
-      height: 100%;
-      background: white;
-      box-shadow: -2px 0 5px rgba(0,0,0,0.2);
-      padding: 20px;
-      transition: 0.3s;
-      overflow-y: auto;
+    #cartPanel{
+      position:fixed;
+      right:-300px;
+      top:0;
+      width:300px;
+      height:100%;
+      background:white;
+      box-shadow:-2px 0 5px rgba(0,0,0,0.2);
+      padding:20px;
+      transition:0.3s;
+      overflow-y:auto;
     }
 
-    #cartPanel.active {
-      right: 0;
+    #cartPanel.active{
+      right:0;
     }
 
-    .close-btn {
-      float: right;
-      cursor: pointer;
-      font-size: 20px;
+    .close-btn{
+      float:right;
+      cursor:pointer;
+      font-size:20px;
     }
   </style>
 </head>
@@ -124,12 +125,12 @@
     <p>Clothing</p>
   </div>
 
-  <!-- PRODUCTS -->
+  <!-- 🔥 IMPORTANT: Firebase products will load here -->
   <div class="products" id="product-list"></div>
 
 </div>
 
-<!-- CART PANEL -->
+<!-- CART -->
 <div id="cartPanel">
   <span class="close-btn" onclick="toggleCart()">✖</span>
   <h2>Your Cart</h2>
@@ -137,11 +138,9 @@
   <h3 id="total"></h3>
 </div>
 
-<!-- Firebase + Shop -->
-<script type="module" src="shop.js"></script>
-
-<!-- Cart -->
+<!-- 🔥 SCRIPTS (ORDER IMPORTANT) -->
 <script src="cart.js"></script>
+<script type="module" src="shop.js"></script>
 
 </body>
 </html>
