@@ -15,7 +15,7 @@ header {
   text-align:center;
 }
 
-/* Product Grid */
+/* Products */
 .products {
   display:grid;
   grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
@@ -30,20 +30,47 @@ header {
   text-align:center;
 }
 
-/* 🔥 Cart Button */
+/* 🔥 CART ULTRA */
 .cart-btn {
   position:fixed;
   top:15px;
   right:15px;
-  background:#4da6ff;
+  background: linear-gradient(135deg, #00c6ff, #0072ff);
   color:white;
-  padding:12px;
+  padding:15px;
   border-radius:50%;
-  font-size:18px;
+  font-size:22px;
+  cursor:pointer;
   z-index:2000;
+
+  animation: pulse 2s infinite, float 3s infinite ease-in-out;
 }
 
-/* 🔥 Sidebar FIXED */
+@keyframes pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15); }
+  100% { transform: scale(1); }
+}
+
+@keyframes float {
+  0% { transform: translateY(0px); }
+  50% { transform: translateY(-6px); }
+  100% { transform: translateY(0px); }
+}
+
+/* Count */
+#cartCount {
+  background:red;
+  color:white;
+  font-size:12px;
+  padding:2px 6px;
+  border-radius:50%;
+  position:absolute;
+  top:-5px;
+  right:-5px;
+}
+
+/* Sidebar */
 #cartSidebar {
   position:fixed;
   top:0;
@@ -52,8 +79,8 @@ header {
   max-width:320px;
   height:100%;
   background:white;
-  box-shadow:-2px 0 10px rgba(0,0,0,0.3);
-  transition:0.3s;
+  box-shadow:-4px 0 20px rgba(0,0,0,0.3);
+  transition:0.4s;
   padding:15px;
   z-index:1500;
 }
@@ -65,7 +92,7 @@ header {
   left:0;
   width:100%;
   height:100%;
-  background:rgba(0,0,0,0.4);
+  background:rgba(0,0,0,0.5);
   display:none;
   z-index:1400;
 }
@@ -84,13 +111,13 @@ button {
 
 <header><h2>Wholesome Shop</h2></header>
 
-<!-- Cart Button -->
-<div class="cart-btn" onclick="toggleCart()">🛒</div>
+<!-- CART -->
+<div class="cart-btn" onclick="toggleCart()">
+  🛍️ <span id="cartCount">0</span>
+</div>
 
-<!-- Overlay -->
 <div id="overlay" onclick="closeCart()"></div>
 
-<!-- Sidebar -->
 <div id="cartSidebar">
   <h3>Cart</h3>
   <div id="cartItems"></div>
@@ -98,7 +125,7 @@ button {
 
   <button onclick="goCheckout()">Checkout</button>
   <br><br>
-  <button onclick="closeCart()">Close ✖</button>
+  <button onclick="closeCart()">Close</button>
 </div>
 
 <div class="products" id="productList"></div>
