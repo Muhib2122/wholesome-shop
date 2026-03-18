@@ -7,6 +7,7 @@
 <style>
 body { font-family: Arial; margin:0; background:#f5faff; }
 
+/* Header */
 header {
   background:#4da6ff;
   color:white;
@@ -14,11 +15,12 @@ header {
   text-align:center;
 }
 
+/* Product Grid */
 .products {
   display:grid;
-  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
-  gap:20px;
-  padding:20px;
+  grid-template-columns:repeat(auto-fill,minmax(150px,1fr));
+  gap:15px;
+  padding:15px;
 }
 
 .card {
@@ -28,28 +30,44 @@ header {
   text-align:center;
 }
 
+/* 🔥 Cart Button */
 .cart-btn {
   position:fixed;
-  top:20px;
-  right:20px;
+  top:15px;
+  right:15px;
   background:#4da6ff;
   color:white;
   padding:12px;
   border-radius:50%;
-  cursor:pointer;
+  font-size:18px;
+  z-index:2000;
 }
 
-/* Sidebar */
+/* 🔥 Sidebar FIXED */
 #cartSidebar {
   position:fixed;
   top:0;
-  right:-350px;
-  width:350px;
+  right:-100%;
+  width:80%;
+  max-width:320px;
   height:100%;
   background:white;
-  box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+  box-shadow:-2px 0 10px rgba(0,0,0,0.3);
   transition:0.3s;
-  padding:20px;
+  padding:15px;
+  z-index:1500;
+}
+
+/* Overlay */
+#overlay {
+  position:fixed;
+  top:0;
+  left:0;
+  width:100%;
+  height:100%;
+  background:rgba(0,0,0,0.4);
+  display:none;
+  z-index:1400;
 }
 
 button {
@@ -57,22 +75,26 @@ button {
   color:white;
   border:none;
   padding:8px;
-  cursor:pointer;
+  margin-top:5px;
 }
 </style>
 </head>
 
 <body>
 
-<header><h1>Wholesome Shop</h1></header>
+<header><h2>Wholesome Shop</h2></header>
 
+<!-- Cart Button -->
 <div class="cart-btn" onclick="toggleCart()">🛒</div>
 
-<!-- 🔥 Sidebar Cart -->
+<!-- Overlay -->
+<div id="overlay" onclick="closeCart()"></div>
+
+<!-- Sidebar -->
 <div id="cartSidebar">
-  <h2>Cart</h2>
+  <h3>Cart</h3>
   <div id="cartItems"></div>
-  <h3 id="cartTotal"></h3>
+  <h4 id="cartTotal"></h4>
 
   <button onclick="goCheckout()">Checkout</button>
   <br><br>
