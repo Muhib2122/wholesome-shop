@@ -2,23 +2,65 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin</title>
+<title>Admin Panel</title>
 
 <style>
 body{font-family:Arial;background:#f0f9ff;margin:0;}
-.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
 
-.tab{display:flex;}
-.tab div{flex:1;padding:10px;text-align:center;background:#ddd;cursor:pointer;}
-.tab .active{background:#38bdf8;color:white;}
+.header{
+background:#38bdf8;
+color:white;
+padding:15px;
+text-align:center;
+}
 
-.section{display:none;padding:10px;}
-.section.active{display:block;}
+.tabs{
+display:flex;
+}
 
-.card{background:white;padding:10px;margin:10px 0;}
+.tab{
+flex:1;
+padding:10px;
+text-align:center;
+background:#ddd;
+cursor:pointer;
+}
 
-input{width:100%;padding:8px;margin:5px 0;}
-button{background:#38bdf8;color:white;border:none;padding:8px;width:100%;}
+.tab.active{
+background:#38bdf8;
+color:white;
+}
+
+.section{
+display:none;
+padding:10px;
+}
+
+.section.active{
+display:block;
+}
+
+.card{
+background:white;
+padding:10px;
+margin:10px 0;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin:5px 0;
+}
+
+button{
+width:100%;
+padding:8px;
+background:#38bdf8;
+color:white;
+border:none;
+margin-top:5px;
+}
 </style>
 </head>
 
@@ -26,101 +68,146 @@ button{background:#38bdf8;color:white;border:none;padding:8px;width:100%;}
 
 <div class="header">Admin Panel</div>
 
-<div class="tab">
-<div class="active" onclick="show('p',this)">Products</div>
-<div onclick="show('o',this)">Orders</div>
+<div class="tabs">
+<div class="tab active" onclick="showTab('products',this)">Products</div>
+<div class="tab" onclick="showTab('orders',this)">Orders</div>
 </div>
 
-<div id="p" class="section active">
+<!-- PRODUCTS -->
+<div id="products" class="section active">
+
+<h3>Add Product</h3>
 
 <input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="add()">Add Product</button>
+<button onclick="addProduct()">Add Product</button>
 
-<div id="plist"></div>
+<h3>All Products</h3>
+<div id="productList"></div>
 
 </div>
 
-<div id="o" class="section">
-<div id="olist"></div>
+<!-- ORDERS -->
+<div id="orders" class="section">
+
+<h3>Order History</h3>
+<div id="orderList"></div>
+
 </div>
 
 <script>
 
-function show(id,e){
-document.querySelectorAll(".tab div").forEach(x=>x.classList.remove("active"));
-e.classList.add("active");
+// TAB SWITCH
+function showTab(id,el){
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+el.classList.add("active");
 
-document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
 document.getElementById(id).classList.add("active");
 }
 
-// ADD
-function add(){
+// 🔥 ADD PRODUCT
+function addProduct(){
+
+let n = document.getElementById("name").value.trim();
+let p = document.getElementById("price").value.trim();
+let i = document.getElementById("image").value.trim();
+
+if(!n || !p || !i){
+alert("Fill all fields ❌");
+return;
+}
+
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 fields:{
-name:{stringValue:name.value},
-price:{integerValue:price.value},
-image:{stringValue:image.value}
+name:{stringValue:n},
+price:{integerValue:parseInt(p)},
+image:{stringValue:i}
 }
 })
-}).then(()=>loadP());
+})
+.then(res=>res.json())
+.then(()=>{
+alert("Product Added ✅");
+loadProducts();
+})
+.catch(()=>{
+alert("Error ❌");
+});
 }
 
-// LOAD PRODUCTS
-async function loadP(){
-let res=await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
-let data=await res.json();
+// 🔥 LOAD PRODUCTS
+async function loadProducts(){
 
-let div=document.getElementById("plist");
+let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
+let data = await res.json();
+
+let div = document.getElementById("productList");
 div.innerHTML="";
 
-if(!data.documents){div.innerHTML="No products";return;}
+if(!data.documents){
+div.innerHTML="No products";
+return;
+}
 
 data.documents.forEach(d=>{
-let id=d.name.split("/").pop();
-let f=d.fields;
+
+let id = d.name.split("/").pop();
+let f = d.fields;
 
 div.innerHTML+=`
 <div class="card">
-${f.name.stringValue} - ${f.price.integerValue}
-<button onclick="del('${id}')">Delete</button>
+<img src="${f.image.stringValue}" width="100%">
+<b>${f.name.stringValue}</b><br>
+${f.price.integerValue} BDT
+
+<button onclick="deleteProduct('${id}')">Delete</button>
 </div>
 `;
 });
 }
 
-// DELETE
-function del(id){
+// 🔥 DELETE
+function deleteProduct(id){
+
 fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products/${id}`,{
 method:"DELETE"
-}).then(()=>loadP());
+})
+.then(()=>loadProducts());
+
 }
 
-// LOAD ORDERS
-async function loadO(){
-let res=await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
-let data=await res.json();
+// 🔥 LOAD ORDERS
+async function loadOrders(){
 
-let div=document.getElementById("olist");
+let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
+let data = await res.json();
+
+let div = document.getElementById("orderList");
 div.innerHTML="";
 
-if(!data.documents){div.innerHTML="No orders";return;}
+if(!data.documents){
+div.innerHTML="No orders";
+return;
+}
 
 data.documents.forEach(d=>{
-let id=d.name.split("/").pop();
-let f=d.fields;
+
+let id = d.name.split("/").pop();
+let f = d.fields;
 
 div.innerHTML+=`
 <div class="card">
 TX: ${f.txid.stringValue}<br>
 Amount: ${f.amount.integerValue}<br>
-Status: ${f.status.stringValue}
+Status: ${f.status.stringValue}<br>
 
 <button onclick="approve('${id}')">Approve</button>
 </div>
@@ -128,19 +215,27 @@ Status: ${f.status.stringValue}
 });
 }
 
-// APPROVE
+// 🔥 APPROVE
 function approve(id){
+
 fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders/${id}?updateMask.fieldPaths=status`,{
 method:"PATCH",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
-fields:{status:{stringValue:"approved"}}
-})
-}).then(()=>loadO());
+fields:{
+status:{stringValue:"approved"}
+}
+}
+)})
+.then(()=>loadOrders());
+
 }
 
-loadP();
-loadO();
+// INIT
+loadProducts();
+loadOrders();
 
 </script>
 
