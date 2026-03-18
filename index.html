@@ -35,18 +35,17 @@ margin-top:5px;
 position:fixed;
 right:0;
 top:0;
-width:250px;
+width:260px;
 height:100%;
 background:white;
 padding:10px;
 overflow:auto;
-box-shadow:-2px 0 5px rgba(0,0,0,0.2);
 }
 
-.cart-toggle{
+.open{
 position:fixed;
-right:10px;
 bottom:10px;
+right:10px;
 background:red;
 color:white;
 padding:10px;
@@ -59,44 +58,40 @@ border-radius:50%;
 
 <div class="header">Wholesome Shop</div>
 
-<div class="grid" id="products"></div>
+<div id="products" class="grid"></div>
 
-<!-- CART -->
-<div class="cart" id="cartBox">
-<button onclick="toggleCart()">Close</button>
+<div id="cartBox" class="cart">
+<button onclick="closeCart()">Close</button>
 <h3>Cart</h3>
 <div id="cartItems"></div>
 <b id="total"></b>
 <button onclick="goCheckout()">Checkout</button>
 </div>
 
-<!-- OPEN BUTTON -->
-<button class="cart-toggle" onclick="openCart()">🛒</button>
+<button class="open" onclick="openCart()">🛒</button>
 
 <script>
 
-const URL = "https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let cart = JSON.parse(localStorage.getItem("cart"))||[];
 
-// 🔥 LOAD PRODUCTS (FIXED)
+// 🔥 LOAD PRODUCTS
 async function loadProducts(){
 
-let res = await fetch(URL + "/products");
+let res = await fetch(URL+"/products");
 let data = await res.json();
 
-console.log("Products:", data);
-
-let div = document.getElementById("products");
+let div=document.getElementById("products");
 div.innerHTML="";
 
 if(!data.documents){
-div.innerHTML="No products found ❌";
+div.innerHTML="No products ❌";
 return;
 }
 
 data.documents.forEach(d=>{
-let f = d.fields;
+let f=d.fields;
 
 div.innerHTML+=`
 <div class="card">
@@ -109,56 +104,12 @@ ${f.price.integerValue} BDT
 });
 }
 
-// CART FUNCTIONS
-function addCart(name,price){
+// CART
+function addCart(n,p){
+let f=cart.find(i=>i.name===n);
+if(f) f.qty++;
+else cart.push({name:n,price:p,qty:1});
 
-let found = cart.find(i=>i.name===name);
-
-if(found){
-found.qty++;
-}else{
-cart.push({name,price,qty:1});
-}
-
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
-}
-
-function renderCart(){
-
-let div = document.getElementById("cartItems");
-div.innerHTML="";
-
-let total=0;
-
-cart.forEach((i,index)=>{
-total += i.price*i.qty;
-
-div.innerHTML+=`
-<div>
-${i.name} (${i.qty})
-<button onclick="inc(${index})">+</button>
-<button onclick="dec(${index})">-</button>
-<button onclick="removeItem(${index})">❌</button>
-</div>
-`;
-});
-
-document.getElementById("total").innerText="Total: "+total;
-}
-
-function inc(i){
-cart[i].qty++;
-save();
-}
-
-function dec(i){
-if(cart[i].qty>1) cart[i].qty--;
-save();
-}
-
-function removeItem(i){
-cart.splice(i,1);
 save();
 }
 
@@ -167,19 +118,36 @@ localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 }
 
-// CART UI FIX
-function toggleCart(){
-document.getElementById("cartBox").style.display="none";
+function renderCart(){
+let div=document.getElementById("cartItems");
+div.innerHTML="";
+let t=0;
+
+cart.forEach((i,x)=>{
+t+=i.price*i.qty;
+
+div.innerHTML+=`
+<div>
+${i.name} (${i.qty})
+<button onclick="iPlus(${x})">+</button>
+<button onclick="iMinus(${x})">-</button>
+<button onclick="del(${x})">❌</button>
+</div>
+`;
+});
+
+document.getElementById("total").innerText="Total: "+t;
 }
 
-function openCart(){
-document.getElementById("cartBox").style.display="block";
-}
+function iPlus(x){cart[x].qty++;save();}
+function iMinus(x){if(cart[x].qty>1)cart[x].qty--;save();}
+function del(x){cart.splice(x,1);save();}
 
-// CHECKOUT
-function goCheckout(){
-window.location.href="checkout.html";
-}
+// UI
+function closeCart(){document.getElementById("cartBox").style.display="none";}
+function openCart(){document.getElementById("cartBox").style.display="block";}
+
+function goCheckout(){window.location="checkout.html";}
 
 renderCart();
 loadProducts();
