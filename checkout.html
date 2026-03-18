@@ -1,10 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout</title>
-</head>
-
 <body>
 
 <h2>Checkout</h2>
@@ -15,45 +10,42 @@
 <p>bKash: 01764262579</p>
 
 <input id="tx" placeholder="TX ID">
-<button onclick="confirmOrder()">Confirm</button>
+<button onclick="done()">Confirm</button>
 
-<script src="firebase.js"></script>
 <script>
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-let div = document.getElementById("list");
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
 
 let total=0;
 
 cart.forEach(i=>{
-total += i.price*i.qty;
-div.innerHTML += `${i.name} - ${i.qty}<br>`;
+total+=i.price*i.qty;
+list.innerHTML+=`${i.name} x ${i.qty}<br>`;
 });
 
-function confirmOrder(){
+let vat=total*0.04;
+let grand=total+vat;
 
-let tx = document.getElementById("tx").value;
+list.innerHTML+=`<br>VAT: ${vat}<br>Total: ${grand}`;
 
-fetch(BASE_URL+"/orders",{
+function done(){
+
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-txid:{stringValue:tx},
-amount:{integerValue:total},
+txid:{stringValue:tx.value},
+amount:{integerValue:String(grand)},
 status:{stringValue:"pending"}
 }
 })
-})
-.then(()=>{
-
+}).then(()=>{
 alert("Done ✅");
-
 localStorage.removeItem("cart");
-
-location.href="index.html";
+location="index.html";
 });
+
 }
 
 </script>
