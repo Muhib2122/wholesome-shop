@@ -1,111 +1,55 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Admin Panel</title>
+
+  <style>
+    body {
+      font-family: Arial;
+      background: #f4f6f8;
+      padding: 20px;
+    }
+
+    input {
+      padding: 10px;
+      margin: 5px;
+      width: 200px;
+    }
+
+    button {
+      padding: 10px;
+      background: #5aa9c9;
+      color: white;
+      border: none;
+      cursor: pointer;
+    }
+
+    .card {
+      background: white;
+      padding: 10px;
+      margin: 10px 0;
+      border-radius: 8px;
+    }
+  </style>
+</head>
+
 <body>
 
-<h2>Admin Panel</h2>
+<h2>🔥 Admin Panel</h2>
 
-<input id="name" placeholder="Name"><br>
-<input id="price" placeholder="Price"><br>
-<input id="img" placeholder="Image URL"><br>
-
-<select id="category">
-<option value="groceries">Groceries</option>
-<option value="makeup">Makeup</option>
-<option value="clothing">Clothing</option>
-<option value="home">Home</option>
-<option value="toys">Toys</option>
-</select>
-
-<br><br>
+<input id="name" placeholder="Product Name">
+<input id="price" placeholder="Price">
+<input id="img" placeholder="Image URL">
 
 <button onclick="addProduct()">Add Product</button>
 
 <hr>
 
+<h3>All Products</h3>
 <div id="list"></div>
 
-<script>
-
-function load(){
-return JSON.parse(localStorage.getItem("products")) || [];
-}
-
-function save(data){
-localStorage.setItem("products", JSON.stringify(data));
-render();
-}
-
-// ADD
-function addProduct(){
-
-let data = load();
-
-let item = {
-id: Date.now(),
-name: document.getElementById("name").value,
-price: Number(document.getElementById("price").value),
-img: document.getElementById("img").value,
-category: document.getElementById("category").value,
-rating:4
-};
-
-data.push(item);
-save(data);
-
-alert("Added");
-
-}
-
-// DELETE
-function del(id){
-let data = load().filter(p => p.id !== id);
-save(data);
-}
-
-// EDIT
-function edit(id){
-
-let data = load();
-
-let p = data.find(x => x.id === id);
-
-p.name = prompt("Name", p.name);
-p.price = Number(prompt("Price", p.price));
-p.img = prompt("Image URL", p.img);
-
-save(data);
-}
-
-// RENDER
-function render(){
-
-let data = load();
-
-let div = document.getElementById("list");
-
-div.innerHTML = "";
-
-data.forEach(p=>{
-
-div.innerHTML += `
-<div style="border:1px solid #ccc;margin:10px;padding:10px;">
-<img src="${p.img}" width="50"
-onerror="this.src='https://via.placeholder.com/50'"><br>
-
-${p.name} - ${p.price} BDT<br>
-
-<button onclick="edit(${p.id})">Edit</button>
-<button onclick="del(${p.id})">Delete</button>
-</div>
-`;
-
-});
-
-}
-
-render();
-
-</script>
+<script type="module" src="admin.js"></script>
 
 </body>
 </html>
