@@ -1,66 +1,65 @@
 <!DOCTYPE html>
-<html>
-
+<html lang="en">
 <head>
-<title>Wholesome</title>
-<link rel="stylesheet" href="style.css">
-</head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Wholesome Shop</title>
 
-<body>
+<style>
 
-<!-- NAVBAR -->
-<div class="navbar">
+body {
+  margin: 0;
+  font-family: Arial;
+  background: #f5f5f5;
+}
 
-<div class="logo">🛒 Wholesome</div>
+/* HEADER */
+.header {
+  background: #4fa3c7;
+  padding: 10px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: white;
+}
 
-<input type="text" id="search" class="search" placeholder="Search products">
+.logo {
+  font-size: 20px;
+  font-weight: bold;
+}
 
-<div class="nav-btns">
-<span>🛒 <span id="cart-count">0</span></span>
+.search {
+  width: 40%;
+  padding: 8px;
+  border-radius: 5px;
+  border: none;
+}
 
-<button onclick="toggleCart()">Cart</button>
+.actions button {
+  margin-left: 10px;
+  padding: 6px 10px;
+  border: none;
+  cursor: pointer;
+}
 
-<a href="checkout.html">
-<button>Checkout</button>
-</a>
-</div>
+/* LAYOUT */
+.main {
+  display: flex;
+}
 
-</div>
+/* SIDEBAR */
+.sidebar {
+  width: 200px;
+  background: #fff;
+  padding: 20px;
+}
 
-<!-- MAIN -->
-<div class="main">
+.sidebar h3 {
+  margin-bottom: 10px;
+}
 
-<div class="sidebar">
-<h3>Categories</h3>
-
-<p onclick="filterCategory('all')">All</p>
-<p onclick="filterCategory('groceries')">Groceries</p>
-<p onclick="filterCategory('makeup')">Makeup</p>
-<p onclick="filterCategory('clothing')">Clothing</p>
-</div>
-
-<div id="products" class="products"></div>
-
-</div>
-
-<!-- SIDE CART -->
-<div id="sideCart" class="side-cart">
-
-<div class="cart-header">
-<h3>Your Cart</h3>
-<span class="close-btn" onclick="toggleCart()">✖</span>
-</div>
-
-<div id="cart-items"></div>
-
-</div>
-
-<!-- POPUP -->
-<div id="popup" class="popup"></div>
-
-<script src="products.js"></script>
-<script src="cart.js"></script>
-<script src="shop.js?v=final"></script>
-
-</body>
-</html>
+/* PRODUCTS */
+.products {
+  flex: 1;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1
