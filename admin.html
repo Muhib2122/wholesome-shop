@@ -4,6 +4,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
+
 body{
 margin:0;
 font-family:sans-serif;
@@ -19,9 +20,7 @@ font-size:20px;
 font-weight:bold;
 }
 
-.container{
-padding:15px;
-}
+.container{padding:15px;}
 
 .card{
 background:white;
@@ -44,24 +43,22 @@ color:white;
 padding:15px;
 border-radius:10px;
 text-align:center;
-font-weight:bold;
 }
 
 input{
-padding:10px;
-margin:5px 0;
-width:100%;
-border-radius:8px;
+padding:8px;
+margin:5px;
+border-radius:6px;
 border:1px solid #ccc;
+width:90%;
 }
 
 button{
-padding:8px 12px;
+padding:6px 10px;
 border:none;
-border-radius:8px;
+border-radius:6px;
 cursor:pointer;
-margin:5px 3px;
-font-weight:bold;
+margin:3px;
 }
 
 .addBtn{background:#38bdf8;color:white;}
@@ -70,22 +67,13 @@ font-weight:bold;
 .approveBtn{background:#16a34a;color:white;}
 .declineBtn{background:#dc2626;color:white;}
 
-.item{
-border-bottom:1px solid #ddd;
-padding:12px 0;
-}
-
 .order{
 background:#f0f9ff;
-padding:12px;
-border-radius:10px;
-margin:10px 0;
+padding:10px;
+border-radius:8px;
+margin:8px 0;
 }
 
-img{
-border-radius:8px;
-margin-bottom:5px;
-}
 </style>
 </head>
 
@@ -109,7 +97,7 @@ margin-bottom:5px;
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
-<button class="addBtn" onclick="add()">➕ Add Product</button>
+<button class="addBtn" onclick="add()">➕ Add</button>
 </div>
 
 <div class="card">
@@ -140,11 +128,6 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 // ADD PRODUCT
 function add(){
-if(!n.value || !p.value || !i.value){
-alert("Fill all fields");
-return;
-}
-
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -155,10 +138,7 @@ price:{integerValue:String(p.value)},
 image:{stringValue:i.value}
 }
 })
-}).then(()=>{
-n.value=""; p.value=""; i.value="";
-loadPro();
-});
+}).then(loadPro);
 }
 
 // LOAD PRODUCTS
@@ -173,16 +153,16 @@ let id=x.name.split("/").pop();
 let f=x.fields;
 
 pro.innerHTML+=`
-<div class="item">
-<img src="${f.image.stringValue}" width="70">
-
+<div>
+<img src="${f.image.stringValue}" width="60"><br>
 <input id="name_${id}" value="${f.name.stringValue}">
 <input id="price_${id}" value="${f.price.integerValue}">
 <input id="img_${id}" value="${f.image.stringValue}">
-
-<button class="updateBtn" onclick="updatePro('${id}')">✏️ Update</button>
-<button class="deleteBtn" onclick="del('${id}')">🗑 Delete</button>
+<br>
+<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑</button>
 </div>
+<hr>
 `;
 });
 }
@@ -206,12 +186,12 @@ image:{stringValue:img}
 }).then(loadPro);
 }
 
-// DELETE PRODUCT
+// DELETE
 function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-// 🔥 FINAL ORDER LOAD (FIXED)
+// LOAD ORDERS
 async function loadOrders(){
 
 let r=await fetch(URL+"/orders");
@@ -221,69 +201,31 @@ pending.innerHTML="";
 approved.innerHTML="";
 declined.innerHTML="";
 
-let totalSales=0;
-let totalOrders=0;
-let pendingC=0;
+let totalSalesVal=0;
+let totalOrdersVal=0;
+let pendingVal=0;
 
-if(!d.documents)return;
-
-d.documents.forEach(x=>{
+d.documents?.forEach(x=>{
 let id=x.name.split("/").pop();
 let f=x.fields;
 
-// ✅ UNIVERSAL TX
-let tx =
-f.txid?.stringValue ||
-f.tx?.stringValue ||
-f.txId?.stringValue ||
-"N/A";
-
-// ✅ UNIVERSAL AMOUNT
-let amount = 0;
-
-if(f.amount?.integerValue){
-amount = parseInt(f.amount.integerValue);
-}
-else if(f.amount?.doubleValue){
-amount = parseFloat(f.amount.doubleValue);
-}
-else if(f.total?.integerValue){
-amount = parseInt(f.total.integerValue);
-}
-else if(f.total?.doubleValue){
-amount = parseFloat(f.total.doubleValue);
-}
-else if(f.price?.integerValue){
-amount = parseInt(f.price.integerValue);
-}
-
-if(!amount || isNaN(amount)){
-amount = 0;
-}
-
-let displayAmount = amount === 0 ? "N/A" : amount;
-
+let tx=f.txid?.stringValue || "N/A";
+let amount=parseInt(f.amount?.integerValue || 0);
 let status=f.status?.stringValue || "pending";
 
-totalOrders++;
+totalOrdersVal++;
 
-if(status==="approved"){
-totalSales += amount;
-}
+if(status==="approved") totalSalesVal+=amount;
+if(status==="pending") pendingVal++;
 
-if(status==="pending"){
-pendingC++;
-}
-
-// UI SAME
 let html=`
 <div class="order">
-<b>TX:</b> ${tx}<br>
-<b>Amount:</b> ${displayAmount}<br>
-<b>Status:</b> ${status}<br><br>
+TX: ${tx}<br>
+Amount: ${amount}<br>
+Status: ${status}<br>
 
-<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅ Approve</button>
-<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌ Decline</button>
+<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">✅</button>
+<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">❌</button>
 </div>
 `;
 
@@ -293,25 +235,30 @@ else declined.innerHTML+=html;
 
 });
 
-// DASHBOARD
-totalSales.innerText="Total Sales: "+totalSales;
-totalOrders.innerText="Orders: "+totalOrders;
-pendingCount.innerText="Pending: "+pendingC;
+// DASHBOARD FIX
+document.getElementById("totalSales").innerText="Total Sales: "+totalSalesVal;
+document.getElementById("totalOrders").innerText="Orders: "+totalOrdersVal;
+document.getElementById("pendingCount").innerText="Pending: "+pendingVal;
 
 }
 
-// ✅ SAFE UPDATE (NO DATA LOSS)
-function updateOrder(id,status){
-fetch(URL+"/orders/"+id+"?updateMask.fieldPaths=status",{
+// 🔥 FIXED UPDATE ORDER (MAIN FIX)
+function updateOrder(id,tx,amount,status){
+
+fetch(URL+"/orders/"+id,{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-fields:{status:{stringValue:status}}
+fields:{
+txid:{stringValue:tx},
+amount:{integerValue:String(amount)},
+status:{stringValue:status}
+}
 })
 }).then(loadOrders);
+
 }
 
-// INIT
 loadPro();
 loadOrders();
 
