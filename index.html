@@ -28,6 +28,7 @@ color:white;
 border:none;
 padding:8px;
 width:100%;
+margin-top:5px;
 }
 
 .cart{
@@ -42,10 +43,14 @@ overflow:auto;
 box-shadow:-2px 0 5px rgba(0,0,0,0.2);
 }
 
-.close{
+.cart-toggle{
+position:fixed;
+right:10px;
+bottom:10px;
 background:red;
 color:white;
-padding:5px;
+padding:10px;
+border-radius:50%;
 }
 </style>
 </head>
@@ -56,30 +61,37 @@ padding:5px;
 
 <div class="grid" id="products"></div>
 
+<!-- CART -->
 <div class="cart" id="cartBox">
-<button class="close" onclick="toggleCart()">Close</button>
+<button onclick="toggleCart()">Close</button>
 <h3>Cart</h3>
 <div id="cartItems"></div>
 <b id="total"></b>
 <button onclick="goCheckout()">Checkout</button>
 </div>
 
-<script src="firebase.js"></script>
+<!-- OPEN BUTTON -->
+<button class="cart-toggle" onclick="openCart()">🛒</button>
+
 <script>
+
+const URL = "https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// 🔥 LOAD PRODUCTS
+// 🔥 LOAD PRODUCTS (FIXED)
 async function loadProducts(){
 
-let res = await fetch(BASE_URL+"/products");
+let res = await fetch(URL + "/products");
 let data = await res.json();
+
+console.log("Products:", data);
 
 let div = document.getElementById("products");
 div.innerHTML="";
 
 if(!data.documents){
-div.innerHTML="No products";
+div.innerHTML="No products found ❌";
 return;
 }
 
@@ -88,16 +100,16 @@ let f = d.fields;
 
 div.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="100">
-<h4>${f.name.stringValue}</h4>
-<p>${f.price.integerValue} BDT</p>
+<img src="${f.image.stringValue}" width="100"><br>
+<b>${f.name.stringValue}</b><br>
+${f.price.integerValue} BDT
 <button onclick="addCart('${f.name.stringValue}',${f.price.integerValue})">Add</button>
 </div>
 `;
 });
 }
 
-// ADD CART
+// CART FUNCTIONS
 function addCart(name,price){
 
 let found = cart.find(i=>i.name===name);
@@ -112,7 +124,6 @@ localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 }
 
-// RENDER CART
 function renderCart(){
 
 let div = document.getElementById("cartItems");
@@ -121,12 +132,13 @@ div.innerHTML="";
 let total=0;
 
 cart.forEach((i,index)=>{
-
 total += i.price*i.qty;
 
 div.innerHTML+=`
 <div>
-${i.name} (${i.qty}) - ${i.price*i.qty}
+${i.name} (${i.qty})
+<button onclick="inc(${index})">+</button>
+<button onclick="dec(${index})">-</button>
 <button onclick="removeItem(${index})">❌</button>
 </div>
 `;
@@ -135,20 +147,38 @@ ${i.name} (${i.qty}) - ${i.price*i.qty}
 document.getElementById("total").innerText="Total: "+total;
 }
 
-// REMOVE
+function inc(i){
+cart[i].qty++;
+save();
+}
+
+function dec(i){
+if(cart[i].qty>1) cart[i].qty--;
+save();
+}
+
 function removeItem(i){
 cart.splice(i,1);
+save();
+}
+
+function save(){
 localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
+}
+
+// CART UI FIX
+function toggleCart(){
+document.getElementById("cartBox").style.display="none";
+}
+
+function openCart(){
+document.getElementById("cartBox").style.display="block";
 }
 
 // CHECKOUT
 function goCheckout(){
 window.location.href="checkout.html";
-}
-
-function toggleCart(){
-document.getElementById("cartBox").style.display="none";
 }
 
 renderCart();
