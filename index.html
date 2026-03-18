@@ -2,6 +2,7 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wholesome Shop</title>
 
 <style>
@@ -30,7 +31,7 @@ header {
   text-align:center;
 }
 
-/* 🔥 CART ULTRA */
+/* 🔥 CART BUTTON */
 .cart-btn {
   position:fixed;
   top:15px;
@@ -42,23 +43,9 @@ header {
   font-size:22px;
   cursor:pointer;
   z-index:2000;
-
-  animation: pulse 2s infinite, float 3s infinite ease-in-out;
 }
 
-@keyframes pulse {
-  0% { transform: scale(1); }
-  50% { transform: scale(1.15); }
-  100% { transform: scale(1); }
-}
-
-@keyframes float {
-  0% { transform: translateY(0px); }
-  50% { transform: translateY(-6px); }
-  100% { transform: translateY(0px); }
-}
-
-/* Count */
+/* COUNT */
 #cartCount {
   background:red;
   color:white;
@@ -70,19 +57,33 @@ header {
   right:-5px;
 }
 
-/* Sidebar */
+/* 🔥 SIDEBAR FIX */
 #cartSidebar {
   position:fixed;
   top:0;
   right:-100%;
-  width:80%;
-  max-width:320px;
-  height:100%;
+  width:350px;
+  height:100vh;
   background:white;
   box-shadow:-4px 0 20px rgba(0,0,0,0.3);
-  transition:0.4s;
-  padding:15px;
+  transition:0.3s;
+  display:flex;
+  flex-direction:column;
   z-index:1500;
+}
+
+/* 🔥 SCROLL AREA */
+#cartItems {
+  flex:1;
+  overflow-y:auto;
+  padding:10px;
+}
+
+/* 🔥 FOOTER FIX (always visible) */
+.cart-footer {
+  padding:10px;
+  border-top:1px solid #ddd;
+  background:white;
 }
 
 /* Overlay */
@@ -103,6 +104,7 @@ button {
   border:none;
   padding:8px;
   margin-top:5px;
+  width:100%;
 }
 </style>
 </head>
@@ -111,21 +113,30 @@ button {
 
 <header><h2>Wholesome Shop</h2></header>
 
-<!-- CART -->
+<!-- 🔥 CART BUTTON -->
 <div class="cart-btn" onclick="toggleCart()">
   🛍️ <span id="cartCount">0</span>
 </div>
 
 <div id="overlay" onclick="closeCart()"></div>
 
+<!-- 🔥 SIDEBAR -->
 <div id="cartSidebar">
-  <h3>Cart</h3>
-  <div id="cartItems"></div>
-  <h4 id="cartTotal"></h4>
 
-  <button onclick="goCheckout()">Checkout</button>
-  <br><br>
-  <button onclick="closeCart()">Close</button>
+  <h3 style="padding:10px;">Cart</h3>
+
+  <div id="cartItems"></div>
+
+  <!-- 🔥 FIXED FOOTER -->
+  <div class="cart-footer">
+    <h4 id="cartTotal"></h4>
+
+    <!-- 🔥 SIDE CHECKOUT BUTTON -->
+    <button onclick="goCheckout()">Checkout</button>
+
+    <button onclick="closeCart()">Close</button>
+  </div>
+
 </div>
 
 <div class="products" id="productList"></div>
