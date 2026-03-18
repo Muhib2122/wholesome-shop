@@ -3,29 +3,17 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Admin</title>
-
-<style>
-body{font-family:Arial;background:#f0f9ff;margin:0;}
-.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
-
-input{width:100%;padding:10px;margin:5px 0;}
-button{width:100%;padding:10px;background:#38bdf8;color:white;border:none;margin-top:5px;}
-
-.card{background:white;padding:10px;margin:10px;}
-</style>
 </head>
 
 <body>
 
-<div class="header">Admin Panel</div>
+<h2>Admin Panel</h2>
 
-<h3>Add Product</h3>
-
-<input id="name" placeholder="Product name">
+<input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addProduct()">Add Product</button>
+<button onclick="addProduct()">Add</button>
 
 <h3>Products</h3>
 <div id="products"></div>
@@ -33,25 +21,19 @@ button{width:100%;padding:10px;background:#38bdf8;color:white;border:none;margin
 <h3>Orders</h3>
 <div id="orders"></div>
 
+<script src="firebase.js"></script>
 <script>
 
-// 🔥 ADD PRODUCT (FIXED)
+// ADD PRODUCT
 function addProduct(){
 
-let n = document.getElementById("name").value.trim();
-let p = document.getElementById("price").value.trim();
-let i = document.getElementById("image").value.trim();
+let n=name.value;
+let p=price.value;
+let i=image.value;
 
-if(!n || !p || !i){
-alert("Fill all fields");
-return;
-}
-
-fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products",{
+fetch(BASE_URL+"/products",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 name:{stringValue:n},
@@ -60,71 +42,40 @@ image:{stringValue:i}
 }
 })
 })
-.then(res=>{
-console.log(res);
-return res.json();
-})
-.then(data=>{
-console.log(data);
-alert("Added ✅");
-loadProducts();
-})
-.catch(err=>{
-console.error(err);
-alert("Error ❌");
-});
+.then(()=>loadProducts());
 }
 
-// 🔥 LOAD PRODUCTS
+// LOAD PRODUCTS
 async function loadProducts(){
 
-let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
+let res = await fetch(BASE_URL+"/products");
 let data = await res.json();
 
 let div = document.getElementById("products");
 div.innerHTML="";
 
-if(!data.documents){
-div.innerHTML="No products";
-return;
-}
+data.documents?.forEach(d=>{
+let f=d.fields;
 
-data.documents.forEach(d=>{
-
-let id = d.name.split("/").pop();
-let f = d.fields;
-
-div.innerHTML+=`
-<div class="card">
-${f.name.stringValue} - ${f.price.integerValue}
-</div>
-`;
+div.innerHTML+=`${f.name.stringValue} - ${f.price.integerValue}<br>`;
 });
 }
 
-// 🔥 LOAD ORDERS
+// LOAD ORDERS
 async function loadOrders(){
 
-let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
+let res = await fetch(BASE_URL+"/orders");
 let data = await res.json();
 
 let div = document.getElementById("orders");
 div.innerHTML="";
 
-if(!data.documents){
-div.innerHTML="No orders";
-return;
-}
-
-data.documents.forEach(d=>{
-let f = d.fields;
+data.documents?.forEach(d=>{
+let f=d.fields;
 
 div.innerHTML+=`
-<div class="card">
-TX: ${f.txid.stringValue} <br>
-Amount: ${f.amount.integerValue} <br>
-Status: ${f.status.stringValue}
-</div>
+TX:${f.txid.stringValue}
+Status:${f.status.stringValue}<br>
 `;
 });
 }
