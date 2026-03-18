@@ -2,27 +2,31 @@
 <html>
 <head>
 <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
 
 <style>
-body { font-family: Arial; background:#e6f3ff; padding:15px; }
+body { font-family: Arial; background:#e6f3ff; margin:0; padding:10px; }
 
-table { width:100%; border-collapse: collapse; }
+table { width:100%; border-collapse: collapse; font-size:14px; }
 th { background:#4da6ff; color:white; }
-td,th { padding:8px; text-align:center; border:1px solid #ccc; }
+td,th { padding:6px; text-align:center; border:1px solid #ccc; }
+
+.summary { margin-top:10px; }
 
 button {
   background:#4da6ff;
   color:white;
   padding:10px;
   border:none;
+  width:100%;
 }
 </style>
 </head>
 
 <body>
 
-<h2>Checkout</h2>
+<h3>Checkout</h3>
 
 <table>
 <thead>
@@ -36,21 +40,24 @@ button {
 <tbody id="tbody"></tbody>
 </table>
 
-<h3 id="subtotal"></h3>
-<h3 id="vat"></h3>
-<h2 id="total"></h2>
+<div class="summary">
+  <p id="subtotal"></p>
+  <p id="vat"></p>
+  <h3 id="total"></h3>
+</div>
 
-<input id="txid" placeholder="TX ID">
+<input id="txid" placeholder="TX ID" style="width:100%;padding:8px;">
+<br><br>
 <button onclick="confirmOrder()">Confirm</button>
 
 <script>
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
 
-let tbody=document.getElementById("tbody");
 let subtotal=0;
+let tbody=document.getElementById("tbody");
 
 cart.forEach(i=>{
-  let qty=i.qty || 1;
+  let qty=i.qty||1;
   let t=i.price*qty;
   subtotal+=t;
 
