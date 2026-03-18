@@ -5,14 +5,20 @@
 <title>Admin</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f0f9ff;}
-.header{background:#38bdf8;color:#fff;padding:15px;text-align:center;}
+body{font-family:Arial;background:#f0f9ff;margin:0;}
+.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
 
-.section{padding:10px;}
-.card{background:#fff;padding:10px;margin:10px 0;}
+.tab{display:flex;}
+.tab div{flex:1;padding:10px;text-align:center;background:#ddd;cursor:pointer;}
+.tab .active{background:#38bdf8;color:white;}
+
+.section{display:none;padding:10px;}
+.section.active{display:block;}
+
+.card{background:white;padding:10px;margin:10px 0;}
 
 input{width:100%;padding:8px;margin:5px 0;}
-button{background:#38bdf8;color:#fff;padding:8px;width:100%;}
+button{background:#38bdf8;color:white;border:none;padding:8px;width:100%;}
 </style>
 </head>
 
@@ -20,28 +26,39 @@ button{background:#38bdf8;color:#fff;padding:8px;width:100%;}
 
 <div class="header">Admin Panel</div>
 
-<div class="section">
+<div class="tab">
+<div class="active" onclick="show('p',this)">Products</div>
+<div onclick="show('o',this)">Orders</div>
+</div>
 
-<h3>Add Product</h3>
+<div id="p" class="section active">
 
 <input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addProduct()">Add</button>
+<button onclick="add()">Add Product</button>
 
-<h3>Products</h3>
-<div id="products"></div>
+<div id="plist"></div>
 
-<h3>Orders</h3>
-<div id="orders"></div>
+</div>
 
+<div id="o" class="section">
+<div id="olist"></div>
 </div>
 
 <script>
 
-// ADD PRODUCT
-function addProduct(){
+function show(id,e){
+document.querySelectorAll(".tab div").forEach(x=>x.classList.remove("active"));
+e.classList.add("active");
+
+document.querySelectorAll(".section").forEach(x=>x.classList.remove("active"));
+document.getElementById(id).classList.add("active");
+}
+
+// ADD
+function add(){
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -52,22 +69,22 @@ price:{integerValue:price.value},
 image:{stringValue:image.value}
 }
 })
-}).then(()=>loadProducts());
+}).then(()=>loadP());
 }
 
 // LOAD PRODUCTS
-async function loadProducts(){
-let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
-let data = await res.json();
+async function loadP(){
+let res=await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
+let data=await res.json();
 
-let div = document.getElementById("products");
+let div=document.getElementById("plist");
 div.innerHTML="";
 
 if(!data.documents){div.innerHTML="No products";return;}
 
 data.documents.forEach(d=>{
-let id = d.name.split("/").pop();
-let f = d.fields;
+let id=d.name.split("/").pop();
+let f=d.fields;
 
 div.innerHTML+=`
 <div class="card">
@@ -82,27 +99,27 @@ ${f.name.stringValue} - ${f.price.integerValue}
 function del(id){
 fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products/${id}`,{
 method:"DELETE"
-}).then(()=>loadProducts());
+}).then(()=>loadP());
 }
 
 // LOAD ORDERS
-async function loadOrders(){
-let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
-let data = await res.json();
+async function loadO(){
+let res=await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
+let data=await res.json();
 
-let div = document.getElementById("orders");
+let div=document.getElementById("olist");
 div.innerHTML="";
 
 if(!data.documents){div.innerHTML="No orders";return;}
 
 data.documents.forEach(d=>{
-let id = d.name.split("/").pop();
-let f = d.fields;
+let id=d.name.split("/").pop();
+let f=d.fields;
 
 div.innerHTML+=`
 <div class="card">
-TX: ${f.txid.stringValue} <br>
-Amount: ${f.amount.integerValue} <br>
+TX: ${f.txid.stringValue}<br>
+Amount: ${f.amount.integerValue}<br>
 Status: ${f.status.stringValue}
 
 <button onclick="approve('${id}')">Approve</button>
@@ -119,11 +136,11 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{status:{stringValue:"approved"}}
 })
-}).then(()=>loadOrders());
+}).then(()=>loadO());
 }
 
-loadProducts();
-loadOrders();
+loadP();
+loadO();
 
 </script>
 
