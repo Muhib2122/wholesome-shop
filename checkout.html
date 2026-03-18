@@ -5,12 +5,13 @@
 <title>Checkout</title>
 
 <style>
-body{font-family:Arial;background:#f0f9ff;padding:10px}
-table{width:100%;border-collapse:collapse}
-th{background:#38bdf8;color:#fff}
-td,th{padding:8px;border:1px solid #ccc;text-align:center}
-.bkash{text-align:center;margin-top:20px}
-button{width:100%;padding:10px;background:#38bdf8;color:#fff;border:none}
+body{font-family:Arial;background:#f0f9ff;padding:10px;}
+h2{text-align:center;}
+
+table{width:100%;background:#fff;border-collapse:collapse;}
+th,td{padding:8px;border:1px solid #ddd;text-align:center;}
+
+button{background:#38bdf8;color:#fff;border:none;padding:10px;width:100%;}
 </style>
 </head>
 
@@ -18,31 +19,38 @@ button{width:100%;padding:10px;background:#38bdf8;color:#fff;border:none}
 
 <h2>Checkout</h2>
 
-<table>
-<tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr>
-<tbody id="tbody"></tbody>
+<table id="table">
+<tr>
+<th>Product</th>
+<th>Price</th>
+<th>Qty</th>
+<th>Total</th>
+</tr>
 </table>
 
-<h4 id="subtotal"></h4>
-<h4 id="vat"></h4>
 <h3 id="total"></h3>
 
-<div class="bkash">
-<img src="https://raw.githubusercontent.com/muhib2122/wholesome-shop/main/bkash.png" width="120">
-<h3>bKash: 01764262579</h3>
-
-<input id="txid" placeholder="TX ID">
-<button onclick="confirmOrder()">Confirm</button>
+<div style="text-align:center;margin:20px;">
+<img src="bkash.jpg" width="100"><br>
+bKash: 01764262579
 </div>
 
+<input id="tx" placeholder="Enter TX ID" style="width:100%;padding:8px;">
+
+<button onclick="confirmOrder()">Confirm</button>
+
 <script>
+
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let subtotal=0;
+
+let table = document.getElementById("table");
+let total=0;
 
 cart.forEach(i=>{
-let t=i.price*i.qty;
-subtotal+=t;
-tbody.innerHTML+=`
+let t = i.price*i.qty;
+total+=t;
+
+table.innerHTML+=`
 <tr>
 <td>${i.name}</td>
 <td>${i.price}</td>
@@ -52,16 +60,12 @@ tbody.innerHTML+=`
 `;
 });
 
-let vat=subtotal*0.04;
-let total=subtotal+vat;
+document.getElementById("total").innerText="Total: "+total;
 
-subtotalEl.innerText="Subtotal: "+subtotal;
-vatEl.innerText="VAT: "+vat.toFixed(2);
-totalEl.innerText="Total: "+total.toFixed(2);
-
+// SAVE ORDER
 function confirmOrder(){
 
-let tx=document.getElementById("txid").value;
+let tx = document.getElementById("tx").value;
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
@@ -73,13 +77,14 @@ amount:{integerValue:total},
 status:{stringValue:"pending"}
 }
 })
-})
-.then(()=>{
-alert("Order Submitted");
+}).then(()=>{
+alert("Order Submitted ✅");
 localStorage.removeItem("cart");
+location.href="index.html";
 });
 
 }
+
 </script>
 
 </body>
