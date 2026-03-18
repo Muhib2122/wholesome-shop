@@ -5,34 +5,54 @@
 <title>Checkout</title>
 
 <style>
-body { font-family:Arial; background:#f0f9ff; padding:10px; }
+body {
+  font-family: Arial;
+  background: #f0f9ff;
+  padding: 10px;
+}
 
-table { width:100%; border-collapse: collapse; }
-th { background:#38bdf8; color:white; }
-td,th { padding:6px; border:1px solid #ccc; text-align:center; }
+table {
+  width: 100%;
+  border-collapse: collapse;
+}
 
-.bkash {
-  background:white;
-  border-radius:10px;
-  padding:15px;
-  margin-top:15px;
-  text-align:center;
+th {
+  background: #38bdf8;
+  color: white;
+}
+
+td, th {
+  padding: 8px;
+  border: 1px solid #ccc;
+  text-align: center;
+}
+
+.bkash-box {
+  background: white;
+  padding: 15px;
+  border-radius: 10px;
+  margin-top: 20px;
+  text-align: center;
+}
+
+.bkash-box img {
+  width: 120px;
 }
 
 button {
-  width:100%;
-  padding:10px;
-  margin-top:10px;
-  background:#38bdf8;
-  color:white;
-  border:none;
+  width: 100%;
+  padding: 12px;
+  margin-top: 10px;
+  background: #38bdf8;
+  color: white;
+  border: none;
 }
 </style>
 </head>
 
 <body>
 
-<h3>Checkout</h3>
+<h2>Checkout</h2>
 
 <table>
 <thead>
@@ -43,7 +63,6 @@ button {
 <th>Total</th>
 </tr>
 </thead>
-
 <tbody id="tbody"></tbody>
 </table>
 
@@ -52,73 +71,81 @@ button {
 <h3 id="total"></h3>
 
 <!-- 🔥 BKASH -->
-<div class="bkash">
-  <img src="https://i.ibb.co/7W0KX3P/bkash.png" width="120"><br><br>
-  <b>bKash Send Money</b><br>
-  01764262579
-</div>
+<div class="bkash-box">
 
-<input id="txid" placeholder="Enter TX ID" style="width:100%;padding:10px;">
+<img src="https://raw.githubusercontent.com/muhib2122/wholesome-shop/main/bkash.png">
 
+<h3>bKash Send Money</h3>
+<p><b>01764262579</b></p>
+
+<input id="txid" placeholder="Enter TX ID">
 <button onclick="confirmOrder()">Confirm Order</button>
 
-<!-- Firebase -->
-<script type="module">
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+</div>
 
-const firebaseConfig = {
-  apiKey: "AIzaSyXXXX",
-  authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
-  projectId: "wholesome-shop-f4d0f"
-};
-
-const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
+<script>
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-let subtotal = 0;
 let tbody = document.getElementById("tbody");
 
-cart.forEach(i=>{
-  let t = i.price * i.qty;
-  subtotal += t;
+let subtotal = 0;
 
-  tbody.innerHTML += `
-  <tr>
-    <td>${i.name}</td>
-    <td>${i.price}</td>
-    <td>${i.qty}</td>
-    <td>${t}</td>
-  </tr>`;
+cart.forEach(item => {
+
+let total = item.price * item.qty;
+subtotal += total;
+
+tbody.innerHTML += `
+<tr>
+<td>${item.name}</td>
+<td>${item.price}</td>
+<td>${item.qty}</td>
+<td>${total}</td>
+</tr>
+`;
+
 });
 
 let vat = subtotal * 0.04;
-let total = subtotal + vat;
+let final = subtotal + vat;
 
 document.getElementById("subtotal").innerText = "Subtotal: " + subtotal;
 document.getElementById("vat").innerText = "VAT (4%): " + vat.toFixed(2);
-document.getElementById("total").innerText = "Total: " + total.toFixed(2);
+document.getElementById("total").innerText = "Total: " + final.toFixed(2);
 
-// 🔥 SAVE ORDER
-window.confirmOrder = async () => {
-  let tx = document.getElementById("txid").value;
-  if(!tx) return alert("TX ID lagbe!");
+function confirmOrder(){
 
-  await addDoc(collection(db,"orders"),{
-    cart,
-    total,
-    txid: tx,
-    status: "pending",
-    time: new Date()
-  });
+let tx = document.getElementById("txid").value;
 
-  alert("Order submitted! Waiting for admin approval.");
+if(!tx){
+alert("Enter TX ID");
+return;
+}
 
-  localStorage.removeItem("cart");
-  window.location.href="index.html";
-};
+// 🔥 Firebase save
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders", {
+method: "POST",
+headers: { "Content-Type": "application/json" },
+body: JSON.stringify({
+fields: {
+txid: { stringValue: tx },
+amount: { integerValue: final },
+status: { stringValue: "pending" }
+}
+})
+})
+.then(()=>{
+
+alert("Order Submitted ✅");
+
+localStorage.removeItem("cart");
+location.reload();
+
+});
+
+}
+
 </script>
 
 </body>
