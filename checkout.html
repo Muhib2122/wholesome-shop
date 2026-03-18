@@ -3,165 +3,57 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Checkout</title>
-
-<style>
-body{
-font-family:Arial;
-background:#f0f9ff;
-margin:0;
-padding:10px;
-}
-
-h2{text-align:center;}
-
-table{
-width:100%;
-background:white;
-border-collapse:collapse;
-margin-top:10px;
-}
-
-th,td{
-padding:8px;
-border:1px solid #ddd;
-text-align:center;
-}
-
-.summary{
-margin-top:15px;
-font-size:18px;
-}
-
-.pay-box{
-text-align:center;
-margin:20px 0;
-background:white;
-padding:15px;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-}
-
-button{
-width:100%;
-padding:12px;
-background:#38bdf8;
-color:white;
-border:none;
-margin-top:10px;
-}
-</style>
 </head>
 
 <body>
 
 <h2>Checkout</h2>
 
-<table id="table">
-<tr>
-<th>Product</th>
-<th>Price</th>
-<th>Qty</th>
-<th>Total</th>
-</tr>
-</table>
+<div id="list"></div>
 
-<div class="summary">
-<b id="subtotal"></b><br>
-<b id="vat"></b><br>
-<b id="grand"></b>
-</div>
+<img src="https://muhib2122.github.io/wholesome-shop/bkash.png" width="120">
+<p>bKash: 01764262579</p>
 
-<div class="pay-box">
-<img src="https://muhib2122.github.io/wholesome-shop/bkash.png" width="120"><br><br>
-<b>bKash Send Money</b><br>
-<b>01764262579</b>
-</div>
+<input id="tx" placeholder="TX ID">
+<button onclick="confirmOrder()">Confirm</button>
 
-<input id="tx" placeholder="Enter TX ID">
-
-<button onclick="confirmOrder()">Confirm Order</button>
-
+<script src="firebase.js"></script>
 <script>
 
-// 🔥 LOAD CART
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// 🔥 FIX: empty cart redirect
-if(cart.length === 0){
-alert("Cart empty ❌");
-window.location.href="index.html";
-}
+let div = document.getElementById("list");
 
-// TABLE
-let table = document.getElementById("table");
+let total=0;
 
-let subtotal = 0;
-
-// RENDER
-cart.forEach(item=>{
-let total = item.price * item.qty;
-subtotal += total;
-
-table.innerHTML += `
-<tr>
-<td>${item.name}</td>
-<td>${item.price}</td>
-<td>${item.qty}</td>
-<td>${total}</td>
-</tr>
-`;
+cart.forEach(i=>{
+total += i.price*i.qty;
+div.innerHTML += `${i.name} - ${i.qty}<br>`;
 });
 
-// CALCULATION
-let vat = subtotal * 0.04;
-let grand = subtotal + vat;
-
-document.getElementById("subtotal").innerText = "Subtotal: " + subtotal;
-document.getElementById("vat").innerText = "VAT (4%): " + vat.toFixed(2);
-document.getElementById("grand").innerText = "Total: " + grand.toFixed(2);
-
-
-// 🔥 CONFIRM ORDER
 function confirmOrder(){
 
-let tx = document.getElementById("tx").value.trim();
+let tx = document.getElementById("tx").value;
 
-if(!tx){
-alert("Enter TX ID ❌");
-return;
-}
-
-fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
+fetch(BASE_URL+"/orders",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx},
-amount:{integerValue:Math.round(grand)},
-status:{stringValue:"pending"},
-time:{stringValue:new Date().toLocaleString()}
+amount:{integerValue:total},
+status:{stringValue:"pending"}
 }
 })
 })
-.then(res=>res.json())
 .then(()=>{
-alert("Order Submitted ✅");
+
+alert("Done ✅");
 
 localStorage.removeItem("cart");
 
-window.location.href="index.html";
-})
-.catch(()=>{
-alert("Order Failed ❌");
+location.href="index.html";
 });
-
 }
 
 </script>
