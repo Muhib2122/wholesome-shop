@@ -10,7 +10,6 @@ import {
   updateDoc
 } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBqFh9-695gFPpzCxieKf5fVoZ_JedJRL8",
   authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
@@ -23,10 +22,9 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 GLOBAL ID (important)
-let currentEditId = null;
+let editId = null;
 
-// ADD
+// 🔥 ADD
 async function addProduct() {
   const name = document.getElementById("name").value;
   const price = parseInt(document.getElementById("price").value);
@@ -41,7 +39,7 @@ async function addProduct() {
 }
 window.addProduct = addProduct;
 
-// LOAD
+// 🔥 LOAD + SHOW
 async function loadProducts() {
   const snapshot = await getDocs(collection(db, "products"));
   const list = document.getElementById("list");
@@ -63,37 +61,40 @@ async function loadProducts() {
   });
 }
 
-// EDIT CLICK
+// 🔥 EDIT BUTTON CLICK
 function editProduct(id, name, price, img) {
   document.getElementById("name").value = name;
   document.getElementById("price").value = price;
   document.getElementById("img").value = img;
 
-  currentEditId = id;
+  editId = id;
+
+  alert("Now click UPDATE button 🔄");
 }
 window.editProduct = editProduct;
 
-// UPDATE
+// 🔥 UPDATE
 async function updateProduct() {
-  if (!currentEditId) return alert("Select product first");
+  if (!editId) return alert("Click Edit first!");
 
   const name = document.getElementById("name").value;
   const price = parseInt(document.getElementById("price").value);
   const img = document.getElementById("img").value;
 
-  await updateDoc(doc(db, "products", currentEditId), {
+  await updateDoc(doc(db, "products", editId), {
     name,
     price,
     img
   });
 
-  alert("Updated 🔄");
-  currentEditId = null;
+  alert("Updated ✅");
+
+  editId = null;
   loadProducts();
 }
 window.updateProduct = updateProduct;
 
-// DELETE
+// 🔥 DELETE
 async function deleteProduct(id) {
   await deleteDoc(doc(db, "products", id));
   loadProducts();
