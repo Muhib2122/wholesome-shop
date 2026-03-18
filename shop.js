@@ -1,141 +1,82 @@
-// 🔥 Firebase Import
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔥 Firebase Config (👉 নিজেরটা বসা)
 const firebaseConfig = {
-  apiKey: "AIzaSyXXXXXXXXXXXX",
+  apiKey: "AIzaSyXXXX",
   authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
-  projectId: "wholesome-shop-f4d0f",
-  storageBucket: "wholesome-shop-f4d0f.appspot.com",
-  messagingSenderId: "301482399120",
-  appId: "1:301482399120:web:XXXXXXXX"
+  projectId: "wholesome-shop-f4d0f"
 };
 
-// 🔥 Init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-let cart = [];
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
 // 🔥 Load Products
 async function loadProducts() {
-  const querySnapshot = await getDocs(collection(db, "products"));
-  const container = document.getElementById("productList");
+  const data = await getDocs(collection(db, "products"));
+  let container = document.getElementById("productList");
 
   container.innerHTML = "";
 
-  querySnapshot.forEach(doc => {
-    const p = doc.data();
+  data.forEach(doc=>{
+    let p = doc.data();
 
     container.innerHTML += `
-      <div class="card">
-        <img src="${p.img}" style="width:100%;height:150px;object-fit:cover;">
-        <h3>${p.name}</h3>
-        <p>${p.price} BDT</p>
-        <button onclick='addToCart(${JSON.stringify(p)})'>Add to Cart</button>
-      </div>
-    `;
+    <div class="card">
+      <img src="${p.img}" style="width:100%;height:150px">
+      <h3>${p.name}</h3>
+      <p>${p.price} BDT</p>
+      <button onclick='addToCart(${JSON.stringify(p)})'>Add</button>
+    </div>`;
   });
 }
 
-// 🔥 Add to Cart
-window.addToCart = function(product) {
-  const exist = cart.find(p => p.name === product.name);
+// 🔥 Add Cart
+window.addToCart = (p)=>{
+  let exist = cart.find(x=>x.name===p.name);
 
-  if (exist) {
-    exist.qty += 1;
-  } else {
-    cart.push({ ...product, qty: 1 });
-  }
+  if(exist) exist.qty++;
+  else cart.push({...p, qty:1});
 
+  localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
 }
 
-// 🔥 Render Cart
-function renderCart() {
-  const tbody = document.querySelector("#cartTable tbody");
-  tbody.innerHTML = "";
+// 🔥 Render Sidebar
+function renderCart(){
+  let box = document.getElementById("cartItems");
+  box.innerHTML = "";
 
-  let subtotal = 0;
+  let total = 0;
 
-  cart.forEach(item => {
-    const total = item.price * item.qty;
-    subtotal += total;
+  cart.forEach((i,index)=>{
+    let t = i.price*i.qty;
+    total+=t;
 
-    tbody.innerHTML += `
-      <tr>
-        <td>${item.name}</td>
-        <td>${item.price} BDT</td>
-        <td>${item.qty}</td>
-        <td>${total} BDT</td>
-      </tr>
-    `;
+    box.innerHTML += `
+    <div>
+      ${i.name} (${i.qty})
+      <button onclick="removeItem(${index})">❌</button>
+    </div>`;
   });
 
-  const vat = subtotal * 0.04;
-  const grand = subtotal + vat;
-
-  document.getElementById("subtotal").innerText = "Subtotal: " + subtotal + " BDT";
-  document.getElementById("vat").innerText = "VAT (4%): " + vat.toFixed(2) + " BDT";
-  document.getElementById("grandTotal").innerText = "Total: " + grand.toFixed(2) + " BDT";
+  document.getElementById("cartTotal").innerText = "Total: "+total;
 }
 
-// 🔥 Confirm Order
-window.confirmOrder = function() {
-  const txid = document.getElementById("txid").value;
-
-  if (!txid) {
-    alert("Enter TX ID");
-    return;
-  }
-
-  generatePDF(txid);
+window.removeItem = (i)=>{
+  cart.splice(i,1);
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
 }
 
-// 🔥 PDF Generator
-async function generatePDF(txid) {
-  const { jsPDF } = window.jspdf;
-  const doc = new jsPDF();
-
-  let y = 20;
-
-  doc.setFontSize(20);
-  doc.text("WHOLESOME SHOP", 60, y);
-  y += 10;
-
-  doc.setFontSize(12);
-  doc.text("Invoice", 90, y);
-  y += 10;
-
-  let subtotal = 0;
-
-  cart.forEach(item => {
-    const total = item.price * item.qty;
-    subtotal += total;
-
-    doc.text(item.name, 10, y);
-    doc.text(item.price.toString(), 80, y);
-    doc.text(item.qty.toString(), 120, y);
-    doc.text(total.toString(), 150, y);
-
-    y += 10;
-  });
-
-  const vat = subtotal * 0.04;
-  const grand = subtotal + vat;
-
-  y += 10;
-  doc.text("Subtotal: " + subtotal + " BDT", 10, y);
-  y += 10;
-  doc.text("VAT: " + vat.toFixed(2) + " BDT", 10, y);
-  y += 10;
-  doc.text("Total: " + grand.toFixed(2) + " BDT", 10, y);
-  y += 10;
-  doc.text("TX ID: " + txid, 10, y);
-
-  doc.save("invoice.pdf");
+// 🔥 Navigation
+window.goCheckout = ()=>{
+  window.location.href = "checkout.html";
 }
 
-// 🔥 Run
+window.toggleCart = ()=> document.getElementById("cartSidebar").style.right="0";
+window.closeCart = ()=> document.getElementById("cartSidebar").style.right="-350px";
+
 loadProducts();
+renderCart();
