@@ -15,7 +15,7 @@ let cart = JSON.parse(localStorage.getItem("cart")) || [];
 // 🔥 Load Products
 async function loadProducts() {
   const data = await getDocs(collection(db, "products"));
-  let container = document.getElementById("productList");
+  const container = document.getElementById("productList");
 
   container.innerHTML = "";
 
@@ -23,21 +23,21 @@ async function loadProducts() {
     let p = doc.data();
 
     container.innerHTML += `
-    <div class="card">
-      <img src="${p.img}" style="width:100%;height:150px">
-      <h3>${p.name}</h3>
-      <p>${p.price} BDT</p>
-      <button onclick='addToCart(${JSON.stringify(p)})'>Add</button>
-    </div>`;
+      <div class="card">
+        <img src="${p.img}" style="width:100%;height:120px">
+        <h4>${p.name}</h4>
+        <p>${p.price} BDT</p>
+        <button onclick='addToCart(${JSON.stringify(p)})'>Add</button>
+      </div>`;
   });
 }
 
-// 🔥 Add Cart
+// 🔥 Add Cart FIXED
 window.addToCart = (p)=>{
   let exist = cart.find(x=>x.name===p.name);
 
-  if(exist) exist.qty++;
-  else cart.push({...p, qty:1});
+  if(exist) exist.qty += 1;
+  else cart.push({...p, qty:1}); // 🔥 FIX
 
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
@@ -51,32 +51,45 @@ function renderCart(){
   let total = 0;
 
   cart.forEach((i,index)=>{
-    let t = i.price*i.qty;
-    total+=t;
+    let qty = i.qty || 1;
+    let t = i.price * qty;
+    total += t;
 
     box.innerHTML += `
-    <div>
-      ${i.name} (${i.qty})
-      <button onclick="removeItem(${index})">❌</button>
-    </div>`;
+      <div style="margin-bottom:10px;">
+        ${i.name} (${qty})
+        <br>
+        ${i.price} × ${qty} = ${t}
+        <br>
+        <button onclick="removeItem(${index})">❌</button>
+      </div>`;
   });
 
-  document.getElementById("cartTotal").innerText = "Total: "+total;
+  document.getElementById("cartTotal").innerText = "Total: " + total + " BDT";
 }
 
+// 🔥 Remove
 window.removeItem = (i)=>{
   cart.splice(i,1);
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
 }
 
-// 🔥 Navigation
-window.goCheckout = ()=>{
-  window.location.href = "checkout.html";
+// 🔥 Sidebar Toggle FIX
+window.toggleCart = ()=>{
+  document.getElementById("cartSidebar").style.right="0";
+  document.getElementById("overlay").style.display="block";
 }
 
-window.toggleCart = ()=> document.getElementById("cartSidebar").style.right="0";
-window.closeCart = ()=> document.getElementById("cartSidebar").style.right="-350px";
+window.closeCart = ()=>{
+  document.getElementById("cartSidebar").style.right="-100%";
+  document.getElementById("overlay").style.display="none";
+}
+
+// 🔥 Checkout
+window.goCheckout = ()=>{
+  window.location.href="checkout.html";
+}
 
 loadProducts();
 renderCart();
