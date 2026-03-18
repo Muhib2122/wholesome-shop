@@ -2,45 +2,18 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
-
-<style>
-body{font-family:Arial;background:#f0f9ff;margin:0;padding:10px;}
-
-input{
-width:100%;
-padding:10px;
-margin:5px 0;
-}
-
-button{
-width:100%;
-padding:10px;
-background:#38bdf8;
-color:white;
-border:none;
-}
-
-.card{
-background:white;
-padding:10px;
-margin:10px 0;
-border-radius:8px;
-}
-</style>
+<title>Admin</title>
 </head>
 
 <body>
 
 <h2>Admin Panel</h2>
 
-<h3>Add Product</h3>
-
 <input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addProduct()">Add Product</button>
+<button onclick="addProduct()">Add</button>
 
 <h3>Products</h3>
 <div id="products"></div>
@@ -49,70 +22,57 @@ border-radius:8px;
 
 const URL = "https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// 🔥 ADD PRODUCT (100% FIXED)
+// ADD
 function addProduct(){
 
-let n = document.getElementById("name").value.trim();
-let p = document.getElementById("price").value.trim();
-let i = document.getElementById("image").value.trim();
+let n=name.value;
+let p=price.value;
+let i=image.value;
 
-if(!n || !p || !i){
-alert("Fill all fields ❌");
-return;
-}
-
-fetch(URL + "/products",{
+fetch(URL+"/products",{
 method:"POST",
-headers:{
-"Content-Type":"application/json"
-},
+headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 name:{stringValue:n},
-price:{integerValue:String(p)},  // 🔥 IMPORTANT FIX
+price:{integerValue:String(p)},
 image:{stringValue:i}
 }
 })
 })
-.then(res=>res.json())
-.then(data=>{
-console.log("Added:", data);
-alert("Product Added ✅");
-loadProducts();
-})
-.catch(err=>{
-console.error(err);
-alert("Error ❌");
-});
-
+.then(()=>loadProducts());
 }
 
-// 🔥 LOAD PRODUCTS
+// LOAD
 async function loadProducts(){
 
-let res = await fetch(URL + "/products");
+let res = await fetch(URL+"/products");
 let data = await res.json();
 
 let div = document.getElementById("products");
 div.innerHTML="";
 
-if(!data.documents){
-div.innerHTML="No products";
-return;
-}
+data.documents?.forEach(d=>{
 
-data.documents.forEach(d=>{
-
-let f = d.fields;
+let id = d.name.split("/").pop();
+let f=d.fields;
 
 div.innerHTML+=`
-<div class="card">
-<img src="${f.image.stringValue}" width="100"><br>
-<b>${f.name.stringValue}</b><br>
-${f.price.integerValue} BDT
+<div>
+<b>${f.name.stringValue}</b> - ${f.price.integerValue}
+<button onclick="del('${id}')">Delete</button>
 </div>
 `;
 });
+}
+
+// DELETE
+function del(id){
+
+fetch(URL+"/products/"+id,{
+method:"DELETE"
+})
+.then(()=>loadProducts());
 }
 
 loadProducts();
