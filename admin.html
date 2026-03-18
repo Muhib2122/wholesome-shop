@@ -2,12 +2,12 @@
 <html>
 <body>
 
-<h2>Admin</h2>
+<h2>Admin Panel</h2>
 
+<h3>Add Product</h3>
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
-
 <button onclick="add()">Add</button>
 
 <h3>Products</h3>
@@ -20,7 +20,7 @@
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// ADD
+// ADD PRODUCT
 function add(){
 fetch(URL+"/products",{
 method:"POST",
@@ -48,10 +48,10 @@ let f=x.fields;
 
 pro.innerHTML+=`
 <div>
+<img src="${f.image.stringValue}" width="50">
 ${f.name.stringValue} - ${f.price.integerValue}
 <button onclick="del('${id}')">Delete</button>
-</div>
-`;
+</div>`;
 });
 }
 
@@ -73,21 +73,31 @@ let f=x.fields;
 
 ord.innerHTML+=`
 <div>
-TX: ${f.txid.stringValue}
+TX: ${f.txid.stringValue} |
+Amount: ${f.amount.integerValue} |
 Status: ${f.status.stringValue}
 <button onclick="approve('${id}')">Approve</button>
-</div>
-`;
+<button onclick="decline('${id}')">Decline</button>
+</div>`;
 });
 }
 
 // APPROVE
 function approve(id){
+update(id,"approved");
+}
+
+// DECLINE
+function decline(id){
+update(id,"declined");
+}
+
+function update(id,status){
 fetch(URL+"/orders/"+id,{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
-fields:{status:{stringValue:"approved"}}
+fields:{status:{stringValue:status}}
 })
 }).then(loadOrd);
 }
