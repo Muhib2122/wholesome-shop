@@ -79,7 +79,7 @@ function renderCart(){
     </div>`;
   });
 
-  document.getElementById("cartTotal").innerText="Total: "+total;
+  document.getElementById("cartTotal").innerText="Total: "+total+" BDT";
 }
 
 // Remove
