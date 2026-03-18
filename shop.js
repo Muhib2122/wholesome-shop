@@ -1,7 +1,12 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getFirestore, collection, getDocs } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 🔥 Firebase Config (already set)
+import {
+  getFirestore,
+  collection,
+  onSnapshot
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+// 🔥 Firebase Config
 const firebaseConfig = {
   apiKey: "AIzaSyBqFh9-695gFPpzCxieKf5fVoZ_JedJRL8",
   authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
@@ -11,19 +16,18 @@ const firebaseConfig = {
   appId: "1:301482399120:web:ce87c2f88edb2018fd4f15"
 };
 
-// 🔥 Initialize Firebase
+// 🔥 Init
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
-// 🔥 Load Products from Firebase
-async function loadProducts() {
-  try {
-    const querySnapshot = await getDocs(collection(db, "products"));
-    const container = document.getElementById("product-list");
+// 🔥 LIVE PRODUCT LOAD (REAL-TIME)
+function loadProducts() {
+  const container = document.getElementById("product-list");
 
+  onSnapshot(collection(db, "products"), (snapshot) => {
     container.innerHTML = "";
 
-    querySnapshot.forEach((doc) => {
+    snapshot.forEach((doc) => {
       const p = doc.data();
 
       container.innerHTML += `
@@ -37,11 +41,8 @@ async function loadProducts() {
         </div>
       `;
     });
-
-  } catch (error) {
-    console.error("Firebase Error:", error);
-  }
+  });
 }
 
-// 🔥 Run function
+// 🔥 RUN
 loadProducts();
