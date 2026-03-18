@@ -12,10 +12,10 @@ const db = getFirestore(app);
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// 🔥 Load Products
+// Load products
 async function loadProducts() {
   const data = await getDocs(collection(db, "products"));
-  const container = document.getElementById("productList");
+  let container = document.getElementById("productList");
 
   container.innerHTML = "";
 
@@ -32,64 +32,77 @@ async function loadProducts() {
   });
 }
 
-// 🔥 Add Cart FIXED
+// Add cart
 window.addToCart = (p)=>{
   let exist = cart.find(x=>x.name===p.name);
 
-  if(exist) exist.qty += 1;
-  else cart.push({...p, qty:1}); // 🔥 FIX
+  if(exist) exist.qty++;
+  else cart.push({...p, qty:1});
 
   localStorage.setItem("cart", JSON.stringify(cart));
-  renderCart();
-}
 
-// 🔥 Render Sidebar
+  renderCart();
+  updateCartCount();
+
+  // animation
+  let btn = document.querySelector(".cart-btn");
+  btn.style.transform="scale(1.3)";
+  setTimeout(()=>btn.style.transform="scale(1)",200);
+};
+
+// Render cart
 function renderCart(){
   let box = document.getElementById("cartItems");
-  box.innerHTML = "";
+  box.innerHTML="";
 
-  let total = 0;
+  let total=0;
 
   cart.forEach((i,index)=>{
-    let qty = i.qty || 1;
-    let t = i.price * qty;
-    total += t;
+    let qty=i.qty || 1;
+    let t=i.price*qty;
+    total+=t;
 
-    box.innerHTML += `
-      <div style="margin-bottom:10px;">
-        ${i.name} (${qty})
-        <br>
-        ${i.price} × ${qty} = ${t}
+    box.innerHTML+=`
+      <div>
+        ${i.name} (${qty}) <br>
+        ${i.price}×${qty}=${t}
         <br>
         <button onclick="removeItem(${index})">❌</button>
       </div>`;
   });
 
-  document.getElementById("cartTotal").innerText = "Total: " + total + " BDT";
+  document.getElementById("cartTotal").innerText="Total: "+total+" BDT";
 }
 
-// 🔥 Remove
-window.removeItem = (i)=>{
+// Remove
+window.removeItem=(i)=>{
   cart.splice(i,1);
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
+  updateCartCount();
 }
 
-// 🔥 Sidebar Toggle FIX
-window.toggleCart = ()=>{
+// Count
+function updateCartCount(){
+  document.getElementById("cartCount").innerText=cart.length;
+}
+
+// Sidebar
+window.toggleCart=()=>{
   document.getElementById("cartSidebar").style.right="0";
   document.getElementById("overlay").style.display="block";
 }
 
-window.closeCart = ()=>{
+window.closeCart=()=>{
   document.getElementById("cartSidebar").style.right="-100%";
   document.getElementById("overlay").style.display="none";
 }
 
-// 🔥 Checkout
-window.goCheckout = ()=>{
+// Checkout
+window.goCheckout=()=>{
   window.location.href="checkout.html";
 }
 
 loadProducts();
 renderCart();
+updateCartCount();
