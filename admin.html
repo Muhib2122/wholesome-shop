@@ -2,65 +2,16 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin Panel</title>
+<title>Admin</title>
 
 <style>
 body{font-family:Arial;background:#f0f9ff;margin:0;}
+.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
 
-.header{
-background:#38bdf8;
-color:white;
-padding:15px;
-text-align:center;
-}
+input{width:100%;padding:10px;margin:5px 0;}
+button{width:100%;padding:10px;background:#38bdf8;color:white;border:none;margin-top:5px;}
 
-.tabs{
-display:flex;
-}
-
-.tab{
-flex:1;
-padding:10px;
-text-align:center;
-background:#ddd;
-cursor:pointer;
-}
-
-.tab.active{
-background:#38bdf8;
-color:white;
-}
-
-.section{
-display:none;
-padding:10px;
-}
-
-.section.active{
-display:block;
-}
-
-.card{
-background:white;
-padding:10px;
-margin:10px 0;
-border-radius:10px;
-}
-
-input{
-width:100%;
-padding:8px;
-margin:5px 0;
-}
-
-button{
-width:100%;
-padding:8px;
-background:#38bdf8;
-color:white;
-border:none;
-margin-top:5px;
-}
+.card{background:white;padding:10px;margin:10px;}
 </style>
 </head>
 
@@ -68,47 +19,23 @@ margin-top:5px;
 
 <div class="header">Admin Panel</div>
 
-<div class="tabs">
-<div class="tab active" onclick="showTab('products',this)">Products</div>
-<div class="tab" onclick="showTab('orders',this)">Orders</div>
-</div>
-
-<!-- PRODUCTS -->
-<div id="products" class="section active">
-
 <h3>Add Product</h3>
 
-<input id="name" placeholder="Name">
+<input id="name" placeholder="Product name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
 <button onclick="addProduct()">Add Product</button>
 
-<h3>All Products</h3>
-<div id="productList"></div>
+<h3>Products</h3>
+<div id="products"></div>
 
-</div>
-
-<!-- ORDERS -->
-<div id="orders" class="section">
-
-<h3>Order History</h3>
-<div id="orderList"></div>
-
-</div>
+<h3>Orders</h3>
+<div id="orders"></div>
 
 <script>
 
-// TAB SWITCH
-function showTab(id,el){
-document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
-el.classList.add("active");
-
-document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
-document.getElementById(id).classList.add("active");
-}
-
-// 🔥 ADD PRODUCT
+// 🔥 ADD PRODUCT (FIXED)
 function addProduct(){
 
 let n = document.getElementById("name").value.trim();
@@ -116,7 +43,7 @@ let p = document.getElementById("price").value.trim();
 let i = document.getElementById("image").value.trim();
 
 if(!n || !p || !i){
-alert("Fill all fields ❌");
+alert("Fill all fields");
 return;
 }
 
@@ -133,12 +60,17 @@ image:{stringValue:i}
 }
 })
 })
-.then(res=>res.json())
-.then(()=>{
-alert("Product Added ✅");
+.then(res=>{
+console.log(res);
+return res.json();
+})
+.then(data=>{
+console.log(data);
+alert("Added ✅");
 loadProducts();
 })
-.catch(()=>{
+.catch(err=>{
+console.error(err);
 alert("Error ❌");
 });
 }
@@ -149,7 +81,7 @@ async function loadProducts(){
 let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
 let data = await res.json();
 
-let div = document.getElementById("productList");
+let div = document.getElementById("products");
 div.innerHTML="";
 
 if(!data.documents){
@@ -164,24 +96,10 @@ let f = d.fields;
 
 div.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="100%">
-<b>${f.name.stringValue}</b><br>
-${f.price.integerValue} BDT
-
-<button onclick="deleteProduct('${id}')">Delete</button>
+${f.name.stringValue} - ${f.price.integerValue}
 </div>
 `;
 });
-}
-
-// 🔥 DELETE
-function deleteProduct(id){
-
-fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products/${id}`,{
-method:"DELETE"
-})
-.then(()=>loadProducts());
-
 }
 
 // 🔥 LOAD ORDERS
@@ -190,7 +108,7 @@ async function loadOrders(){
 let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
 let data = await res.json();
 
-let div = document.getElementById("orderList");
+let div = document.getElementById("orders");
 div.innerHTML="";
 
 if(!data.documents){
@@ -199,41 +117,18 @@ return;
 }
 
 data.documents.forEach(d=>{
-
-let id = d.name.split("/").pop();
 let f = d.fields;
 
 div.innerHTML+=`
 <div class="card">
-TX: ${f.txid.stringValue}<br>
-Amount: ${f.amount.integerValue}<br>
-Status: ${f.status.stringValue}<br>
-
-<button onclick="approve('${id}')">Approve</button>
+TX: ${f.txid.stringValue} <br>
+Amount: ${f.amount.integerValue} <br>
+Status: ${f.status.stringValue}
 </div>
 `;
 });
 }
 
-// 🔥 APPROVE
-function approve(id){
-
-fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders/${id}?updateMask.fieldPaths=status`,{
-method:"PATCH",
-headers:{
-"Content-Type":"application/json"
-},
-body:JSON.stringify({
-fields:{
-status:{stringValue:"approved"}
-}
-}
-)})
-.then(()=>loadOrders());
-
-}
-
-// INIT
 loadProducts();
 loadOrders();
 
