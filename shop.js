@@ -12,7 +12,7 @@ const db = getFirestore(app);
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// Load Products
+// Load products
 async function loadProducts(){
   const data = await getDocs(collection(db,"products"));
   let container=document.getElementById("productList");
@@ -32,65 +32,68 @@ async function loadProducts(){
   });
 }
 
-// Add Cart
+// Add
 window.addToCart=(p)=>{
   let exist=cart.find(x=>x.name===p.name);
-
   if(exist) exist.qty++;
   else cart.push({...p, qty:1});
 
   localStorage.setItem("cart", JSON.stringify(cart));
-
   renderCart();
-  updateCount();
 }
 
-// Render Cart
+// Quantity
+window.increase=(i)=>{
+  cart[i].qty++;
+  save();
+}
+
+window.decrease=(i)=>{
+  if(cart[i].qty>1) cart[i].qty--;
+  save();
+}
+
+function save(){
+  localStorage.setItem("cart", JSON.stringify(cart));
+  renderCart();
+}
+
+// Render
 function renderCart(){
   let box=document.getElementById("cartItems");
   box.innerHTML="";
-
   let total=0;
 
   cart.forEach((i,index)=>{
-    let qty=i.qty||1;
-    let t=i.price*qty;
+    let t=i.price*i.qty;
     total+=t;
 
     box.innerHTML+=`
-    <div style="margin-bottom:10px;">
+    <div>
       <b>${i.name}</b><br>
-      ${i.price} × ${qty} = ${t}
+      ${i.price} × ${i.qty} = ${t}
       <br>
-      <button onclick="removeItem(${index})">Remove</button>
+      <button onclick="increase(${index})">+</button>
+      <button onclick="decrease(${index})">-</button>
+      <button onclick="removeItem(${index})">❌</button>
     </div>`;
   });
 
-  document.getElementById("cartTotal").innerText="Total: "+total+" BDT";
+  document.getElementById("cartTotal").innerText="Total: "+total;
 }
 
 // Remove
 window.removeItem=(i)=>{
   cart.splice(i,1);
-  localStorage.setItem("cart", JSON.stringify(cart));
-  renderCart();
-  updateCount();
-}
-
-// Count
-function updateCount(){
-  document.getElementById("cartCount").innerText=cart.length;
+  save();
 }
 
 // Sidebar
 window.toggleCart=()=>{
   document.getElementById("cartSidebar").style.right="0";
-  document.getElementById("overlay").style.display="block";
 }
-
 window.closeCart=()=>{
   document.getElementById("cartSidebar").style.right="-100%";
-  document.getElementById("overlay").style.display="none";
 }
 
 // Checkout
@@ -100,4 +103,3 @@ window.goCheckout=()=>{
 
 loadProducts();
 renderCart();
-updateCount();
