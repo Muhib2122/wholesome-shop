@@ -97,36 +97,28 @@ margin-bottom:5px;
 
 <div class="container">
 
-<!-- DASHBOARD -->
 <div class="card">
 <h3>📊 Dashboard</h3>
-
 <div class="dashboard">
 <div class="box" id="totalSales">Total Sales: 0</div>
 <div class="box" id="totalOrders">Orders: 0</div>
 <div class="box" id="pendingCount">Pending: 0</div>
 </div>
-
 </div>
 
-<!-- ADD PRODUCT -->
 <div class="card">
 <h3>Add Product</h3>
-
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
-
 <button class="addBtn" onclick="add()">➕ Add Product</button>
 </div>
 
-<!-- PRODUCTS -->
 <div class="card">
 <h3>Products</h3>
 <div id="pro"></div>
 </div>
 
-<!-- ORDERS -->
 <div class="card">
 <h3>Pending Orders ⏳</h3>
 <div id="pending"></div>
@@ -156,146 +148,4 @@ return;
 }
 
 fetch(URL+"/products",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:n.value},
-price:{integerValue:String(p.value)},
-image:{stringValue:i.value}
-}
-})
-}).then(()=>{
-n.value=""; p.value=""; i.value="";
-loadPro();
-});
-}
-
-// LOAD PRODUCTS
-async function loadPro(){
-let r=await fetch(URL+"/products");
-let d=await r.json();
-
-pro.innerHTML="";
-
-d.documents?.forEach(x=>{
-let id=x.name.split("/").pop();
-let f=x.fields;
-
-pro.innerHTML+=`
-<div class="item">
-<img src="${f.image.stringValue}" width="70">
-
-<input id="name_${id}" value="${f.name.stringValue}">
-<input id="price_${id}" value="${f.price.integerValue}">
-<input id="img_${id}" value="${f.image.stringValue}">
-
-<button class="updateBtn" onclick="updatePro('${id}')">✏️ Update</button>
-<button class="deleteBtn" onclick="del('${id}')">🗑 Delete</button>
-</div>
-`;
-});
-}
-
-// UPDATE PRODUCT
-function updatePro(id){
-let name=document.getElementById("name_"+id).value;
-let price=document.getElementById("price_"+id).value;
-let img=document.getElementById("img_"+id).value;
-
-fetch(URL+"/products/"+id,{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:name},
-price:{integerValue:String(price)},
-image:{stringValue:img}
-}
-})
-}).then(loadPro);
-}
-
-// DELETE PRODUCT
-function del(id){
-fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
-}
-
-// LOAD ORDERS
-async function loadOrders(){
-
-let r=await fetch(URL+"/orders");
-let d=await r.json();
-
-pending.innerHTML="";
-approved.innerHTML="";
-declined.innerHTML="";
-
-let totalSales=0;
-let totalOrders=0;
-let pendingC=0;
-
-if(!d.documents)return;
-
-d.documents.forEach(x=>{
-let id=x.name.split("/").pop();
-let f=x.fields;
-
-let tx=f.txid?.stringValue || "N/A";
-let amount=parseInt(f.amount?.integerValue || 0);
-let status=f.status?.stringValue || "pending";
-
-if(amount===0) amount="N/A";
-
-totalOrders++;
-
-if(status==="approved" && amount!=="N/A") totalSales+=amount;
-if(status==="pending") pendingC++;
-
-let html=`
-<div class="order">
-<b>TX:</b> ${tx}<br>
-<b>Amount:</b> ${amount}<br>
-<b>Status:</b> ${status}<br><br>
-
-<button class="approveBtn" onclick="updateOrder('${id}','approved')">✅ Approve</button>
-<button class="declineBtn" onclick="updateOrder('${id}','declined')">❌ Decline</button>
-</div>
-`;
-
-if(status==="pending") pending.innerHTML+=html;
-else if(status==="approved") approved.innerHTML+=html;
-else declined.innerHTML+=html;
-
-});
-
-// DASHBOARD UPDATE
-totalSales.innerText="Total Sales: "+totalSales;
-totalOrders.innerText="Orders: "+totalOrders;
-pendingCount.innerText="Pending: "+pendingC;
-
-}
-
-// ✅ FIXED UPDATE ORDER (MAIN FIX)
-function updateOrder(id,status){
-
-fetch(URL+"/orders/"+id+"?updateMask.fieldPaths=status",{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-status:{stringValue:status}
-}
-})
-}).then(loadOrders);
-
-}
-
-// INIT
-loadPro();
-loadOrders();
-
-</script>
-
-</body>
-</html>
+method:"POST
