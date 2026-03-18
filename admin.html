@@ -2,84 +2,245 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Checkout</title>
+<title>Admin Panel</title>
 
 <style>
-body{font-family:Arial;background:#f0f9ff;padding:10px}
-table{width:100%;border-collapse:collapse}
-th{background:#38bdf8;color:#fff}
-td,th{padding:8px;border:1px solid #ccc;text-align:center}
-.bkash{text-align:center;margin-top:20px}
-button{width:100%;padding:10px;background:#38bdf8;color:#fff;border:none}
+body{
+font-family:Arial;
+margin:0;
+background:#f0f9ff;
+}
+
+.header{
+background:#38bdf8;
+color:#fff;
+padding:15px;
+text-align:center;
+font-size:20px;
+}
+
+.tabs{
+display:flex;
+}
+
+.tab{
+flex:1;
+padding:10px;
+text-align:center;
+background:#e0f2fe;
+cursor:pointer;
+}
+
+.tab.active{
+background:#38bdf8;
+color:white;
+}
+
+.section{
+display:none;
+padding:10px;
+}
+
+.section.active{
+display:block;
+}
+
+.card{
+background:#fff;
+padding:10px;
+margin:10px 0;
+border-radius:10px;
+}
+
+input{
+width:100%;
+padding:8px;
+margin:5px 0;
+}
+
+button{
+width:100%;
+padding:8px;
+margin-top:5px;
+background:#38bdf8;
+color:white;
+border:none;
+cursor:pointer;
+}
 </style>
 </head>
 
 <body>
 
-<h2>Checkout</h2>
+<div class="header">👨‍💼 Admin Panel</div>
 
-<table>
-<tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr>
-<tbody id="tbody"></tbody>
-</table>
+<div class="tabs">
+<div class="tab active" onclick="showTab('products', event)">Products</div>
+<div class="tab" onclick="showTab('orders', event)">Orders</div>
+</div>
 
-<h4 id="subtotal"></h4>
-<h4 id="vat"></h4>
-<h3 id="total"></h3>
+<!-- PRODUCTS -->
+<div id="products" class="section active">
 
-<div class="bkash">
-<img src="https://raw.githubusercontent.com/muhib2122/wholesome-shop/main/bkash.png" width="120">
-<h3>bKash: 01764262579</h3>
+<h3>Add Product</h3>
 
-<input id="txid" placeholder="TX ID">
-<button onclick="confirmOrder()">Confirm</button>
+<input id="name" placeholder="Name">
+<input id="price" placeholder="Price">
+<input id="image" placeholder="Image URL">
+
+<button onclick="addProduct()">Add Product</button>
+
+<h3>All Products</h3>
+<div id="productList"></div>
+
+</div>
+
+<!-- ORDERS -->
+<div id="orders" class="section">
+
+<h3>Order History</h3>
+<div id="orderList"></div>
+
 </div>
 
 <script>
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-let subtotal=0;
 
-cart.forEach(i=>{
-let t=i.price*i.qty;
-subtotal+=t;
-tbody.innerHTML+=`
-<tr>
-<td>${i.name}</td>
-<td>${i.price}</td>
-<td>${i.qty}</td>
-<td>${t}</td>
-</tr>
-`;
-});
+// TAB
+function showTab(tab, e){
+document.querySelectorAll(".tab").forEach(t=>t.classList.remove("active"));
+e.target.classList.add("active");
 
-let vat=subtotal*0.04;
-let total=subtotal+vat;
+document.querySelectorAll(".section").forEach(s=>s.classList.remove("active"));
+document.getElementById(tab).classList.add("active");
+}
 
-subtotalEl.innerText="Subtotal: "+subtotal;
-vatEl.innerText="VAT: "+vat.toFixed(2);
-totalEl.innerText="Total: "+total.toFixed(2);
+// ADD PRODUCT
+function addProduct(){
 
-function confirmOrder(){
+let name = document.getElementById("name").value;
+let price = document.getElementById("price").value;
+let image = document.getElementById("image").value;
 
-let tx=document.getElementById("txid").value;
-
-fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-txid:{stringValue:tx},
-amount:{integerValue:total},
-status:{stringValue:"pending"}
+name:{stringValue:name},
+price:{integerValue:price},
+image:{stringValue:image}
 }
 })
 })
 .then(()=>{
-alert("Order Submitted");
-localStorage.removeItem("cart");
+alert("Added ✅");
+loadProducts();
 });
 
 }
+
+// LOAD PRODUCTS
+async function loadProducts(){
+
+let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products");
+let data = await res.json();
+
+let div = document.getElementById("productList");
+div.innerHTML="";
+
+if(!data.documents){
+div.innerHTML="No products";
+return;
+}
+
+data.documents.forEach(d=>{
+
+let id = d.name.split("/").pop();
+let f = d.fields;
+
+div.innerHTML+=`
+<div class="card">
+<img src="${f.image.stringValue}" width="100%">
+<h4>${f.name.stringValue}</h4>
+<p>${f.price.integerValue} BDT</p>
+
+<button onclick="deleteProduct('${id}')">Delete</button>
+</div>
+`;
+
+});
+
+}
+
+// DELETE PRODUCT
+function deleteProduct(id){
+
+fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products/${id}`,{
+method:"DELETE"
+})
+.then(()=>{
+alert("Deleted ❌");
+loadProducts();
+});
+
+}
+
+// LOAD ORDERS
+async function loadOrders(){
+
+let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
+let data = await res.json();
+
+let div = document.getElementById("orderList");
+div.innerHTML="";
+
+if(!data.documents){
+div.innerHTML="No orders";
+return;
+}
+
+data.documents.forEach(d=>{
+
+let id = d.name.split("/").pop();
+let f = d.fields;
+
+div.innerHTML+=`
+<div class="card">
+<p><b>TX:</b> ${f.txid.stringValue}</p>
+<p><b>Amount:</b> ${f.amount.integerValue}</p>
+<p><b>Status:</b> ${f.status.stringValue}</p>
+
+<button onclick="approve('${id}')">Approve</button>
+</div>
+`;
+
+});
+
+}
+
+// APPROVE
+function approve(id){
+
+fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders/${id}?updateMask.fieldPaths=status`,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+status:{stringValue:"approved"}
+}
+})
+})
+.then(()=>{
+alert("Approved ✅");
+loadOrders();
+});
+
+}
+
+// INIT
+loadProducts();
+loadOrders();
+
 </script>
 
 </body>
