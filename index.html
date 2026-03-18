@@ -5,25 +5,26 @@
 <title>Shop</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f0f9ff;}
-.header{background:#38bdf8;color:#fff;padding:15px;text-align:center;}
+body{margin:0;font-family:Arial;background:#f0f9ff;}
+
+.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
 
 .products{display:flex;flex-wrap:wrap;gap:10px;padding:10px;}
-.card{background:#fff;padding:10px;border-radius:10px;width:45%;}
+
+.card{background:white;padding:10px;border-radius:10px;width:45%;}
 
 .card img{width:100%;height:120px;object-fit:cover;}
 
-button{background:#38bdf8;color:#fff;border:none;padding:6px;width:100%;}
+button{background:#38bdf8;color:white;border:none;padding:6px;margin-top:5px;width:100%;}
 
 .cart-btn{
 position:fixed;
-top:20px;
 right:20px;
+top:20px;
 background:#0ea5e9;
-color:#fff;
+color:white;
 padding:12px;
 border-radius:50%;
-cursor:pointer;
 }
 
 .cart{
@@ -32,7 +33,7 @@ right:-300px;
 top:0;
 width:300px;
 height:100%;
-background:#fff;
+background:white;
 padding:10px;
 transition:0.4s;
 overflow:auto;
@@ -60,7 +61,7 @@ overflow:auto;
 
 <h3 id="total"></h3>
 
-<button onclick="checkout()">Checkout</button>
+<button onclick="goCheckout()">Checkout</button>
 
 </div>
 
@@ -73,17 +74,39 @@ document.getElementById("cart").classList.toggle("show");
 renderCart();
 }
 
+// ADD
 function addToCart(name,price){
 let f = cart.find(i=>i.name===name);
 if(f){f.qty++}else{cart.push({name,price,qty:1})}
 saveCart();
 }
 
+// SAVE
 function saveCart(){
 localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 }
 
+// REMOVE
+function removeItem(name){
+cart = cart.filter(i=>i.name!==name);
+saveCart();
+}
+
+// +
+function inc(name){
+cart.find(i=>i.name===name).qty++;
+saveCart();
+}
+
+// -
+function dec(name){
+let f = cart.find(i=>i.name===name);
+if(f.qty>1)f.qty--;
+saveCart();
+}
+
+// RENDER
 function renderCart(){
 let div = document.getElementById("cartItems");
 div.innerHTML="";
@@ -94,7 +117,7 @@ total+=i.price*i.qty;
 
 div.innerHTML+=`
 <div class="item">
-${i.name}<br>
+<b>${i.name}</b><br>
 
 <button onclick="dec('${i.name}')">-</button>
 ${i.qty}
@@ -110,23 +133,7 @@ ${i.qty}
 document.getElementById("total").innerText="Total: "+total;
 }
 
-function inc(name){
-cart.find(i=>i.name===name).qty++;
-saveCart();
-}
-
-function dec(name){
-let f = cart.find(i=>i.name===name);
-if(f.qty>1)f.qty--;
-saveCart();
-}
-
-function removeItem(name){
-cart = cart.filter(i=>i.name!==name);
-saveCart();
-}
-
-function checkout(){
+function goCheckout(){
 location.href="checkout.html";
 }
 
