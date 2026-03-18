@@ -1,12 +1,28 @@
 <!DOCTYPE html>
 <html>
 <head>
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Shop</title>
 
 <style>
-body{font-family:Arial;margin:0;background:#f0f9ff;}
-.header{background:#38bdf8;color:white;padding:15px;text-align:center;}
+body{margin:0;font-family:sans-serif;background:#f1f5f9;}
+
+.header{
+display:flex;
+justify-content:space-between;
+align-items:center;
+background:#0ea5e9;
+color:white;
+padding:10px;
+}
+
+.btn{
+background:white;
+color:#0ea5e9;
+padding:5px 10px;
+border-radius:5px;
+cursor:pointer;
+}
 
 .grid{
 display:grid;
@@ -22,16 +38,7 @@ border-radius:10px;
 text-align:center;
 }
 
-button{
-background:#38bdf8;
-color:white;
-border:none;
-padding:8px;
-width:100%;
-margin-top:5px;
-}
-
-.cart{
+.cartBox{
 position:fixed;
 right:0;
 top:0;
@@ -39,118 +46,108 @@ width:260px;
 height:100%;
 background:white;
 padding:10px;
+display:none;
 overflow:auto;
 }
 
-.open{
-position:fixed;
-bottom:10px;
-right:10px;
-background:red;
-color:white;
-padding:10px;
-border-radius:50%;
+.cartItem{
+display:flex;
+justify-content:space-between;
+margin:5px 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">Wholesome Shop</div>
+<div class="header">
+<b>Wholesome Shop</b>
+<div>
+<span class="btn" onclick="openCart()">Cart</span>
+<span class="btn" onclick="goCheckout()">Checkout</span>
+</div>
+</div>
 
 <div id="products" class="grid"></div>
 
-<div id="cartBox" class="cart">
+<div id="cartBox" class="cartBox">
 <button onclick="closeCart()">Close</button>
 <h3>Cart</h3>
 <div id="cartItems"></div>
-<b id="total"></b>
-<button onclick="goCheckout()">Checkout</button>
+<h4 id="total"></h4>
 </div>
-
-<button class="open" onclick="openCart()">🛒</button>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-let cart = JSON.parse(localStorage.getItem("cart"))||[];
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
 
-// 🔥 LOAD PRODUCTS
-async function loadProducts(){
+// LOAD PRODUCTS
+async function load(){
+let r=await fetch(URL+"/products");
+let d=await r.json();
 
-let res = await fetch(URL+"/products");
-let data = await res.json();
+products.innerHTML="";
 
-let div=document.getElementById("products");
-div.innerHTML="";
+d.documents?.forEach(x=>{
+let f=x.fields;
 
-if(!data.documents){
-div.innerHTML="No products ❌";
-return;
-}
-
-data.documents.forEach(d=>{
-let f=d.fields;
-
-div.innerHTML+=`
+products.innerHTML+=`
 <div class="card">
 <img src="${f.image.stringValue}" width="100"><br>
 <b>${f.name.stringValue}</b><br>
 ${f.price.integerValue} BDT
-<button onclick="addCart('${f.name.stringValue}',${f.price.integerValue})">Add</button>
-</div>
-`;
+<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">Add</button>
+</div>`;
 });
 }
 
 // CART
-function addCart(n,p){
+function add(n,p){
 let f=cart.find(i=>i.name===n);
-if(f) f.qty++;
+if(f)f.qty++;
 else cart.push({name:n,price:p,qty:1});
-
 save();
 }
 
 function save(){
 localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
+render();
 }
 
-function renderCart(){
-let div=document.getElementById("cartItems");
-div.innerHTML="";
+function render(){
+cartItems.innerHTML="";
 let t=0;
 
 cart.forEach((i,x)=>{
 t+=i.price*i.qty;
 
-div.innerHTML+=`
-<div>
+cartItems.innerHTML+=`
+<div class="cartItem">
 ${i.name} (${i.qty})
-<button onclick="iPlus(${x})">+</button>
-<button onclick="iMinus(${x})">-</button>
+<div>
+<button onclick="plus(${x})">+</button>
+<button onclick="minus(${x})">-</button>
 <button onclick="del(${x})">❌</button>
 </div>
-`;
+</div>`;
 });
 
-document.getElementById("total").innerText="Total: "+t;
+total.innerText="Total: "+t;
 }
 
-function iPlus(x){cart[x].qty++;save();}
-function iMinus(x){if(cart[x].qty>1)cart[x].qty--;save();}
+function plus(x){cart[x].qty++;save();}
+function minus(x){if(cart[x].qty>1)cart[x].qty--;save();}
 function del(x){cart.splice(x,1);save();}
 
 // UI
-function closeCart(){document.getElementById("cartBox").style.display="none";}
-function openCart(){document.getElementById("cartBox").style.display="block";}
+function openCart(){cartBox.style.display="block";}
+function closeCart(){cartBox.style.display="none";}
+function goCheckout(){location="checkout.html";}
 
-function goCheckout(){window.location="checkout.html";}
-
-renderCart();
-loadProducts();
+render();
+load();
 
 </script>
 
