@@ -1,61 +1,85 @@
 <!DOCTYPE html>
 <html>
 <head>
-<title>Admin</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Checkout</title>
+
+<style>
+body{font-family:Arial;background:#f0f9ff;padding:10px}
+table{width:100%;border-collapse:collapse}
+th{background:#38bdf8;color:#fff}
+td,th{padding:8px;border:1px solid #ccc;text-align:center}
+.bkash{text-align:center;margin-top:20px}
+button{width:100%;padding:10px;background:#38bdf8;color:#fff;border:none}
+</style>
 </head>
 
 <body>
 
-<h2>Orders</h2>
-<div id="orders"></div>
+<h2>Checkout</h2>
+
+<table>
+<tr><th>Product</th><th>Price</th><th>Qty</th><th>Total</th></tr>
+<tbody id="tbody"></tbody>
+</table>
+
+<h4 id="subtotal"></h4>
+<h4 id="vat"></h4>
+<h3 id="total"></h3>
+
+<div class="bkash">
+<img src="https://raw.githubusercontent.com/muhib2122/wholesome-shop/main/bkash.png" width="120">
+<h3>bKash: 01764262579</h3>
+
+<input id="txid" placeholder="TX ID">
+<button onclick="confirmOrder()">Confirm</button>
+</div>
 
 <script>
-async function loadOrders(){
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let subtotal=0;
 
-let res = await fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders");
-let data = await res.json();
-
-let div=document.getElementById("orders");
-div.innerHTML="";
-
-data.documents.forEach(d=>{
-
-let id=d.name.split("/").pop();
-let f=d.fields;
-
-div.innerHTML+=`
-<div style="border:1px solid #ccc;padding:10px;margin:10px">
-<p>TX: ${f.txid.stringValue}</p>
-<p>Amount: ${f.amount.integerValue}</p>
-<p>Status: ${f.status.stringValue}</p>
-
-<button onclick="approve('${id}')">Approve</button>
-</div>
+cart.forEach(i=>{
+let t=i.price*i.qty;
+subtotal+=t;
+tbody.innerHTML+=`
+<tr>
+<td>${i.name}</td>
+<td>${i.price}</td>
+<td>${i.qty}</td>
+<td>${t}</td>
+</tr>
 `;
-
 });
 
-}
+let vat=subtotal*0.04;
+let total=subtotal+vat;
 
-function approve(id){
+subtotalEl.innerText="Subtotal: "+subtotal;
+vatEl.innerText="VAT: "+vat.toFixed(2);
+totalEl.innerText="Total: "+total.toFixed(2);
 
-fetch(`https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders/${id}?updateMask.fieldPaths=status`,{
-method:"PATCH",
+function confirmOrder(){
+
+let tx=document.getElementById("txid").value;
+
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
+method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-status:{stringValue:"approved"}
+txid:{stringValue:tx},
+amount:{integerValue:total},
+status:{stringValue:"pending"}
 }
 })
 })
 .then(()=>{
-alert("Approved");
-loadOrders();
+alert("Order Submitted");
+localStorage.removeItem("cart");
 });
 
 }
-
-loadOrders();
 </script>
 
 </body>
