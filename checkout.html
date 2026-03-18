@@ -6,12 +6,9 @@
 
 <style>
 body{font-family:Arial;background:#f0f9ff;padding:10px;}
-h2{text-align:center;}
-
-table{width:100%;background:#fff;border-collapse:collapse;}
+table{width:100%;background:white;border-collapse:collapse;}
 th,td{padding:8px;border:1px solid #ddd;text-align:center;}
-
-button{background:#38bdf8;color:#fff;border:none;padding:10px;width:100%;}
+button{background:#38bdf8;color:white;border:none;padding:10px;width:100%;}
 </style>
 </head>
 
@@ -31,7 +28,7 @@ button{background:#38bdf8;color:#fff;border:none;padding:10px;width:100%;}
 <h3 id="total"></h3>
 
 <div style="text-align:center;margin:20px;">
-<img src="bkash.jpg" width="100"><br>
+<img src="bkash.jpg" width="120"><br>
 bKash: 01764262579
 </div>
 
@@ -47,7 +44,7 @@ let table = document.getElementById("table");
 let total=0;
 
 cart.forEach(i=>{
-let t = i.price*i.qty;
+let t=i.price*i.qty;
 total+=t;
 
 table.innerHTML+=`
@@ -62,7 +59,6 @@ table.innerHTML+=`
 
 document.getElementById("total").innerText="Total: "+total;
 
-// SAVE ORDER
 function confirmOrder(){
 
 let tx = document.getElementById("tx").value;
@@ -78,7 +74,7 @@ status:{stringValue:"pending"}
 }
 })
 }).then(()=>{
-alert("Order Submitted ✅");
+alert("Order Done ✅");
 localStorage.removeItem("cart");
 location.href="index.html";
 });
