@@ -2,86 +2,120 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Admin</title>
+<title>Admin Panel</title>
+
+<style>
+body{font-family:Arial;background:#f0f9ff;margin:0;padding:10px;}
+
+input{
+width:100%;
+padding:10px;
+margin:5px 0;
+}
+
+button{
+width:100%;
+padding:10px;
+background:#38bdf8;
+color:white;
+border:none;
+}
+
+.card{
+background:white;
+padding:10px;
+margin:10px 0;
+border-radius:8px;
+}
+</style>
 </head>
 
 <body>
 
 <h2>Admin Panel</h2>
 
+<h3>Add Product</h3>
+
 <input id="name" placeholder="Name">
 <input id="price" placeholder="Price">
 <input id="image" placeholder="Image URL">
 
-<button onclick="addProduct()">Add</button>
+<button onclick="addProduct()">Add Product</button>
 
 <h3>Products</h3>
 <div id="products"></div>
 
-<h3>Orders</h3>
-<div id="orders"></div>
-
-<script src="firebase.js"></script>
 <script>
 
-// ADD PRODUCT
+const URL = "https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+
+// 🔥 ADD PRODUCT (100% FIXED)
 function addProduct(){
 
-let n=name.value;
-let p=price.value;
-let i=image.value;
+let n = document.getElementById("name").value.trim();
+let p = document.getElementById("price").value.trim();
+let i = document.getElementById("image").value.trim();
 
-fetch(BASE_URL+"/products",{
+if(!n || !p || !i){
+alert("Fill all fields ❌");
+return;
+}
+
+fetch(URL + "/products",{
 method:"POST",
-headers:{"Content-Type":"application/json"},
+headers:{
+"Content-Type":"application/json"
+},
 body:JSON.stringify({
 fields:{
 name:{stringValue:n},
-price:{integerValue:parseInt(p)},
+price:{integerValue:String(p)},  // 🔥 IMPORTANT FIX
 image:{stringValue:i}
 }
 })
 })
-.then(()=>loadProducts());
+.then(res=>res.json())
+.then(data=>{
+console.log("Added:", data);
+alert("Product Added ✅");
+loadProducts();
+})
+.catch(err=>{
+console.error(err);
+alert("Error ❌");
+});
+
 }
 
-// LOAD PRODUCTS
+// 🔥 LOAD PRODUCTS
 async function loadProducts(){
 
-let res = await fetch(BASE_URL+"/products");
+let res = await fetch(URL + "/products");
 let data = await res.json();
 
 let div = document.getElementById("products");
 div.innerHTML="";
 
-data.documents?.forEach(d=>{
-let f=d.fields;
-
-div.innerHTML+=`${f.name.stringValue} - ${f.price.integerValue}<br>`;
-});
+if(!data.documents){
+div.innerHTML="No products";
+return;
 }
 
-// LOAD ORDERS
-async function loadOrders(){
+data.documents.forEach(d=>{
 
-let res = await fetch(BASE_URL+"/orders");
-let data = await res.json();
-
-let div = document.getElementById("orders");
-div.innerHTML="";
-
-data.documents?.forEach(d=>{
-let f=d.fields;
+let f = d.fields;
 
 div.innerHTML+=`
-TX:${f.txid.stringValue}
-Status:${f.status.stringValue}<br>
+<div class="card">
+<img src="${f.image.stringValue}" width="100"><br>
+<b>${f.name.stringValue}</b><br>
+${f.price.integerValue} BDT
+</div>
 `;
 });
 }
 
 loadProducts();
-loadOrders();
 
 </script>
 
