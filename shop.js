@@ -12,29 +12,29 @@ const db = getFirestore(app);
 
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-// Load products
-async function loadProducts() {
-  const data = await getDocs(collection(db, "products"));
-  let container = document.getElementById("productList");
+// Load Products
+async function loadProducts(){
+  const data = await getDocs(collection(db,"products"));
+  let container=document.getElementById("productList");
 
-  container.innerHTML = "";
+  container.innerHTML="";
 
   data.forEach(doc=>{
-    let p = doc.data();
+    let p=doc.data();
 
-    container.innerHTML += `
-      <div class="card">
-        <img src="${p.img}" style="width:100%;height:120px">
-        <h4>${p.name}</h4>
-        <p>${p.price} BDT</p>
-        <button onclick='addToCart(${JSON.stringify(p)})'>Add</button>
-      </div>`;
+    container.innerHTML+=`
+    <div class="card">
+      <img src="${p.img}" style="width:100%;height:120px">
+      <h4>${p.name}</h4>
+      <p>${p.price} BDT</p>
+      <button onclick='addToCart(${JSON.stringify(p)})'>Add</button>
+    </div>`;
   });
 }
 
-// Add cart
-window.addToCart = (p)=>{
-  let exist = cart.find(x=>x.name===p.name);
+// Add Cart
+window.addToCart=(p)=>{
+  let exist=cart.find(x=>x.name===p.name);
 
   if(exist) exist.qty++;
   else cart.push({...p, qty:1});
@@ -42,33 +42,28 @@ window.addToCart = (p)=>{
   localStorage.setItem("cart", JSON.stringify(cart));
 
   renderCart();
-  updateCartCount();
+  updateCount();
+}
 
-  // animation
-  let btn = document.querySelector(".cart-btn");
-  btn.style.transform="scale(1.3)";
-  setTimeout(()=>btn.style.transform="scale(1)",200);
-};
-
-// Render cart
+// Render Cart
 function renderCart(){
-  let box = document.getElementById("cartItems");
+  let box=document.getElementById("cartItems");
   box.innerHTML="";
 
   let total=0;
 
   cart.forEach((i,index)=>{
-    let qty=i.qty || 1;
+    let qty=i.qty||1;
     let t=i.price*qty;
     total+=t;
 
     box.innerHTML+=`
-      <div>
-        ${i.name} (${qty}) <br>
-        ${i.price}×${qty}=${t}
-        <br>
-        <button onclick="removeItem(${index})">❌</button>
-      </div>`;
+    <div style="margin-bottom:10px;">
+      <b>${i.name}</b><br>
+      ${i.price} × ${qty} = ${t}
+      <br>
+      <button onclick="removeItem(${index})">Remove</button>
+    </div>`;
   });
 
   document.getElementById("cartTotal").innerText="Total: "+total+" BDT";
@@ -79,11 +74,11 @@ window.removeItem=(i)=>{
   cart.splice(i,1);
   localStorage.setItem("cart", JSON.stringify(cart));
   renderCart();
-  updateCartCount();
+  updateCount();
 }
 
 // Count
-function updateCartCount(){
+function updateCount(){
   document.getElementById("cartCount").innerText=cart.length;
 }
 
@@ -105,4 +100,4 @@ window.goCheckout=()=>{
 
 loadProducts();
 renderCart();
-updateCartCount();
+updateCount();
