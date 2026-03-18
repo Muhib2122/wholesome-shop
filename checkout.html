@@ -5,17 +5,23 @@
 <title>Checkout</title>
 
 <style>
-body { font-family: Arial; background:#e6f3ff; padding:20px; }
+body { font-family: Arial; background:#e6f3ff; padding:15px; }
 
 table { width:100%; border-collapse: collapse; }
 th { background:#4da6ff; color:white; }
-td,th { padding:10px; text-align:center; border:1px solid #ccc; }
+td,th { padding:8px; text-align:center; border:1px solid #ccc; }
+
+.summary {
+  margin-top:15px;
+  font-size:16px;
+}
 
 button {
   background:#4da6ff;
   color:white;
   padding:10px;
   border:none;
+  margin-top:10px;
 }
 </style>
 </head>
@@ -24,7 +30,7 @@ button {
 
 <h2>Checkout</h2>
 
-<table id="table">
+<table>
 <thead>
 <tr>
 <th>Product</th>
@@ -33,63 +39,93 @@ button {
 <th>Total</th>
 </tr>
 </thead>
-<tbody></tbody>
+<tbody id="tbody"></tbody>
 </table>
 
-<h3 id="subtotal"></h3>
-<h3 id="vat"></h3>
-<h2 id="total"></h2>
+<div class="summary">
+  <p id="subtotal"></p>
+  <p id="vat"></p>
+  <h3 id="total"></h3>
+</div>
 
-<input id="txid" placeholder="TX ID">
+<input id="txid" placeholder="Enter TX ID">
+<br>
 <button onclick="confirmOrder()">Confirm</button>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
+// 🔥 Get cart
 let cart = JSON.parse(localStorage.getItem("cart")) || [];
 
-let tbody = document.querySelector("tbody");
+let tbody = document.getElementById("tbody");
 let subtotal = 0;
 
+// 🔥 Loop products
 cart.forEach(item=>{
-  let t = item.price * item.qty;
-  subtotal += t;
+  let qty = item.qty || 1;   // ✅ FIX
+  let price = Number(item.price);
+  let total = price * qty;
+
+  subtotal += total;
 
   tbody.innerHTML += `
   <tr>
     <td>${item.name}</td>
-    <td>${item.price}</td>
-    <td>${item.qty}</td>
-    <td>${t}</td>
+    <td>${price} BDT</td>
+    <td>${qty}</td>
+    <td>${total} BDT</td>
   </tr>`;
 });
 
+// 🔥 VAT + TOTAL
 let vat = subtotal * 0.04;
-let total = subtotal + vat;
+let grandTotal = subtotal + vat;
 
-document.getElementById("subtotal").innerText = "Subtotal: "+subtotal;
-document.getElementById("vat").innerText = "VAT: "+vat.toFixed(2);
-document.getElementById("total").innerText = "Total: "+total.toFixed(2);
+// 🔥 Show
+document.getElementById("subtotal").innerText =
+  "Subtotal: " + subtotal.toFixed(2) + " BDT";
 
+document.getElementById("vat").innerText =
+  "VAT (4%): " + vat.toFixed(2) + " BDT";
+
+document.getElementById("total").innerText =
+  "Total: " + grandTotal.toFixed(2) + " BDT";
+
+
+// 🔥 Confirm + PDF
 function confirmOrder(){
   let tx = document.getElementById("txid").value;
-  if(!tx) return alert("Enter TXID");
+
+  if(!tx) {
+    alert("TX ID lagbe!");
+    return;
+  }
 
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
 
-  let y=20;
-  doc.text("Invoice",80,y); y+=10;
+  let y = 20;
+
+  doc.text("Wholesome Shop Invoice", 60, y);
+  y += 10;
 
   cart.forEach(i=>{
-    doc.text(`${i.name} x${i.qty}`,10,y);
-    y+=10;
+    let q = i.qty || 1;
+    doc.text(`${i.name} x${q}`, 10, y);
+    y += 8;
   });
 
-  doc.text("Total: "+total,10,y); y+=10;
-  doc.text("TXID: "+tx,10,y);
+  y += 5;
+  doc.text("Subtotal: " + subtotal, 10, y); y+=8;
+  doc.text("VAT: " + vat.toFixed(2), 10, y); y+=8;
+  doc.text("Total: " + grandTotal.toFixed(2), 10, y); y+=8;
+  doc.text("TXID: " + tx, 10, y);
 
   doc.save("invoice.pdf");
+
+  // 🔥 clear cart after order
+  localStorage.removeItem("cart");
 }
 </script>
 
