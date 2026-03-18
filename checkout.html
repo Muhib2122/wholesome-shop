@@ -4,9 +4,20 @@
 
 <h2>Checkout</h2>
 
-<div id="list"></div>
+<table border="1" width="100%">
+<tr>
+<th>Product</th>
+<th>Price</th>
+<th>Qty</th>
+<th>Total</th>
+</tr>
 
-<img src="https://muhib2122.github.io/wholesome-shop/bkash.png" width="120">
+<tbody id="list"></tbody>
+</table>
+
+<h3 id="sum"></h3>
+
+<img src="bkash.png" width="120">
 <p>bKash: 01764262579</p>
 
 <input id="tx" placeholder="TX ID">
@@ -15,19 +26,27 @@
 <script>
 
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
-
 let total=0;
 
 cart.forEach(i=>{
-total+=i.price*i.qty;
-list.innerHTML+=`${i.name} x ${i.qty}<br>`;
+let t=i.price*i.qty;
+total+=t;
+
+list.innerHTML+=`
+<tr>
+<td>${i.name}</td>
+<td>${i.price}</td>
+<td>${i.qty}</td>
+<td>${t}</td>
+</tr>`;
 });
 
 let vat=total*0.04;
 let grand=total+vat;
 
-list.innerHTML+=`<br>VAT: ${vat}<br>Total: ${grand}`;
+sum.innerHTML=`VAT: ${vat} <br> Total: ${grand}`;
 
+// ORDER SAVE
 function done(){
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
@@ -41,7 +60,7 @@ status:{stringValue:"pending"}
 }
 })
 }).then(()=>{
-alert("Done ✅");
+alert("Order placed ✅");
 localStorage.removeItem("cart");
 location="index.html";
 });
