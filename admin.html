@@ -4,14 +4,12 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-
 body{
 margin:0;
 font-family:sans-serif;
 background:#e0f2fe;
 }
 
-/* HEADER */
 .header{
 background:#0ea5e9;
 color:white;
@@ -21,12 +19,10 @@ font-size:20px;
 font-weight:bold;
 }
 
-/* CONTAINER */
 .container{
 padding:15px;
 }
 
-/* CARD */
 .card{
 background:white;
 padding:15px;
@@ -35,7 +31,6 @@ margin-bottom:15px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
-/* DASHBOARD */
 .dashboard{
 display:flex;
 gap:10px;
@@ -52,7 +47,6 @@ text-align:center;
 font-weight:bold;
 }
 
-/* INPUT */
 input{
 padding:10px;
 margin:5px 0;
@@ -61,7 +55,6 @@ border-radius:8px;
 border:1px solid #ccc;
 }
 
-/* BUTTON */
 button{
 padding:8px 12px;
 border:none;
@@ -93,7 +86,6 @@ img{
 border-radius:8px;
 margin-bottom:5px;
 }
-
 </style>
 </head>
 
@@ -103,36 +95,28 @@ margin-bottom:5px;
 
 <div class="container">
 
-<!-- DASHBOARD -->
 <div class="card">
 <h3>📊 Dashboard</h3>
-
 <div class="dashboard">
 <div class="box" id="totalSales">Total Sales: 0</div>
 <div class="box" id="totalOrders">Orders: 0</div>
 <div class="box" id="pendingCount">Pending: 0</div>
 </div>
-
 </div>
 
-<!-- ADD PRODUCT -->
 <div class="card">
 <h3>Add Product</h3>
-
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
-
 <button class="addBtn" onclick="add()">➕ Add Product</button>
 </div>
 
-<!-- PRODUCTS -->
 <div class="card">
 <h3>Products</h3>
 <div id="pro"></div>
 </div>
 
-<!-- ORDERS -->
 <div class="card">
 <h3>Pending Orders ⏳</h3>
 <div id="pending"></div>
@@ -222,12 +206,12 @@ image:{stringValue:img}
 }).then(loadPro);
 }
 
-// DELETE
+// DELETE PRODUCT
 function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
-// LOAD ORDERS
+// 🔥 FINAL ORDER LOAD (FIXED)
 async function loadOrders(){
 
 let r=await fetch(URL+"/orders");
@@ -247,21 +231,55 @@ d.documents.forEach(x=>{
 let id=x.name.split("/").pop();
 let f=x.fields;
 
-let tx=f.txid?.stringValue || "N/A";
-let amount=parseInt(f.amount?.integerValue || 0);
-let status=f.status?.stringValue || "pending";
+// ✅ UNIVERSAL TX
+let tx =
+f.txid?.stringValue ||
+f.tx?.stringValue ||
+f.txId?.stringValue ||
+"N/A";
 
-if(amount===0) amount="N/A";
+// ✅ UNIVERSAL AMOUNT
+let amount = 0;
+
+if(f.amount?.integerValue){
+amount = parseInt(f.amount.integerValue);
+}
+else if(f.amount?.doubleValue){
+amount = parseFloat(f.amount.doubleValue);
+}
+else if(f.total?.integerValue){
+amount = parseInt(f.total.integerValue);
+}
+else if(f.total?.doubleValue){
+amount = parseFloat(f.total.doubleValue);
+}
+else if(f.price?.integerValue){
+amount = parseInt(f.price.integerValue);
+}
+
+if(!amount || isNaN(amount)){
+amount = 0;
+}
+
+let displayAmount = amount === 0 ? "N/A" : amount;
+
+let status=f.status?.stringValue || "pending";
 
 totalOrders++;
 
-if(status==="approved") totalSales += (amount==="N/A"?0:amount);
-if(status==="pending") pendingC++;
+if(status==="approved"){
+totalSales += amount;
+}
 
+if(status==="pending"){
+pendingC++;
+}
+
+// UI SAME
 let html=`
 <div class="order">
 <b>TX:</b> ${tx}<br>
-<b>Amount:</b> ${amount}<br>
+<b>Amount:</b> ${displayAmount}<br>
 <b>Status:</b> ${status}<br><br>
 
 <button class="approveBtn" onclick="updateOrder('${id}','approved')">✅ Approve</button>
@@ -275,16 +293,16 @@ else declined.innerHTML+=html;
 
 });
 
-// DASHBOARD UPDATE
+// DASHBOARD
 totalSales.innerText="Total Sales: "+totalSales;
 totalOrders.innerText="Orders: "+totalOrders;
 pendingCount.innerText="Pending: "+pendingC;
 
 }
 
-// UPDATE ORDER
+// ✅ SAFE UPDATE (NO DATA LOSS)
 function updateOrder(id,status){
-fetch(URL+"/orders/"+id,{
+fetch(URL+"/orders/"+id+"?updateMask.fieldPaths=status",{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
