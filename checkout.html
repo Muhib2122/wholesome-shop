@@ -1,10 +1,65 @@
 <!DOCTYPE html>
 <html>
+<head>
+<style>
+body{
+font-family:sans-serif;
+background:#e0f2fe;
+padding:20px;
+}
+
+.card{
+background:white;
+padding:20px;
+border-radius:12px;
+box-shadow:0 0 10px rgba(0,0,0,0.1);
+}
+
+table{
+width:100%;
+border-collapse:collapse;
+}
+
+th{
+background:#38bdf8;
+color:white;
+padding:10px;
+}
+
+td{
+padding:10px;
+border:1px solid #ddd;
+text-align:center;
+}
+
+.total{
+margin-top:10px;
+font-weight:bold;
+}
+
+.success{
+position:fixed;
+top:20px;
+left:50%;
+transform:translateX(-50%);
+background:#22c55e;
+color:white;
+padding:15px 25px;
+border-radius:10px;
+display:none;
+}
+</style>
+</head>
+
 <body>
+
+<div class="success" id="successBox">Order placed ✅</div>
+
+<div class="card">
 
 <h2>Checkout</h2>
 
-<table border="1" width="100%">
+<table>
 <tr>
 <th>Product</th>
 <th>Price</th>
@@ -15,13 +70,17 @@
 <tbody id="list"></tbody>
 </table>
 
-<h3 id="sum"></h3>
+<div class="total" id="sum"></div>
 
-<img src="bkash.png" width="120">
-<p>bKash: 01764262579</p>
+<br>
+
+<img src="bkash.png" width="120"><br>
+bKash: 01764262579<br><br>
 
 <input id="tx" placeholder="TX ID">
 <button onclick="done()">Confirm</button>
+
+</div>
 
 <script>
 
@@ -44,10 +103,14 @@ list.innerHTML+=`
 let vat=total*0.04;
 let grand=total+vat;
 
-sum.innerHTML=`VAT: ${vat} <br> Total: ${grand}`;
+sum.innerHTML=`VAT: ${vat.toFixed(2)} <br> Total: ${grand.toFixed(2)}`;
 
-// ORDER SAVE
 function done(){
+
+if(!tx.value){
+alert("TX ID dao ❌");
+return;
+}
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
@@ -55,14 +118,20 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx.value},
-amount:{integerValue:String(grand)},
+amount:{integerValue:String(Math.round(grand))},
 status:{stringValue:"pending"}
 }
 })
 }).then(()=>{
-alert("Order placed ✅");
+
+successBox.style.display="block";
+
+setTimeout(()=>{
+successBox.style.display="none";
 localStorage.removeItem("cart");
 location="index.html";
+},1500);
+
 });
 
 }
