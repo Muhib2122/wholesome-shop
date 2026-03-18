@@ -2,130 +2,85 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Wholesome Shop</title>
 
 <style>
-body {
-  font-family: Arial;
-  margin: 0;
-  background: #f5faff;
-}
+body { font-family: Arial; margin:0; background:#f5faff; }
 
-/* Header */
 header {
-  background: #4da6ff;
-  color: white;
-  padding: 15px;
-  text-align: center;
+  background:#4da6ff;
+  color:white;
+  padding:15px;
+  text-align:center;
 }
 
-/* Products */
 .products {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: 20px;
-  padding: 20px;
+  display:grid;
+  grid-template-columns:repeat(auto-fill,minmax(200px,1fr));
+  gap:20px;
+  padding:20px;
 }
 
 .card {
-  background: white;
-  border-radius: 10px;
-  padding: 10px;
-  text-align: center;
-  box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+  background:white;
+  padding:10px;
+  border-radius:10px;
+  text-align:center;
 }
 
-.card img {
-  width: 100%;
-  height: 150px;
-  object-fit: cover;
-  border-radius: 8px;
+.cart-btn {
+  position:fixed;
+  top:20px;
+  right:20px;
+  background:#4da6ff;
+  color:white;
+  padding:12px;
+  border-radius:50%;
+  cursor:pointer;
+}
+
+/* Sidebar */
+#cartSidebar {
+  position:fixed;
+  top:0;
+  right:-350px;
+  width:350px;
+  height:100%;
+  background:white;
+  box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+  transition:0.3s;
+  padding:20px;
 }
 
 button {
-  background: #4da6ff;
-  color: white;
-  border: none;
-  padding: 8px;
-  margin-top: 5px;
-  cursor: pointer;
-  border-radius: 6px;
-}
-
-/* Checkout */
-.checkout-box {
-  background: #e6f3ff;
-  padding: 20px;
-  margin: 20px;
-  border-radius: 10px;
-}
-
-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-bottom: 15px;
-}
-
-th {
-  background: #4da6ff;
-  color: white;
-}
-
-td, th {
-  padding: 10px;
-  text-align: center;
-  border-bottom: 1px solid #ccc;
-}
-
-input {
-  padding: 10px;
-  width: 200px;
-  margin-right: 10px;
+  background:#4da6ff;
+  color:white;
+  border:none;
+  padding:8px;
+  cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<header>
-  <h1>Wholesome Shop</h1>
-</header>
+<header><h1>Wholesome Shop</h1></header>
 
-<!-- 🔥 PRODUCTS -->
-<div class="products" id="productList"></div>
+<div class="cart-btn" onclick="toggleCart()">🛒</div>
 
-<!-- 🔥 CHECKOUT -->
-<div class="checkout-box">
+<!-- 🔥 Sidebar Cart -->
+<div id="cartSidebar">
+  <h2>Cart</h2>
+  <div id="cartItems"></div>
+  <h3 id="cartTotal"></h3>
 
-  <h2>Checkout</h2>
-
-  <table id="cartTable">
-    <thead>
-      <tr>
-        <th>Product</th>
-        <th>Price</th>
-        <th>Qty</th>
-        <th>Total</th>
-      </tr>
-    </thead>
-    <tbody></tbody>
-  </table>
-
-  <h3 id="subtotal">Subtotal: 0</h3>
-  <h3 id="vat">VAT: 0</h3>
-  <h2 id="grandTotal">Total: 0</h2>
-
-  <input id="txid" placeholder="Enter TX ID">
-  <button onclick="confirmOrder()">Confirm Order</button>
-
+  <button onclick="goCheckout()">Checkout</button>
+  <br><br>
+  <button onclick="closeCart()">Close ✖</button>
 </div>
 
-<!-- 🔥 SHOP JS -->
+<div class="products" id="productList"></div>
+
 <script type="module" src="shop.js"></script>
-
-<!-- 🔥 PDF LIB -->
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </body>
 </html>
