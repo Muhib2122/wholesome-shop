@@ -11,18 +11,26 @@
       padding: 20px;
     }
 
+    h2 {
+      margin-bottom: 20px;
+    }
+
     input {
       padding: 10px;
       margin: 5px;
       width: 200px;
+      border-radius: 5px;
+      border: 1px solid #ccc;
     }
 
     button {
       padding: 10px;
+      margin: 5px;
       background: #5aa9c9;
       color: white;
       border: none;
       cursor: pointer;
+      border-radius: 5px;
     }
 
     .card {
@@ -30,6 +38,7 @@
       padding: 10px;
       margin: 10px 0;
       border-radius: 8px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
     }
   </style>
 </head>
@@ -38,17 +47,22 @@
 
 <h2>🔥 Admin Panel</h2>
 
+<!-- INPUT SECTION -->
 <input id="name" placeholder="Product Name">
 <input id="price" placeholder="Price">
 <input id="img" placeholder="Image URL">
 
+<br>
+
 <button onclick="addProduct()">Add Product</button>
+<button onclick="updateProduct()">Update Product</button>
 
 <hr>
 
 <h3>All Products</h3>
 <div id="list"></div>
 
+<!-- SCRIPT -->
 <script type="module" src="admin.js"></script>
 
 </body>
