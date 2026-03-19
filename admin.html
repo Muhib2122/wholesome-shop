@@ -1,8 +1,13 @@
 <!DOCTYPE html>
 <html>
 <head>
+
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Admin Panel</title>
+
+<!-- 🔥 APP (UPDATED MANIFEST) -->
+<link rel="manifest" href="admin-manifest.json">
+<meta name="theme-color" content="#0ea5e9">
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
@@ -23,6 +28,7 @@ input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #cc
 .section{margin-top:15px;}
 select{padding:5px;margin-top:5px;border-radius:6px;}
 </style>
+
 </head>
 
 <body>
@@ -34,14 +40,12 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
 
 <div class="container">
 
-<!-- DASHBOARD -->
 <div class="topbox">
 <div>💰 <span id="sales">0</span></div>
 <div>📦 <span id="ordersCount">0</span></div>
 <div>⏳ <span id="pending">0</span></div>
 </div>
 
-<!-- PRODUCTS -->
 <div class="section">
 <h3>Products</h3>
 
@@ -55,11 +59,9 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
 <div id="products"></div>
 </div>
 
-<!-- ORDERS -->
 <div class="section">
 <h3>Orders</h3>
 
-<!-- 🔥 NEW SEARCH BAR (ONLY ADD) -->
 <input id="orderSearch" placeholder="Search Order ID">
 <button onclick="searchOrders()">Search</button>
 
@@ -70,23 +72,26 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
 
 <script>
 
+// 🔥 SERVICE WORKER (APP MODE)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js');
+}
+
+// ===== ORIGINAL LOGIC (UNCHANGED) =====
+
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
 let allOrders=[];
 
-// 🔐 CHECK
 if(localStorage.getItem("admin")!=="true"){
 alert("Admin only");
 location.href="auth.html";
 }
 
-// LOGOUT
 function logout(){
 localStorage.removeItem("admin");
 location.href="auth.html";
 }
-
-// ================= PRODUCTS =================
 
 let editDoc=null;
 
@@ -159,23 +164,18 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 }
 
 
-// ================= ORDERS =================
+// ===== ORDERS =====
 
 function loadOrders(){
 
 fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
-
 allOrders=d.documents||[];
-
 renderOrders(allOrders);
-
 });
 }
 
-
-// 🔥 RENDER (UNCHANGED LOGIC)
 function renderOrders(list){
 
 let total=0;
@@ -229,8 +229,6 @@ pending.innerText=pendingCount;
 
 }
 
-
-// 🔥 SEARCH (NEW ONLY)
 function searchOrders(){
 
 let val=orderSearch.value.trim();
@@ -249,8 +247,6 @@ renderOrders(filtered);
 
 }
 
-
-// UPDATE STATUS (UNCHANGED)
 function update(doc,status){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
 method:"PATCH",
@@ -261,8 +257,6 @@ fields:{status:{stringValue:status}}
 }).then(()=>location.reload());
 }
 
-
-// UPDATE STEP (UNCHANGED)
 function updateStep(doc,value){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
 method:"PATCH",
@@ -272,7 +266,6 @@ fields:{statusStep:{stringValue:value}}
 })
 });
 }
-
 
 // INIT
 loadProducts();
