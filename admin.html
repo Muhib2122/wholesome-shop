@@ -74,6 +74,12 @@ border-radius:8px;
 margin:8px 0;
 }
 
+.logoutBtn{
+background:#ef4444;
+color:white;
+margin-top:10px;
+}
+
 </style>
 </head>
 
@@ -81,15 +87,32 @@ margin:8px 0;
 
 <!-- 🔐 ADMIN PROTECTION -->
 <script>
-const adminEmail = "aiub58muhib@gmail.com"; // এখানে নিজের Gmail বসাও
+const adminEmail = "aiub58muhib@gmail.com";
 
+// not logged in
+if(!localStorage.getItem("user")){
+location.href="auth.html";
+}
+
+// not admin
 if(localStorage.getItem("user") !== adminEmail){
 alert("Admin only");
 location.href="index.html";
 }
+
+// 🔥 auto security (if user change)
+window.addEventListener("storage", function(){
+if(localStorage.getItem("user") !== adminEmail){
+location.href="index.html";
+}
+});
 </script>
 
 <div class="header">Admin Dashboard</div>
+
+<div style="text-align:center;">
+<button class="logoutBtn" onclick="logout()">Logout</button>
+</div>
 
 <div class="container">
 
@@ -135,6 +158,12 @@ location.href="index.html";
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+
+// LOGOUT
+function logout(){
+localStorage.removeItem("user");
+location.href="auth.html";
+}
 
 // ADD PRODUCT
 function add(){
@@ -263,7 +292,7 @@ document.getElementById("pendingCount").innerText="Pending: "+pendingVal;
 
 }
 
-// UPDATE ORDER (SAFE)
+// UPDATE ORDER
 function updateOrder(id,tx,amount,status){
 
 fetch(URL+"/orders/"+id,{
