@@ -2,7 +2,9 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
 <body style="font-family:sans-serif;background:#e0f2fe;padding:15px;">
@@ -45,13 +47,13 @@ html+=`<tr><td colspan="2"><b>Total</b></td><td><b>${finalTotal}</b></td></tr>`;
 table.innerHTML=html;
 
 
-// ===== 🔥 ORDER ID GENERATOR (NEW)
+// ===== ORDER ID
 function generateOrderId(){
 return "ORD-"+Date.now();
 }
 
 
-// ===== PLACE ORDER (LOGIC SAME + ORDER ID ADD)
+// ===== PLACE ORDER (UNCHANGED + ORDER ID)
 function place(){
 
 let orderId = generateOrderId();
@@ -61,28 +63,33 @@ method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-orderId:{stringValue:orderId}, // 🔥 NEW
+orderId:{stringValue:orderId},
 txid:{stringValue:tx.value},
 amount:{integerValue:String(finalTotal)},
 status:{stringValue:"pending"},
+statusStep:{stringValue:"Pending"},
 email:{stringValue:localStorage.getItem("user")||"N/A"}
 }
 })
 }).then(()=>{
-generatePDF(orderId); // 🔥 PASS ID
+generatePDF(orderId);
 localStorage.removeItem("cart");
 location.href="myorders.html";
 });
 }
 
 
-// ===== PDF (UNCHANGED DESIGN + ORDER ID ADD)
+// ===== 🔥 PDF (UPDATED DESIGN ONLY)
 function generatePDF(orderId){
 
 const { jsPDF } = window.jspdf;
 let doc = new jsPDF();
 
-// HEADER
+// ===== DATA
+let userEmail = localStorage.getItem("user") || "N/A";
+let statusStep = "Pending";
+
+// ===== HEADER
 doc.setFillColor(14,165,233);
 doc.rect(0,0,210,25,"F");
 
@@ -90,54 +97,62 @@ doc.setTextColor(255,255,255);
 doc.setFontSize(16);
 doc.text("Wholesome Shop", 15,15);
 
-doc.addImage("myshop.jpg", "JPEG", 160,5,15,15);
+doc.addImage("myshop.jpg","JPEG",170,5,20,15);
 
 doc.setTextColor(0,0,0);
 
-// TITLE
+// ===== TITLE
 doc.setFontSize(14);
-doc.text("Invoice", 15,35);
+doc.text("Invoice",15,35);
 
-// 🔥 ORDER ID
+// ===== INFO
 doc.setFontSize(10);
-doc.text("Order ID: "+orderId, 15,42);
-
-// DATE
 let date = new Date().toLocaleString();
-doc.text("Date: "+date, 15,48);
 
-// TABLE HEADER
-let y = 60;
+doc.text("Order ID: "+orderId,15,42);
+doc.text("Date: "+date,15,48);
+doc.text("Status: "+statusStep,15,54);
+doc.text("Email: "+userEmail,15,60);
+
+// ===== TABLE HEADER
+let y = 70;
+
 doc.setFillColor(220,220,220);
 doc.rect(15,y,180,8,"F");
 
-doc.text("Product", 20,y+5);
-doc.text("Qty", 110,y+5);
-doc.text("Total", 150,y+5);
+doc.text("Product",20,y+5);
+doc.text("Qty",110,y+5);
+doc.text("Total",150,y+5);
 
-// ITEMS
-y+=10;
+// ===== ITEMS
+y+=12;
+
 cart.forEach(i=>{
 doc.text(i.name,20,y);
 doc.text(String(i.qty),110,y);
-doc.text(String(i.price*i.qty)+" BDT",150,y);
+doc.text((i.price*i.qty)+" BDT",150,y);
 y+=8;
 });
 
-// LINE
+// ===== LINE
 doc.line(15,y,195,y);
+y+=10;
+
+// ===== TOTAL
+doc.text("Subtotal: "+total+" BDT",140,y); 
 y+=8;
 
-doc.text("Subtotal: "+total+" BDT",140,y); y+=8;
-doc.text("VAT (4%): "+vat+" BDT",140,y); y+=8;
+doc.text("VAT (4%): "+vat+" BDT",140,y); 
+y+=8;
 
 doc.setFontSize(12);
 doc.text("Total: "+finalTotal+" BDT",140,y);
 
-// FOOTER
+// ===== FOOTER
 doc.setFontSize(10);
 doc.text("Thank you for shopping ❤️",15,280);
 
+// SAVE
 doc.save("invoice-"+orderId+".pdf");
 
 }
