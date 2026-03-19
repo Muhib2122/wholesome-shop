@@ -5,135 +5,281 @@
 
 <style>
 body{
+margin:0;
 font-family:sans-serif;
 background:#e0f2fe;
-display:flex;
-justify-content:center;
-align-items:center;
-height:100vh;
-margin:0;
 }
 
-.box{
-background:white;
-padding:20px;
-border-radius:12px;
-width:90%;
-max-width:350px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-h2{text-align:center;}
-
-input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:6px;
-border:1px solid #ccc;
-}
-
-button{
-width:100%;
-padding:10px;
-margin-top:8px;
-border:none;
-border-radius:6px;
+.header{
 background:#0ea5e9;
 color:white;
+padding:15px;
+text-align:center;
+font-size:20px;
 font-weight:bold;
 }
 
-.google{
-background:#ef4444;
+.container{padding:15px;}
+
+.card{
+background:white;
+padding:15px;
+border-radius:12px;
+margin-bottom:15px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.dashboard{
+display:flex;
+gap:10px;
+flex-wrap:wrap;
+}
+
+.box{
+flex:1;
+background:#38bdf8;
+color:white;
+padding:15px;
+border-radius:10px;
+text-align:center;
+}
+
+input{
+padding:8px;
+margin:5px;
+border-radius:6px;
+border:1px solid #ccc;
+width:90%;
+}
+
+button{
+padding:6px 10px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+margin:3px;
+}
+
+.addBtn{background:#38bdf8;color:white;}
+.updateBtn{background:#22c55e;color:white;}
+.deleteBtn{background:#ef4444;color:white;}
+.approveBtn{background:#16a34a;color:white;}
+.declineBtn{background:#dc2626;color:white;}
+
+.order{
+background:#f0f9ff;
+padding:10px;
+border-radius:8px;
+margin:8px 0;
 }
 </style>
 </head>
 
 <body>
 
-<div class="box">
-<h2>Login / Signup</h2>
+<script>
+// 🔐 ADMIN PROTECTION (STRONG FIX)
+const adminEmail = "aiub58muhib@gmail.com";
 
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Password">
+let user = localStorage.getItem("user");
 
-<button onclick="signup()">Create Account</button>
-<button onclick="login()">Login</button>
-<button class="google" onclick="googleLogin()">Google Login</button>
+if(!user || user !== adminEmail){
+alert("Admin only");
+location.href="index.html";
+}
+</script>
+
+<div class="header">Admin Dashboard</div>
+
+<div class="container">
+
+<div class="card">
+<h3>📊 Dashboard</h3>
+<div class="dashboard">
+<div class="box" id="totalSales">Total Sales: 0</div>
+<div class="box" id="totalOrders">Orders: 0</div>
+<div class="box" id="pendingCount">Pending: 0</div>
+</div>
+</div>
+
+<div class="card">
+<h3>Add Product</h3>
+<input id="n" placeholder="Name">
+<input id="p" placeholder="Price">
+<input id="i" placeholder="Image URL">
+<button class="addBtn" onclick="add()">➕ Add</button>
+</div>
+
+<div class="card">
+<h3>Products</h3>
+<div id="pro"></div>
+</div>
+
+<div class="card">
+<h3>Pending Orders ⏳</h3>
+<div id="pending"></div>
+</div>
+
+<div class="card">
+<h3>Approved Orders ✅</h3>
+<div id="approved"></div>
+</div>
+
+<div class="card">
+<h3>Declined Orders ❌</h3>
+<div id="declined"></div>
+</div>
 
 </div>
 
-<!-- Firebase CDN -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
-
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyBqFh9-695gFPpzCxieKf5fVoZ_JedJRL8",
-  authDomain: "wholesome-shop-f4d0f.firebaseapp.com",
-  projectId: "wholesome-shop-f4d0f"
-};
 
-firebase.initializeApp(firebaseConfig);
-const auth = firebase.auth();
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// SIGNUP
-function signup(){
-let email = emailInput();
-let pass = passInput();
-
-auth.createUserWithEmailAndPassword(email, pass)
-.then(()=>{
-alert("Account Created ✅");
-})
-.catch(e=>alert(e.message));
+// ADD PRODUCT
+function add(){
+if(!n.value || !p.value || !i.value){
+alert("Fill all fields");
+return;
 }
 
-// LOGIN (🔥 FIXED)
-function login(){
-let email = emailInput();
-let pass = passInput();
-
-auth.signInWithEmailAndPassword(email, pass)
-.then(res=>{
-
-// 🔥 IMPORTANT
-localStorage.setItem("user", res.user.email);
-
-alert("Login Success ✅");
-
-// ADMIN AUTO REDIRECT
-if(res.user.email === "aiub58muhib@gmail.com"){
-location.href="admin.html";
-}else{
-location.href="index.html";
-}
-
-})
-.catch(e=>alert(e.message));
-}
-
-// GOOGLE LOGIN
-function googleLogin(){
-let provider = new firebase.auth.GoogleAuthProvider();
-
-auth.signInWithPopup(provider)
-.then(res=>{
-localStorage.setItem("user", res.user.email);
-
-if(res.user.email === "aiub58muhib@gmail.com"){
-location.href="admin.html";
-}else{
-location.href="index.html";
+fetch(URL+"/products",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:n.value},
+price:{integerValue:String(p.value)},
+image:{stringValue:i.value}
 }
 })
-.catch(e=>alert(e.message));
+}).then(()=>{
+n.value=""; p.value=""; i.value="";
+loadPro();
+});
 }
 
-// helpers
-function emailInput(){ return document.getElementById("email").value; }
-function passInput(){ return document.getElementById("pass").value; }
+// LOAD PRODUCTS
+async function loadPro(){
+let r=await fetch(URL+"/products");
+let d=await r.json();
+
+pro.innerHTML="";
+
+d.documents?.forEach(x=>{
+let id=x.name.split("/").pop();
+let f=x.fields;
+
+pro.innerHTML+=`
+<div>
+<img src="${f.image.stringValue}" width="60"><br>
+
+<input id="name_${id}" value="${f.name.stringValue}">
+<input id="price_${id}" value="${f.price.integerValue}">
+<input id="img_${id}" value="${f.image.stringValue}">
+
+<br>
+
+<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑</button>
+</div>
+<hr>
+`;
+});
+}
+
+// UPDATE
+function updatePro(id){
+let name=document.getElementById("name_"+id).value;
+let price=document.getElementById("price_"+id).value;
+let img=document.getElementById("img_"+id).value;
+
+fetch(URL+"/products/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:name},
+price:{integerValue:String(price)},
+image:{stringValue:img}
+}
+})
+}).then(loadPro);
+}
+
+// DELETE
+function del(id){
+fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
+}
+
+// LOAD ORDERS
+async function loadOrders(){
+
+let r=await fetch(URL+"/orders");
+let d=await r.json();
+
+pending.innerHTML="";
+approved.innerHTML="";
+declined.innerHTML="";
+
+let totalSalesVal=0;
+let totalOrdersVal=0;
+let pendingVal=0;
+
+d.documents?.forEach(x=>{
+let id=x.name.split("/").pop();
+let f=x.fields;
+
+let tx=f.txid?.stringValue || "N/A";
+let amount=parseInt(f.amount?.integerValue || 0);
+let status=f.status?.stringValue || "pending";
+
+totalOrdersVal++;
+
+if(status==="approved") totalSalesVal+=amount;
+if(status==="pending") pendingVal++;
+
+let html=`
+<div class="order">
+TX: ${tx}<br>
+Amount: ${amount}<br>
+Status: ${status}<br>
+
+<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">✅</button>
+<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">❌</button>
+</div>
+`;
+
+if(status==="pending") pending.innerHTML+=html;
+else if(status==="approved") approved.innerHTML+=html;
+else declined.innerHTML+=html;
+
+});
+
+totalSales.innerText="Total Sales: "+totalSalesVal;
+totalOrders.innerText="Orders: "+totalOrdersVal;
+pendingCount.innerText="Pending: "+pendingVal;
+}
+
+// UPDATE ORDER
+function updateOrder(id,tx,amount,status){
+fetch(URL+"/orders/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+txid:{stringValue:tx},
+amount:{integerValue:String(amount)},
+status:{stringValue:status}
+}
+})
+}).then(loadOrders);
+}
+
+// INIT
+loadPro();
+loadOrders();
+
 </script>
 
 </body>
