@@ -10,23 +10,55 @@ font-family:sans-serif;
 background:#e0f2fe;
 }
 
-/* LOGIN */
-.loginBox{
-height:100vh;
-display:flex;
-justify-content:center;
-align-items:center;
+/* HEADER */
+.header{
+background:#0ea5e9;
+color:white;
+padding:15px;
+text-align:center;
+font-size:20px;
+font-weight:bold;
+position:relative;
 }
 
-.box{
+.logout{
+position:absolute;
+right:10px;
+top:10px;
+background:#ef4444;
+padding:6px 10px;
+border:none;
+border-radius:6px;
+color:white;
+}
+
+/* CONTAINER */
+.container{padding:15px;}
+
+.card{
 background:white;
-padding:20px;
+padding:15px;
 border-radius:12px;
-width:90%;
-max-width:350px;
+margin-bottom:15px;
 box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
+/* DASHBOARD */
+.dashboard{
+display:flex;
+gap:10px;
+}
+
+.box{
+flex:1;
+background:#38bdf8;
+color:white;
+padding:15px;
+border-radius:10px;
+text-align:center;
+}
+
+/* INPUT */
 input{
 width:100%;
 padding:10px;
@@ -35,62 +67,20 @@ border-radius:6px;
 border:1px solid #ccc;
 }
 
+/* BUTTON */
 button{
-padding:10px;
+padding:6px 10px;
 border:none;
 border-radius:6px;
-background:#0ea5e9;
-color:white;
-width:100%;
-margin-top:8px;
+cursor:pointer;
+margin:3px;
 }
 
-/* PANEL */
-.header{
-background:#0ea5e9;
-color:white;
-padding:15px;
-text-align:center;
-font-size:20px;
-font-weight:bold;
-display:none;
-}
-
-.logoutBtn{
-position:absolute;
-right:10px;
-top:10px;
-background:#ef4444;
-padding:6px 10px;
-border-radius:6px;
-color:white;
-}
-
-.container{
-padding:15px;
-display:none;
-}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-}
-
-.dashboard{
-display:flex;
-gap:10px;
-}
-
-.boxStat{
-flex:1;
-background:#38bdf8;
-color:white;
-padding:15px;
-border-radius:10px;
-text-align:center;
-}
+.add{background:#38bdf8;color:white;}
+.update{background:#22c55e;color:white;}
+.delete{background:#ef4444;color:white;}
+.approve{background:#16a34a;color:white;}
+.decline{background:#dc2626;color:white;}
 
 .order{
 background:#f0f9ff;
@@ -103,87 +93,21 @@ margin:8px 0;
 
 <body>
 
-<!-- 🔐 LOGIN UI -->
-<div class="loginBox" id="loginBox">
-<div class="box">
-<h3>Admin Login</h3>
-
-<input id="email" placeholder="Email">
-<input id="pass" type="password" placeholder="Password">
-
-<button onclick="login()">Login</button>
-</div>
-</div>
-
-<!-- 🔥 ADMIN PANEL -->
-<div class="header" id="header">
-Admin Dashboard
-<button class="logoutBtn" onclick="logout()">Logout</button>
-</div>
-
-<div class="container" id="panel">
-
-<div class="card">
-<h3>Dashboard</h3>
-<div class="dashboard">
-<div class="boxStat" id="totalSales">Sales: 0</div>
-<div class="boxStat" id="totalOrders">Orders: 0</div>
-<div class="boxStat" id="pendingCount">Pending: 0</div>
-</div>
-</div>
-
-<div class="card">
-<h3>Add Product</h3>
-<input id="n" placeholder="Name">
-<input id="p" placeholder="Price">
-<input id="i" placeholder="Image URL">
-<button onclick="add()">Add</button>
-</div>
-
-<div class="card">
-<h3>Products</h3>
-<div id="pro"></div>
-</div>
-
-<div class="card">
-<h3>Orders</h3>
-<div id="orders"></div>
-</div>
-
-</div>
-
 <script>
+// 🔐 LOGIN SYSTEM
+const ADMIN_EMAIL="aiub58muhib@gmail.com";
+const ADMIN_PASS="123456";
 
-// 🔐 ADMIN LOGIN CHECK
-const ADMIN_EMAIL = "aiub58muhib@gmail.com";
-const ADMIN_PASS = "123456"; // 👉 চাইলে change কর
+if(localStorage.getItem("admin")!=="true"){
+let e=prompt("Admin Email:");
+let p=prompt("Password:");
 
-// AUTO LOGIN
-if(localStorage.getItem("admin") === "true"){
-showPanel();
-}
-
-// LOGIN FUNCTION
-function login(){
-let email = document.getElementById("email").value;
-let pass = document.getElementById("pass").value;
-
-if(email === ADMIN_EMAIL && pass === ADMIN_PASS){
+if(e===ADMIN_EMAIL && p===ADMIN_PASS){
 localStorage.setItem("admin","true");
-showPanel();
 }else{
-alert("Wrong credentials ❌");
+alert("Access Denied ❌");
+location.href="index.html";
 }
-}
-
-// SHOW PANEL
-function showPanel(){
-document.getElementById("loginBox").style.display="none";
-document.getElementById("header").style.display="block";
-document.getElementById("panel").style.display="block";
-
-loadPro();
-loadOrders();
 }
 
 // LOGOUT
@@ -191,8 +115,50 @@ function logout(){
 localStorage.removeItem("admin");
 location.reload();
 }
+</script>
 
-// 🔥 FIRESTORE
+<div class="header">
+Admin Dashboard
+<button class="logout" onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div class="card">
+<h3>📊 Dashboard</h3>
+<div class="dashboard">
+<div class="box" id="sales">Sales: 0</div>
+<div class="box" id="orders">Orders: 0</div>
+<div class="box" id="pending">Pending: 0</div>
+</div>
+</div>
+
+<!-- ADD PRODUCT -->
+<div class="card">
+<h3>➕ Add Product</h3>
+<input id="n" placeholder="Name">
+<input id="p" placeholder="Price">
+<input id="i" placeholder="Image URL">
+<button class="add" onclick="add()">Add Product</button>
+</div>
+
+<!-- PRODUCTS -->
+<div class="card">
+<h3>🛒 Products</h3>
+<div id="pro"></div>
+</div>
+
+<!-- ORDERS -->
+<div class="card">
+<h3>📦 Orders</h3>
+<div id="orderList"></div>
+</div>
+
+</div>
+
+<script>
+
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
 // ADD PRODUCT
@@ -207,7 +173,10 @@ price:{integerValue:String(p.value)},
 image:{stringValue:i.value}
 }
 })
-}).then(loadPro);
+}).then(()=>{
+n.value="";p.value="";i.value="";
+loadPro();
+});
 }
 
 // LOAD PRODUCTS
@@ -223,44 +192,99 @@ let f=x.fields;
 
 pro.innerHTML+=`
 <div>
-${f.name.stringValue} - ${f.price.integerValue}
-</div>
+<img src="${f.image.stringValue}" width="60"><br>
+
+<input id="name_${id}" value="${f.name.stringValue}">
+<input id="price_${id}" value="${f.price.integerValue}">
+<input id="img_${id}" value="${f.image.stringValue}">
+
+<br>
+<button class="update" onclick="updatePro('${id}')">✏️</button>
+<button class="delete" onclick="del('${id}')">🗑️</button>
+</div><hr>
 `;
 });
+}
+
+// UPDATE PRODUCT
+function updatePro(id){
+let name=document.getElementById("name_"+id).value;
+let price=document.getElementById("price_"+id).value;
+let img=document.getElementById("img_"+id).value;
+
+fetch(URL+"/products/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:name},
+price:{integerValue:String(price)},
+image:{stringValue:img}
+}
+})
+}).then(loadPro);
+}
+
+// DELETE
+function del(id){
+fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
 
 // LOAD ORDERS
 async function loadOrders(){
-
 let r=await fetch(URL+"/orders");
 let d=await r.json();
 
-orders.innerHTML="";
+orderList.innerHTML="";
 
 let total=0, count=0, pending=0;
 
 d.documents?.forEach(x=>{
+let id=x.name.split("/").pop();
 let f=x.fields;
 
-let amount=parseInt(f.amount?.integerValue || 0);
-let status=f.status?.stringValue;
+let amount=parseInt(f.amount?.integerValue||0);
+let tx=f.txid?.stringValue||"N/A";
+let status=f.status?.stringValue||"pending";
 
 count++;
-
 if(status==="approved") total+=amount;
 if(status==="pending") pending++;
 
-orders.innerHTML+=`
+orderList.innerHTML+=`
 <div class="order">
-${amount} BDT - ${status}
+<b>TX:</b> ${tx}<br>
+<b>Amount:</b> ${amount} BDT<br>
+<b>Status:</b> ${status}<br>
+
+<button class="approve" onclick="updateOrder('${id}',${amount},'approved')">✅</button>
+<button class="decline" onclick="updateOrder('${id}',${amount},'declined')">❌</button>
 </div>
 `;
 });
 
-totalSales.innerText="Sales: "+total;
-totalOrders.innerText="Orders: "+count;
-pendingCount.innerText="Pending: "+pending;
+sales.innerText="Sales: "+total;
+orders.innerText="Orders: "+count;
+pending.innerText="Pending: "+pending;
 }
+
+// UPDATE ORDER
+function updateOrder(id,amount,status){
+fetch(URL+"/orders/"+id,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+amount:{integerValue:String(amount)},
+status:{stringValue:status}
+}
+})
+}).then(loadOrders);
+}
+
+// INIT
+loadPro();
+loadOrders();
 
 </script>
 
