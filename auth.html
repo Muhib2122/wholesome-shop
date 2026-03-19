@@ -2,7 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Login / Signup</title>
+<title>Login</title>
 
 <style>
 body{
@@ -38,19 +38,17 @@ border:1px solid #ccc;
 button{
 width:100%;
 padding:10px;
-margin-top:10px;
 border:none;
 border-radius:6px;
+background:#0ea5e9;
+color:white;
 font-size:15px;
 }
 
-.login{background:#0ea5e9;color:white;}
-.google{background:#ef4444;color:white;}
-
-.switch{
+.info{
 margin-top:10px;
+font-size:13px;
 color:#555;
-cursor:pointer;
 }
 </style>
 </head>
@@ -59,79 +57,47 @@ cursor:pointer;
 
 <div class="box">
 
-<h2 id="title">Login</h2>
+<h2>Login</h2>
 
-<input id="name" placeholder="Full Name" style="display:none;">
 <input id="email" placeholder="Email">
 <input id="password" type="password" placeholder="Password">
 
-<button class="login" onclick="submit()">Continue</button>
+<button onclick="login()">Login</button>
 
-<button class="google" onclick="googleLogin()">Google Sign</button>
-
-<div class="switch" onclick="toggle()">Switch Login / Signup</div>
+<div class="info">
+Admin: aiub58muhib@gmail.com / 123456
+</div>
 
 </div>
 
 <script>
 
-let isLogin = true;
-
-// 🔄 SWITCH LOGIN/SIGNUP
-function toggle(){
-isLogin = !isLogin;
-
-title.innerText = isLogin ? "Login" : "Signup";
-name.style.display = isLogin ? "none" : "block";
-}
-
-// 🔐 MAIN LOGIN/SIGNUP
-function submit(){
+// 🔐 LOGIN SYSTEM (LOGIC SAFE)
+function login(){
 
 let email = document.getElementById("email").value;
 let pass = document.getElementById("password").value;
-let fullname = document.getElementById("name").value;
 
-// BASIC VALIDATION
 if(!email || !pass){
 alert("Fill all fields");
 return;
 }
 
-// 👉 SAVE USER
+// 👉 USER SAVE (existing logic)
 localStorage.setItem("user", email);
 
-// 👉 ADMIN CHECK
-if(email === "aiub58muhib@gmail.com"){
+// 👉 ADMIN LOGIN (FIXED)
+if(email === "aiub58muhib@gmail.com" && pass === "123456"){
+
 localStorage.setItem("admin","true");
 location.href = "admin.html";
-return;
-}else{
-localStorage.removeItem("admin");
-}
 
-// 👉 NORMAL USER
+}else{
+
+// 👉 NORMAL USER (existing flow untouched)
+localStorage.removeItem("admin");
 location.href = "index.html";
 
-}
-
-// 🔴 GOOGLE LOGIN (UI BASED)
-function googleLogin(){
-
-let email = prompt("Enter Google Email:");
-
-if(!email) return;
-
-// SAVE USER
-localStorage.setItem("user", email);
-
-// ADMIN CHECK
-if(email === "aiub58muhib@gmail.com"){
-localStorage.setItem("admin","true");
-location.href="admin.html";
-}else{
-localStorage.removeItem("admin");
-location.href="index.html";
 }
 
 }
