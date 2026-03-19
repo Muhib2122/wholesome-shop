@@ -2,59 +2,47 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
 <style>
 body{font-family:sans-serif;background:#e0f2fe;margin:0;}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.header img{
-width:35px;
-border-radius:50%;
-}
-
-.card{
-background:white;
-margin:10px;
-padding:15px;
-border-radius:10px;
-}
+.card{background:white;margin:10px;padding:15px;border-radius:10px;}
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<img src="myshop.jpg">
-<b>My Orders</b>
-</div>
-
+<h2 style="text-align:center;">My Orders</h2>
 <div id="orders"></div>
 
 <script>
+
+let currentUser = localStorage.getItem("user");
+
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders")
 .then(r=>r.json())
 .then(d=>{
+
 let html="";
+
 d.documents?.forEach(x=>{
 let f=x.fields;
+
+let email=f.userEmail?.stringValue || "";
+
+if(email !== currentUser) return; // 🔥 FILTER
+
 html+=`
 <div class="card">
-TX: ${f.txid?.stringValue || "N/A"}<br>
-Amount: ${f.amount?.integerValue || 0} BDT<br>
+TX: ${f.txid?.stringValue}<br>
+Amount: ${f.amount?.integerValue} BDT<br>
 Status: ${f.status?.stringValue}
 </div>
 `;
 });
-orders.innerHTML=html;
+
+orders.innerHTML = html || "No Orders";
+
 });
+
 </script>
 
 </body>
