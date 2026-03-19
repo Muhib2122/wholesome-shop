@@ -9,9 +9,22 @@ body{font-family:sans-serif;margin:0;background:#e0f2fe;}
 .header{
 background:#0ea5e9;
 color:white;
-padding:12px;
+padding:10px;
 display:flex;
 justify-content:space-between;
+align-items:center;
+}
+
+.logo{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.logo img{
+width:35px;
+height:35px;
+border-radius:50%;
 }
 
 .products{
@@ -26,6 +39,7 @@ background:white;
 padding:10px;
 border-radius:10px;
 width:45%;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 button{
@@ -72,45 +86,44 @@ location.href="auth.html";
 </script>
 
 <div class="header">
-<div>🛒 Shop</div>
+
+<div class="logo">
+<img src="myshop.jpg">
+<b>MyShop</b>
+</div>
 
 <div>
 <button onclick="openCart()">Cart</button>
 <button onclick="location.href='myorders.html'">My Orders</button>
 <button onclick="logout()">Logout</button>
 </div>
+
 </div>
 
 <div class="products" id="products"></div>
 
-<!-- CART -->
 <div id="cartPanel" class="cartPanel">
-<h3>Cart</h3>
-
+<h3>🛒 Cart</h3>
 <div id="cartItems"></div>
-
 <div class="totalBox" id="totalBox">Total: 0</div>
-
 <button onclick="location.href='checkout.html'">Checkout</button>
 <button onclick="closeCart()">Close</button>
 </div>
 
 <script>
+// same logic (unchanged)
 
 function logout(){
 localStorage.removeItem("user");
 location.href="auth.html";
 }
 
-// LOAD PRODUCTS
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products")
 .then(r=>r.json())
 .then(d=>{
 let html="";
-
 d.documents?.forEach(x=>{
 let f=x.fields;
-
 html+=`
 <div class="card">
 <img src="${f.image.stringValue}" width="100%">
@@ -120,24 +133,18 @@ html+=`
 </div>
 `;
 });
-
 products.innerHTML=html;
 });
 
-// ADD CART
 function add(name,price){
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
-
 let f=cart.find(i=>i.name===name);
-
 if(f) f.qty++;
 else cart.push({name,price,qty:1});
-
 localStorage.setItem("cart",JSON.stringify(cart));
 loadCart();
 }
 
-// LOAD CART
 function loadCart(){
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let html="";
@@ -145,12 +152,10 @@ let sum=0;
 
 cart.forEach((item,i)=>{
 sum += item.price * item.qty;
-
 html+=`
 <div>
 <b>${item.name}</b><br>
-${item.price} × ${item.qty}
-<br>
+${item.price} × ${item.qty}<br>
 <button class="qtyBtn" onclick="changeQty(${i},1)">➕</button>
 <button class="qtyBtn" onclick="changeQty(${i},-1)">➖</button>
 <button class="qtyBtn" onclick="removeItem(${i})">❌</button>
@@ -160,21 +165,17 @@ ${item.price} × ${item.qty}
 });
 
 cartItems.innerHTML=html;
-document.getElementById("totalBox").innerText = "Total: "+sum+" BDT";
+document.getElementById("totalBox").innerText="Total: "+sum+" BDT";
 }
 
-// CHANGE QTY
 function changeQty(i,v){
 let cart=JSON.parse(localStorage.getItem("cart"));
 cart[i].qty+=v;
-
 if(cart[i].qty<=0) cart.splice(i,1);
-
 localStorage.setItem("cart",JSON.stringify(cart));
 loadCart();
 }
 
-// REMOVE
 function removeItem(i){
 let cart=JSON.parse(localStorage.getItem("cart"));
 cart.splice(i,1);
@@ -190,7 +191,6 @@ loadCart();
 function closeCart(){
 document.getElementById("cartPanel").classList.remove("active");
 }
-
 </script>
 
 </body>
