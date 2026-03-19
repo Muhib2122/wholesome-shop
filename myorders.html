@@ -2,35 +2,50 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 </head>
 
-<body style="font-family:sans-serif;background:#e0f2fe;padding:10px;">
+<body style="font-family:sans-serif;background:#e0f2fe;padding:15px;">
 
 <img src="myshop.jpg" width="40">
+
 <h2>My Orders</h2>
 
-<!-- 🔍 SEARCH -->
-<input id="search" placeholder="Enter Order ID"
-style="width:100%;padding:10px;margin-bottom:10px">
+<input id="searchId" placeholder="Enter Order ID">
+<button onclick="search()">Search</button>
 
-<button onclick="loadOrders()">Search</button>
-
-<div id="list"></div>
+<div id="orders"></div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-function loadOrders(){
+let allOrders=[];
+
+
+// ================= LOAD =================
+function load(){
 
 fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
-list.innerHTML="";
-let searchVal = search.value.trim();
+allOrders=d.documents||[];
+show(allOrders);
 
-(d.documents||[]).forEach(doc=>{
+});
+
+}
+
+
+// ================= SHOW =================
+function show(list){
+
+orders.innerHTML="";
+
+list.forEach(doc=>{
 
 let f=doc.fields;
 
@@ -40,37 +55,120 @@ let status=f.status?.stringValue||"pending";
 let step=f.statusStep?.stringValue||"Pending";
 let email=f.email?.stringValue||"N/A";
 
-// 🔥 FILTER BY ORDER ID
-if(searchVal && orderId!==searchVal) return;
-
-list.innerHTML+=`
-<div style="background:white;padding:10px;margin-bottom:10px;border-radius:10px">
+orders.innerHTML+=`
+<div style="background:white;padding:10px;margin:10px 0;border-radius:10px">
 
 🆔 ${orderId}<br>
 💰 ${amount} BDT<br>
 Status: ${status}<br>
+📦 Step: ${step}<br>
 
-<!-- 🔥 TRACKING -->
-<div style="margin-top:5px">
-📦 Step: <b>${step}</b>
-</div>
-
-<button onclick="download('${orderId}','${amount}')">Download PDF</button>
+<button onclick="downloadPDF(
+'${orderId}',
+'${amount}',
+'${status}',
+'${step}',
+'${email}'
+)">Download PDF</button>
 
 </div>
 `;
 
 });
 
+}
+
+
+// ================= SEARCH =================
+function search(){
+
+let val=searchId.value.trim();
+
+if(!val){
+show(allOrders);
+return;
+}
+
+let filtered=allOrders.filter(doc=>{
+let id=doc.fields.orderId?.stringValue||"";
+return id.includes(val);
 });
+
+show(filtered);
+
 }
 
-// 🔥 SIMPLE PDF
-function download(id,amount){
-window.print(); // existing simple logic safe
+
+// ================= 🔥 PDF (FIXED) =================
+function downloadPDF(orderId, amount, status, step, email){
+
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
+
+// HEADER
+doc.setFillColor(14,165,233);
+doc.rect(0,0,210,25,"F");
+
+doc.setTextColor(255,255,255);
+doc.setFontSize(16);
+doc.text("Wholesome Shop",15,15);
+
+doc.addImage("myshop.jpg","JPEG",170,5,20,15);
+
+doc.setTextColor(0,0,0);
+
+// TITLE
+doc.setFontSize(14);
+doc.text("Invoice",15,35);
+
+// INFO
+doc.setFontSize(10);
+let date = new Date().toLocaleString();
+
+doc.text("Order ID: "+orderId,15,42);
+doc.text("Date: "+date,15,48);
+doc.text("Status: "+status,15,54);
+doc.text("Step: "+step,15,60);
+doc.text("Email: "+email,15,66);
+
+// TABLE HEADER
+let y = 80;
+
+doc.setFillColor(220,220,220);
+doc.rect(15,y,180,8,"F");
+
+doc.text("Product",20,y+5);
+doc.text("Qty",110,y+5);
+doc.text("Total",150,y+5);
+
+// DATA (fallback safe)
+y+=12;
+
+doc.text("Order Amount",20,y);
+doc.text("-",110,y);
+doc.text(amount+" BDT",150,y);
+
+// LINE
+y+=10;
+doc.line(15,y,195,y);
+y+=10;
+
+// TOTAL
+doc.setFontSize(12);
+doc.text("Total: "+amount+" BDT",140,y);
+
+// FOOTER
+doc.setFontSize(10);
+doc.text("Thank you for shopping ❤️",15,280);
+
+// SAVE
+doc.save("invoice-"+orderId+".pdf");
+
 }
 
-loadOrders();
+
+// INIT
+load();
 
 </script>
 
