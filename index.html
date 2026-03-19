@@ -37,12 +37,48 @@ border:none;
 padding:6px;
 border-radius:6px;
 margin-top:5px;
+cursor:pointer;
 }
 
-.cartBtn{
-background:#22c55e;
+/* CART PANEL */
+.cartPanel{
+position:fixed;
+right:-100%;
+top:0;
+width:80%;
+height:100%;
+background:white;
+box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+transition:0.3s;
+padding:15px;
+overflow:auto;
+z-index:999;
 }
 
+.cartPanel.active{
+right:0;
+}
+
+.cartItem{
+border-bottom:1px solid #ddd;
+padding:10px 0;
+}
+
+.qtyBtn{
+padding:4px 8px;
+margin:2px;
+background:#38bdf8;
+border-radius:5px;
+}
+
+.totalBox{
+background:#0ea5e9;
+color:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
+margin-top:10px;
+}
 </style>
 </head>
 
@@ -58,12 +94,24 @@ location.href="auth.html";
 <div>🛒 Shop</div>
 
 <div>
+<button onclick="openCart()">Cart</button>
 <button onclick="goOrders()">My Orders</button>
 <button onclick="logout()">Logout</button>
 </div>
 </div>
 
 <div class="products" id="products"></div>
+
+<!-- CART PANEL -->
+<div id="cartPanel" class="cartPanel">
+<h3>🛒 Cart</h3>
+<div id="cartItems"></div>
+
+<div class="totalBox" id="total">Total: 0</div>
+
+<button onclick="goCheckout()">Checkout</button>
+<button onclick="closeCart()">Close</button>
+</div>
 
 <script>
 
@@ -76,7 +124,11 @@ function goOrders(){
 location.href="myorders.html";
 }
 
-// 🔥 LOAD PRODUCTS FROM FIRESTORE
+function goCheckout(){
+location.href="checkout.html";
+}
+
+// LOAD PRODUCTS
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products")
 .then(r=>r.json())
 .then(d=>{
@@ -94,8 +146,7 @@ html+=`
 <img src="${img}" width="100%">
 <h4>${name}</h4>
 <p>${price} BDT</p>
-
-<button onclick="add('${name}',${price})">Add to Cart</button>
+<button onclick="add('${name}',${price})">Add</button>
 </div>
 `;
 });
@@ -116,16 +167,64 @@ cart.push({name,price,qty:1});
 }
 
 localStorage.setItem("cart",JSON.stringify(cart));
-
-alert("Added");
+loadCart();
 }
 
-// GO CHECKOUT
-document.body.insertAdjacentHTML("beforeend",`
-<div style="position:fixed;bottom:10px;right:10px;">
-<button class="cartBtn" onclick="location.href='checkout.html'">Checkout</button>
+// LOAD CART
+function loadCart(){
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+let html="";
+let total=0;
+
+cart.forEach((item,i)=>{
+total+=item.price*item.qty;
+
+html+=`
+<div class="cartItem">
+<b>${item.name}</b><br>
+${item.price} × ${item.qty}
+
+<br>
+
+<button class="qtyBtn" onclick="changeQty(${i},1)">➕</button>
+<button class="qtyBtn" onclick="changeQty(${i},-1)">➖</button>
+<button class="qtyBtn" onclick="removeItem(${i})">❌</button>
 </div>
-`);
+`;
+});
+
+cartItems.innerHTML=html;
+total.innerText="Total: "+total+" BDT";
+}
+
+// CHANGE QTY
+function changeQty(i,val){
+let cart=JSON.parse(localStorage.getItem("cart"));
+cart[i].qty+=val;
+
+if(cart[i].qty<=0) cart.splice(i,1);
+
+localStorage.setItem("cart",JSON.stringify(cart));
+loadCart();
+}
+
+// REMOVE
+function removeItem(i){
+let cart=JSON.parse(localStorage.getItem("cart"));
+cart.splice(i,1);
+localStorage.setItem("cart",JSON.stringify(cart));
+loadCart();
+}
+
+// PANEL
+function openCart(){
+document.getElementById("cartPanel").classList.add("active");
+loadCart();
+}
+
+function closeCart(){
+document.getElementById("cartPanel").classList.remove("active");
+}
 
 </script>
 
