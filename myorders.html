@@ -6,40 +6,11 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.header img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
-
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;align-items:center;gap:10px;}
+.header img{width:35px;height:35px;border-radius:50%;}
 .container{padding:15px;}
-
-.card{
-background:white;
-padding:12px;
-margin-bottom:10px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-button{
-margin-top:8px;
-padding:8px;
-background:#0ea5e9;
-color:white;
-border:none;
-border-radius:6px;
-}
+.card{background:white;padding:12px;margin-bottom:10px;border-radius:10px;}
+button{margin-top:8px;padding:8px;background:#0ea5e9;color:white;border:none;border-radius:6px;}
 </style>
 </head>
 
@@ -52,15 +23,16 @@ My Orders
 
 <div class="container" id="orders"></div>
 
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// 🔥 existing logic (UNCHANGED)
 let user = localStorage.getItem("user");
+
+// ❗ debug দেখার জন্য
+console.log("Logged user:", user);
 
 fetch(URL+"/orders")
 .then(r=>r.json())
@@ -68,38 +40,48 @@ fetch(URL+"/orders")
 
 orders.innerHTML="";
 
+// ❗ যদি data না থাকে
+if(!d.documents){
+orders.innerHTML = "<p>No orders found</p>";
+return;
+}
+
 (d.documents||[]).forEach(doc=>{
 
 let f = doc.fields;
 
-// 👉 user filter (unchanged)
-if(f.email.stringValue !== user) return;
+// ❗ SAFE email read
+let email = f.email?.stringValue || "N/A";
 
-// UI
+// 🔥 original logic (same)
+if(email !== user) return;
+
 orders.innerHTML += `
 <div class="card">
+👤 ${email}<br>
 💰 ${f.amount.integerValue} BDT<br>
-TX: ${f.txid.stringValue}<br>
+TX: ${f.txid?.stringValue || "-"}<br>
 Status: ${f.status.stringValue}<br>
 
-<button onclick="downloadPDF('${f.amount.integerValue}','${f.txid.stringValue}','${f.status.stringValue}')">
-📄 Download Invoice
+<button onclick="downloadPDF('${f.amount.integerValue}','${f.txid?.stringValue}','${f.status.stringValue}')">
+📄 Invoice
 </button>
-
 </div>
 `;
 
 });
 
+})
+.catch(()=>{
+orders.innerHTML = "<p>❌ Internet problem</p>";
 });
 
-// 🔥 PDF UPGRADE (ADD ONLY – logic untouched)
+// PDF
 function downloadPDF(amount, tx, status){
 
 const { jsPDF } = window.jspdf;
 let doc = new jsPDF();
 
-// LOGO
 let img = new Image();
 img.src = "myshop.jpg";
 
@@ -115,16 +97,9 @@ doc.text("Date: " + new Date().toLocaleString(), 50, 28);
 
 doc.line(10, 35, 200, 35);
 
-// DETAILS
-doc.setFontSize(12);
-
 doc.text("Amount: " + amount + " BDT", 15, 50);
-doc.text("Transaction ID: " + tx, 15, 60);
+doc.text("TX: " + tx, 15, 60);
 doc.text("Status: " + status, 15, 70);
-
-// FOOTER
-doc.setFontSize(10);
-doc.text("Thank you for shopping with us!", 15, 90);
 
 doc.save("invoice.pdf");
 
@@ -133,6 +108,5 @@ doc.save("invoice.pdf");
 }
 
 </script>
-
 </body>
 </html>
