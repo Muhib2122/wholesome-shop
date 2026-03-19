@@ -1,32 +1,23 @@
 <!DOCTYPE html>
 <html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-</head>
-
 <body style="font-family:sans-serif;background:#e0f2fe;padding:10px;">
 
-<div style="display:flex;align-items:center;gap:10px;">
 <img src="myshop.jpg" width="40">
 <h2>My Orders</h2>
-</div>
 
 <div id="orders"></div>
 
 <script>
 
-const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders";
-
 let user=localStorage.getItem("user");
 
-fetch(URL)
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders")
 .then(r=>r.json())
 .then(d=>{
 
 orders.innerHTML="";
 
 (d.documents||[]).forEach(doc=>{
-
 let f=doc.fields;
 
 if((f.email?.stringValue||"N/A")===user){
@@ -36,15 +27,11 @@ orders.innerHTML+=`
 💰 ${f.amount.integerValue} BDT<br>
 TX: ${f.txid.stringValue}<br>
 Status: ${f.status.stringValue}
-</div>
-`;
-
+</div>`;
 }
-
 });
 
 });
-
 </script>
 
 </body>
