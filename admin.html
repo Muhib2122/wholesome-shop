@@ -1,3 +1,23 @@
+<script>
+// ✅ ADMIN ONLY CHECK (FIXED)
+
+const adminEmail = "aiub58muhib@gmail.com";
+
+// 🔥 login system support
+let user = localStorage.getItem("user");
+let adminLogin = localStorage.getItem("admin");
+
+// 👉 দুইভাবে allow:
+// 1. Firebase login (user email)
+// 2. manual admin login (admin=true)
+
+if(user === adminEmail || adminLogin === "true"){
+// allow
+}else{
+alert("Admin only");
+location.href="auth.html";
+}
+</script>
 <!DOCTYPE html>
 <html>
 <head>
