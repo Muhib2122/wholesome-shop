@@ -15,7 +15,9 @@ align-items:center;
 gap:10px;
 }
 
-.header img{width:35px;height:35px;border-radius:50%;}
+.header img{
+width:35px;height:35px;border-radius:50%;
+}
 
 .container{padding:15px;}
 
@@ -46,7 +48,7 @@ font-weight:bold;
 margin-top:10px;
 }
 
-button.checkout{
+.checkout{
 width:100%;
 padding:12px;
 background:#16a34a;
@@ -61,7 +63,7 @@ margin-top:10px;
 <body>
 
 <div class="header">
-<img src="images/logo.png">
+<img src="myshop.jpg">
 <b>Your Cart</b>
 </div>
 
@@ -77,6 +79,11 @@ function renderCart(){
 
 cartBox.innerHTML="";
 
+if(cart.length==0){
+cartBox.innerHTML="<h3>Cart Empty</h3>";
+return;
+}
+
 let total=0;
 
 cart.forEach((p,i)=>{
@@ -86,7 +93,7 @@ cartBox.innerHTML+=`
 <div class="row">
 <div>${p.name}</div>
 
-<div>
+<div class="qty">
 <button onclick="minus(${i})">➖</button>
 ${p.qty}
 <button onclick="plus(${i})">➕</button>
