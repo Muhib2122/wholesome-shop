@@ -1,40 +1,79 @@
-<!-- REPLACE FULL -->
 <!DOCTYPE html>
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shop</title>
+
+<!-- 🔥 PWA -->
+<link rel="manifest" href="manifest.json">
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 
 .header{
-background:#0ea5e9;color:white;padding:10px;
-display:flex;justify-content:space-between;align-items:center;
+background:#0ea5e9;
+color:white;
+padding:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
 }
 
-.header img{width:35px;height:35px;border-radius:50%;}
-
-.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px;}
-
-.card{background:white;padding:10px;border-radius:10px;}
-.card img{width:100%;border-radius:10px;}
-
-.cart{
-position:fixed;top:0;right:-100%;
-width:300px;height:100%;
-background:white;padding:10px;
-transition:0.4s;overflow:auto;
+.logo{
+display:flex;
+align-items:center;
+gap:8px;
 }
-.cart.show{right:0;}
+
+.products{
+display:flex;
+flex-wrap:wrap;
+padding:10px;
+gap:10px;
+}
+
+.card{
+background:white;
+padding:10px;
+width:45%;
+border-radius:12px;
+box-shadow:0 2px 6px rgba(0,0,0,0.1);
+}
+
+.card img{
+width:100%;
+border-radius:10px;
+}
+
+button{
+margin-top:5px;
+padding:6px 10px;
+border:none;
+border-radius:6px;
+background:#0ea5e9;
+color:white;
+}
+
+.topbar{
+display:flex;
+gap:5px;
+padding:10px;
+}
+
+.topbar input,.topbar select{
+flex:1;
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
+}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-<div style="display:flex;align-items:center;gap:10px;">
-<img src="myshop.jpg">
+<div class="logo">
+<img src="myshop.jpg" width="35">
 <b>Shop</b>
 </div>
 
@@ -44,128 +83,174 @@ transition:0.4s;overflow:auto;
 </div>
 </div>
 
-<!-- SEARCH + FILTER -->
-<div style="padding:10px;">
-<input id="search" placeholder="Search..." oninput="loadProducts()">
-<select id="sort" onchange="loadProducts()">
+<!-- 🔍 SEARCH + SORT -->
+<div class="topbar">
+<input id="search" placeholder="Search product...">
+<select id="sort">
 <option value="">Sort</option>
 <option value="low">Low → High</option>
 <option value="high">High → Low</option>
 </select>
+<button onclick="load()">Go</button>
 </div>
 
+<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 <!-- CART -->
-<div class="cart" id="cartBox">
+<div id="cartBox" style="position:fixed;right:-100%;top:0;width:80%;height:100%;background:white;padding:10px;transition:.3s;overflow:auto;">
+
 <button onclick="closeCart()">❌</button>
-<h3>Your Cart</h3>
+<h2>Your Cart</h2>
 
 <div id="cartItems"></div>
-<h4 id="total"></h4>
 
-<button onclick="location.href='checkout.html'">Checkout</button>
+<h3 id="total"></h3>
+
+<button onclick="checkout()">Checkout</button>
+
 </div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-function loadProducts(){
+// CART
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+// ================= LOAD PRODUCTS =================
+
+function load(){
+
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 
-let search=searchInput();
-let sort=sortValue();
-
-let list=[];
-
-(d.documents||[]).forEach(x=>{
-let f=x.fields;
-
-let name=f.name.stringValue;
-let price=parseInt(f.price.integerValue);
-
-if(name.toLowerCase().includes(search)){
-list.push({name,price,img:f.image.stringValue});
-}
+let list=(d.documents||[]).map(doc=>{
+let f=doc.fields;
+return {
+name:f.name.stringValue,
+price:parseInt(f.price.integerValue),
+image:f.image.stringValue
+};
 });
 
-if(sort==="low") list.sort((a,b)=>a.price-b.price);
-if(sort==="high") list.sort((a,b)=>b.price-a.price);
+// 🔍 SEARCH
+let s=search.value.toLowerCase();
+if(s){
+list=list.filter(p=>p.name.toLowerCase().includes(s));
+}
 
+// ↕ SORT
+if(sort.value=="low"){
+list.sort((a,b)=>a.price-b.price);
+}
+if(sort.value=="high"){
+list.sort((a,b)=>b.price-a.price);
+}
+
+// SHOW
 products.innerHTML="";
-
 list.forEach(p=>{
 products.innerHTML+=`
 <div class="card">
-<img src="${p.img}">
-<h4>${p.name}</h4>
-<p>${p.price} BDT</p>
-<button onclick="add('${p.name}',${p.price})">Add</button>
-</div>`;
+<img src="${p.image}">
+<b>${p.name}</b><br>
+${p.price} BDT<br>
+
+<button onclick='add(${JSON.stringify(p)})'>Add</button>
+</div>
+`;
 });
 
 });
 }
 
-function searchInput(){
-return document.getElementById("search").value.toLowerCase();
-}
-function sortValue(){
-return document.getElementById("sort").value;
-}
+// ================= CART =================
 
-/* CART */
-function getCart(){return JSON.parse(localStorage.getItem("cart"))||[];}
-function save(c){localStorage.setItem("cart",JSON.stringify(c));renderCart();}
+function add(p){
 
-function add(n,p){
-let c=getCart();
-let f=c.find(i=>i.name===n);
-if(f)f.qty++; else c.push({name:n,price:p,qty:1});
-save(c);
+let found=cart.find(i=>i.name==p.name);
+
+if(found){
+found.qty++;
+}else{
+p.qty=1;
+cart.push(p);
 }
 
-function inc(i){let c=getCart();c[i].qty++;save(c);}
-function dec(i){
-let c=getCart();
-if(c[i].qty>1)c[i].qty--;
-else c.splice(i,1);
-save(c);
+localStorage.setItem("cart",JSON.stringify(cart));
+alert("Added to cart");
 }
 
+// OPEN CART
+function openCart(){
+cartBox.style.right="0";
+renderCart();
+}
+
+// CLOSE CART
+function closeCart(){
+cartBox.style.right="-100%";
+}
+
+// RENDER CART
 function renderCart(){
-let c=getCart();
-let html="";let total=0;
 
-c.forEach((i,x)=>{
+cartItems.innerHTML="";
+let totalPrice=0;
+
+cart.forEach((i,index)=>{
+
 let t=i.price*i.qty;
-total+=t;
+totalPrice+=t;
 
-html+=`
+cartItems.innerHTML+=`
 <div>
-${i.name}<br>
-➖ <button onclick="dec(${x})">-</button>
+<b>${i.name}</b><br>
+
+<button onclick="minus(${index})">➖</button>
 ${i.qty}
-<button onclick="inc(${x})">+</button> ➕
+<button onclick="plus(${index})">➕</button>
+
 = ${t}
-</div><hr>`;
+<hr>
+</div>
+`;
 });
 
-cartItems.innerHTML=html;
-totalText(total);
+total.innerText="Total: "+totalPrice+" BDT";
 }
 
-function totalText(t){
-document.getElementById("total").innerText="Total: "+t+" BDT";
+// ➕➖
+function plus(i){
+cart[i].qty++;
+updateCart();
 }
 
-function openCart(){cartBox.classList.add("show");renderCart();}
-function closeCart(){cartBox.classList.remove("show");}
+function minus(i){
+cart[i].qty--;
+if(cart[i].qty<=0) cart.splice(i,1);
+updateCart();
+}
 
-loadProducts();
+function updateCart(){
+localStorage.setItem("cart",JSON.stringify(cart));
+renderCart();
+}
+
+// CHECKOUT
+function checkout(){
+location.href="checkout.html";
+}
+
+// INIT
+load();
+
+// 🔥 SERVICE WORKER REGISTER (PWA)
+if("serviceWorker" in navigator){
+navigator.serviceWorker.register("sw.js");
+}
 
 </script>
 
