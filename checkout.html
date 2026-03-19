@@ -3,6 +3,9 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
+<!-- jsPDF -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
 <style>
 body{font-family:sans-serif;margin:0;background:#e0f2fe;}
 
@@ -39,16 +42,6 @@ border-bottom:1px solid #ddd;
 text-align:center;
 }
 
-button{
-background:#0ea5e9;
-color:white;
-border:none;
-padding:10px;
-border-radius:8px;
-width:100%;
-margin-top:10px;
-}
-
 .total{
 background:#0ea5e9;
 color:white;
@@ -57,16 +50,47 @@ border-radius:10px;
 text-align:center;
 margin-top:10px;
 }
+
+button{
+background:#0ea5e9;
+color:white;
+border:none;
+padding:12px;
+border-radius:10px;
+width:100%;
+margin-top:10px;
+font-weight:bold;
+}
+
+.bkashBox{
+display:flex;
+align-items:center;
+gap:10px;
+margin-bottom:10px;
+}
+
+.bkashBox img{
+width:50px;
+}
+
+input{
+width:100%;
+padding:10px;
+border-radius:8px;
+border:1px solid #ccc;
+}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
 <img src="myshop.jpg">
 <b>Checkout</b>
 </div>
 
+<!-- ORDER -->
 <div class="card">
 
 <h3>Order Summary</h3>
@@ -84,13 +108,20 @@ margin-top:10px;
 
 </div>
 
+<!-- BKASH -->
 <div class="card">
+
+<div class="bkashBox">
+<img src="bkash.png"> <!-- 👉 এইটা GitHub এ upload করতে হবে -->
 <h3>bKash Send Money</h3>
+</div>
+
 <p><b>01764262579</b></p>
 
-<input id="tx" placeholder="Enter TX ID" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;">
+<input id="tx" placeholder="Enter TX ID">
 
 <button onclick="placeOrder()">Confirm Order</button>
+
 </div>
 
 <script>
@@ -117,6 +148,32 @@ html+=`
 document.getElementById("tbl").innerHTML+=html;
 document.getElementById("grandTotal").innerText="Total: "+total+" BDT";
 
+// PDF
+function generatePDF(tx){
+const { jsPDF } = window.jspdf;
+const doc = new jsPDF();
+
+doc.addImage("myshop.jpg","JPEG",10,10,20,20);
+
+doc.setFontSize(16);
+doc.text("MyShop Invoice", 40, 20);
+
+doc.setFontSize(10);
+doc.text("TX ID: "+tx, 10, 40);
+doc.text("Date: "+new Date().toLocaleString(), 10, 48);
+
+let y=60;
+
+cart.forEach(item=>{
+doc.text(`${item.name} | ${item.price} x ${item.qty} = ${item.price*item.qty}`,10,y);
+y+=8;
+});
+
+doc.text("Total: "+total+" BDT",10,y+10);
+
+doc.save("invoice.pdf");
+}
+
 // PLACE ORDER
 function placeOrder(){
 
@@ -139,10 +196,16 @@ status:{stringValue:"pending"}
 })
 })
 .then(()=>{
-alert("Order placed ✅");
+
+generatePDF(tx);
+
+alert("Order placed + Invoice downloaded ✅");
+
 localStorage.removeItem("cart");
 location.href="index.html";
+
 });
+
 }
 
 </script>
