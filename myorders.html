@@ -5,127 +5,56 @@
 <title>My Orders</title>
 
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-background:#e0f2fe;
-}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
-display:flex;
-align-items:center;
-gap:10px;
-font-size:18px;
-font-weight:bold;
-}
-
-.header img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
-
-.container{
-padding:15px;
-}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-margin-bottom:12px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-.status{
-font-weight:bold;
-margin-top:5px;
-}
-
-.pending{color:#f59e0b;}
-.approved{color:#16a34a;}
-.declined{color:#dc2626;}
-
-.empty{
-text-align:center;
-margin-top:50px;
-font-size:18px;
-color:#555;
-}
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;align-items:center;gap:10px;}
+.header img{width:35px;height:35px;border-radius:50%;}
+.container{padding:15px;}
+.card{background:white;padding:12px;margin-bottom:10px;border-radius:10px;}
+.status{font-weight:bold;}
+button{padding:6px 10px;margin-top:5px;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<img src="logo.png">
+<img src="myshop.jpg">
 My Orders
 </div>
 
-<div class="container" id="list"></div>
+<div class="container" id="orders"></div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
-
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
-
-// 🔥 USER BASED ORDER SHOW (UNCHANGED LOGIC)
-async function loadOrders(){
 
 let user = localStorage.getItem("user");
 
-if(!user){
-list.innerHTML="<div class='empty'>Login first</div>";
-return;
-}
+fetch(URL+"/orders")
+.then(r=>r.json())
+.then(d=>{
+let docs = d.documents || [];
 
-let r = await fetch(URL+"/orders");
-let d = await r.json();
+orders.innerHTML="";
 
-list.innerHTML="";
+docs.forEach(doc=>{
+let f = doc.fields;
 
-let found=false;
+if(f.email.stringValue !== user) return;
 
-d.documents?.forEach(x=>{
+let amount = f.amount.integerValue;
+let status = f.status.stringValue;
+let tx = f.txid.stringValue;
 
-let f = x.fields;
-
-let email = f.email?.stringValue;
-let amount = f.amount?.integerValue;
-let status = f.status?.stringValue || "pending";
-let tx = f.txid?.stringValue || "N/A";
-
-if(email === user){
-
-found=true;
-
-let statusClass = status;
-
-list.innerHTML += `
+orders.innerHTML += `
 <div class="card">
-<b>TX:</b> ${tx}<br>
-<b>Amount:</b> ${amount} BDT<br>
-<div class="status ${statusClass}">
-Status: ${status}
-</div>
+<div>💰 ${amount} BDT</div>
+<div>TX: ${tx}</div>
+<div class="status">Status: ${status}</div>
+<button onclick="downloadPDF('${amount}','${tx}','${status}')">📄 Invoice</button>
 </div>
 `;
-
-}
-
 });
 
-if(!found){
-list.innerHTML="<div class='empty'>No Orders</div>";
-}
-
-}
-
-loadOrders();
-
-</script>
-
-</body>
-</html>
+});
