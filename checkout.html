@@ -2,135 +2,107 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+<title>Checkout</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#fce7f3;}
-
-.header{
-background:#e2136e;
-color:white;
-padding:12px;
-display:flex;
-align-items:center;
-gap:10px;
+body{
+font-family:sans-serif;
+margin:0;
+background:#e0f2fe;
 }
 
-.header img{width:35px;border-radius:50%;}
+.header{
+background:#0ea5e9;
+color:white;
+padding:15px;
+text-align:center;
+font-size:20px;
+}
+
+.container{
+padding:15px;
+}
 
 .card{
 background:white;
-margin:10px;
 padding:15px;
-border-radius:12px;
-}
-
-.total{
-background:#e2136e;
-color:white;
-padding:10px;
 border-radius:10px;
-text-align:center;
-}
-
-button{
-background:#e2136e;
-color:white;
-border:none;
-padding:12px;
-border-radius:10px;
-width:100%;
-margin-top:10px;
-font-weight:bold;
-}
-
-.qr{
-text-align:center;
-}
-
-.qr img{
-width:150px;
+margin-bottom:10px;
 }
 
 input{
 width:100%;
 padding:10px;
-border-radius:8px;
+margin-top:10px;
+border-radius:6px;
 border:1px solid #ccc;
+}
+
+button{
+margin-top:15px;
+width:100%;
+padding:12px;
+background:#0ea5e9;
+color:white;
+border:none;
+border-radius:8px;
+font-size:16px;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<img src="myshop.jpg">
-<b>bKash Payment</b>
-</div>
+<div class="header">Checkout</div>
+
+<div class="container">
 
 <div class="card">
+<h3>Total Amount: <span id="total">0</span> BDT</h3>
 
-<h3>Scan & Pay</h3>
+<input id="tx" placeholder="Enter TX ID">
 
-<div class="qr">
-<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=01764262579">
-<p>01764262579</p>
-</div>
+<button onclick="confirmOrder()">Confirm Order</button>
 
 </div>
-
-<div class="card">
-
-<h3>Enter TX ID</h3>
-<input id="tx" placeholder="Ex: 8N7XK2P9">
-
-<button onclick="pay()">Verify & Complete Payment</button>
 
 </div>
 
 <script>
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
-let total=0;
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-cart.forEach(i=> total += i.price*i.qty);
+// LOAD TOTAL
+let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
-// 🔥 FAKE SMART VERIFY
-function verifyTX(tx){
-return tx.length >= 8 && /[A-Z0-9]/.test(tx);
-}
+let total = cart.reduce((a,b)=>a+(b.price*b.qty),0);
+document.getElementById("total").innerText=total;
 
-// PDF
-function pdf(tx){
-const { jsPDF } = window.jspdf;
-let doc=new jsPDF();
 
-doc.addImage("myshop.jpg","JPEG",10,10,20,20);
-doc.text("Invoice",40,20);
+// 🔥 ORDER SAVE FIX
+function confirmOrder(){
 
-doc.text("TX: "+tx,10,40);
-doc.text("Total: "+total+" BDT",10,50);
+let user = localStorage.getItem("user");
 
-doc.save("invoice.pdf");
-}
-
-// PAY
-function pay(){
-
-let tx=document.getElementById("tx").value;
-
-if(!verifyTX(tx)){
-alert("Invalid TX ID ❌");
+if(!user){
+alert("Login first");
+location.href="auth.html";
 return;
 }
 
-// SAVE ORDER
-fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
+let tx = document.getElementById("tx").value;
+
+if(!tx){
+alert("Enter TX ID");
+return;
+}
+
+fetch(URL+"/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
+email:{stringValue:user},   // ✅ IMPORTANT FIX
 txid:{stringValue:tx},
 amount:{integerValue:String(total)},
 status:{stringValue:"pending"}
@@ -138,14 +110,9 @@ status:{stringValue:"pending"}
 })
 })
 .then(()=>{
-
-pdf(tx);
-
-alert("Payment Verified ✅");
-
+alert("Order placed ✅");
 localStorage.removeItem("cart");
-location.href="index.html";
-
+location.href="myorders.html";
 });
 
 }
