@@ -15,7 +15,9 @@ align-items:center;
 gap:10px;
 }
 
-.header img{width:35px;height:35px;border-radius:50%;}
+.header img{
+width:35px;height:35px;border-radius:50%;
+}
 
 .container{padding:15px;}
 
@@ -56,7 +58,7 @@ margin-top:10px;
 <body>
 
 <div class="header">
-<img src="images/logo.png">
+<img src="myshop.jpg">
 <b>Checkout</b>
 </div>
 
@@ -67,7 +69,7 @@ margin-top:10px;
 <div class="card bkash">
 <h3>Pay with bKash</h3>
 
-<img src="bkash.jpg">
+<img src="bkash.png">
 
 <p>📱 <b style="color:#e2136e;">01764262579</b></p>
 
@@ -106,8 +108,6 @@ let final=total+vat;
 
 cartBox.innerHTML+=`
 <hr>
-<div class="row total"><div>Subtotal</div><div>${total}</div></div>
-<div class="row total"><div>VAT</div><div>${vat}</div></div>
 <div class="row total"><div>Total</div><div>${final} BDT</div></div>
 `;
 }
