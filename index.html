@@ -5,24 +5,38 @@
 <title>Shop</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}
+body{
+margin:0;
+font-family:sans-serif;
+background:#e0f2fe;
+}
 
+/* HEADER */
 .header{
 background:#0ea5e9;
 color:white;
-padding:10px;
+padding:12px;
 display:flex;
 align-items:center;
 justify-content:space-between;
 }
 
-.header img{
-width:35px;height:35px;border-radius:50%;
+.header-left{
+display:flex;
+align-items:center;
+gap:10px;
 }
 
+.header img{
+width:35px;
+height:35px;
+border-radius:50%;
+}
+
+/* PRODUCTS */
 .products{
-display:flex;
-flex-wrap:wrap;
+display:grid;
+grid-template-columns:repeat(2,1fr);
 gap:10px;
 padding:10px;
 }
@@ -30,10 +44,28 @@ padding:10px;
 .card{
 background:white;
 padding:10px;
-width:45%;
+border-radius:12px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+.card img{
+width:100%;
 border-radius:10px;
 }
 
+.card h4{
+margin:5px 0;
+}
+
+.card button{
+background:#0ea5e9;
+color:white;
+border:none;
+padding:6px 10px;
+border-radius:6px;
+}
+
+/* CART */
 .cart{
 position:fixed;
 top:0;
@@ -42,45 +74,79 @@ width:300px;
 height:100%;
 background:white;
 transition:0.4s;
-padding:10px;
+padding:15px;
 overflow:auto;
+box-shadow:-2px 0 10px rgba(0,0,0,0.2);
 }
 
-.cart.show{right:0;}
+.cart.show{
+right:0;
+}
 
-button{padding:5px 10px;margin-top:5px;}
+.cart-item{
+border-bottom:1px solid #ddd;
+padding:8px 0;
+}
+
+.qty-btn{
+padding:3px 8px;
+margin:0 5px;
+}
+
+/* TOTAL */
+.total{
+font-weight:bold;
+margin-top:10px;
+}
+
+.checkout-btn{
+width:100%;
+background:#16a34a;
+color:white;
+padding:10px;
+border:none;
+border-radius:8px;
+margin-top:10px;
+}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
-<div style="display:flex;align-items:center;gap:10px;">
+<div class="header-left">
 <img src="myshop.jpg">
 <b>Shop</b>
 </div>
 
-<button onclick="openCart()">Cart</button>
+<button onclick="openCart()">🛒</button>
 </div>
 
+<!-- PRODUCTS -->
 <div class="products" id="products"></div>
 
 <!-- CART -->
 <div class="cart" id="cartBox">
+
 <button onclick="closeCart()">❌</button>
 <h3>Your Cart</h3>
 
 <div id="cartItems"></div>
-<h4 id="total"></h4>
 
-<button onclick="location.href='checkout.html'">Checkout</button>
+<div class="total" id="total"></div>
+
+<button class="checkout-btn" onclick="location.href='checkout.html'">
+Checkout
+</button>
+
 </div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// LOAD PRODUCTS (OLD LOGIC)
+// ================= PRODUCTS (UNCHANGED LOGIC)
 function loadProducts(){
 fetch(URL+"/products")
 .then(r=>r.json())
@@ -88,23 +154,28 @@ fetch(URL+"/products")
 
 products.innerHTML="";
 
-(d.documents||[]).forEach(x=>{
-let f=x.fields;
+(d.documents||[]).forEach(doc=>{
+
+let f=doc.fields;
 
 products.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="100%">
+<img src="${f.image.stringValue}">
 <h4>${f.name.stringValue}</h4>
 <p>${f.price.integerValue} BDT</p>
-<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">Add</button>
+<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">
+Add
+</button>
 </div>
 `;
 
 });
+
 });
 }
 
-// CART (OLD STYLE + FIXED)
+// ================= CART (UNCHANGED CORE)
+
 function getCart(){
 return JSON.parse(localStorage.getItem("cart"))||[];
 }
@@ -116,6 +187,7 @@ renderCart();
 
 function add(name,price){
 let cart=getCart();
+
 let found=cart.find(i=>i.name===name);
 
 if(found) found.qty++;
@@ -132,44 +204,55 @@ save(cart);
 
 function dec(i){
 let cart=getCart();
+
 if(cart[i].qty>1) cart[i].qty--;
 else cart.splice(i,1);
+
 save(cart);
 }
 
 function renderCart(){
+
 let cart=getCart();
 let html="";
-let total=0;
+let totalAmount=0;
 
 cart.forEach((item,i)=>{
-let t=item.price*item.qty;
-total+=t;
+
+let subtotal=item.price*item.qty;
+totalAmount+=subtotal;
 
 html+=`
-<div>
+<div class="cart-item">
 ${item.name}<br>
-<button onclick="dec(${i})">➖</button>
+
+<button class="qty-btn" onclick="dec(${i})">➖</button>
 ${item.qty}
-<button onclick="inc(${i})">➕</button>
-= ${t}
-</div><hr>
+<button class="qty-btn" onclick="inc(${i})">➕</button>
+
+= ${subtotal} BDT
+</div>
 `;
+
 });
 
-cartItems.innerHTML=html;
-total.innerText="Total: "+total+" BDT";
+document.getElementById("cartItems").innerHTML=html;
+document.getElementById("total").innerText="Total: "+totalAmount+" BDT";
+
 }
 
+// ================= UI
+
 function openCart(){
-cartBox.classList.add("show");
+document.getElementById("cartBox").classList.add("show");
 renderCart();
 }
 
 function closeCart(){
-cartBox.classList.remove("show");
+document.getElementById("cartBox").classList.remove("show");
 }
 
+// INIT
 loadProducts();
 
 </script>
