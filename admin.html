@@ -80,7 +80,6 @@ location.href="auth.html";
 
 // ================= PRODUCTS =================
 
-// 🔥 EDIT STATE
 let editDoc = null;
 
 function loadProducts(){
@@ -94,10 +93,10 @@ let name=doc.name;
 
 products.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="60"><br>
-${f.name.stringValue} - ${f.price.integerValue} BDT<br>
+<img src="${f.image?.stringValue || ''}" width="60"><br>
+${f.name?.stringValue || "No Name"} - ${f.price?.integerValue || 0} BDT<br>
 
-<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}')">Edit</button>
+<button class="edit" onclick="editProduct('${name}','${f.name?.stringValue}','${f.price?.integerValue}','${f.image?.stringValue}')">Edit</button>
 <button class="delete" onclick="deleteProduct('${name}')">Delete</button>
 </div>
 `;
@@ -105,56 +104,45 @@ ${f.name.stringValue} - ${f.price.integerValue} BDT<br>
 });
 }
 
-// 🔥 ADD + UPDATE (SAFE)
 function addProduct(){
 
-// 👉 EDIT MODE
 if(editDoc){
-
 fetch("https://firestore.googleapis.com/v1/"+editDoc,{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-name:{stringValue:pname.value},
-price:{integerValue:pprice.value},
-image:{stringValue:pimg.value}
+name:{stringValue:pname.value || "No Name"},
+price:{integerValue:pprice.value || 0},
+image:{stringValue:pimg.value || ""}
 }
 })
 }).then(()=>{
-editDoc = null;
+editDoc=null;
 location.reload();
 });
-
 return;
 }
 
-// 👉 NORMAL ADD (UNCHANGED)
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-name:{stringValue:pname.value},
-price:{integerValue:pprice.value},
-image:{stringValue:pimg.value}
+name:{stringValue:pname.value || "No Name"},
+price:{integerValue:pprice.value || 0},
+image:{stringValue:pimg.value || ""}
 }
 })
 }).then(()=>location.reload());
-
 }
 
-// 🔥 EDIT (SAFE)
 function editProduct(doc,name,price,img){
-
-pname.value = name;
-pprice.value = price;
-pimg.value = img;
-
+pname.value = name || "";
+pprice.value = price || "";
+pimg.value = img || "";
 editDoc = doc;
-
-alert("Now edit and press Add to update");
-
+alert("Edit করে Add চাপলে update হবে");
 }
 
 function deleteProduct(doc){
@@ -172,25 +160,30 @@ fetch(URL+"/orders")
 
 let total=0;
 let pendingCount=0;
+let count=0;
 
 orders.innerHTML="";
 
 (d.documents||[]).forEach(doc=>{
 
-let f=doc.fields;
+let f=doc.fields || {};
 let name=doc.name;
 
-let amount=parseInt(f.amount.integerValue||0);
-let status=f.status.stringValue;
+let amount=parseInt(f.amount?.integerValue || 0);
+let status=f.status?.stringValue || "pending";
+let email=f.email?.stringValue || "N/A";
+let tx=f.txid?.stringValue || "-";
+
+count++;
 
 if(status==="approved") total+=amount;
 if(status==="pending") pendingCount++;
 
 orders.innerHTML+=`
 <div class="card">
-👤 ${f.email?.stringValue||"N/A"}<br>
+👤 ${email}<br>
 💰 ${amount} BDT<br>
-TX: ${f.txid?.stringValue||"-"}<br>
+TX: ${tx}<br>
 Status: ${status}<br>
 
 <button class="approve" onclick="update('${name}','approved')">✅</button>
@@ -201,9 +194,12 @@ Status: ${status}<br>
 });
 
 sales.innerText=total;
-ordersCount.innerText=d.documents?.length||0;
+ordersCount.innerText=count;
 pending.innerText=pendingCount;
 
+})
+.catch(()=>{
+orders.innerHTML="<p>❌ Load failed</p>";
 });
 }
 
