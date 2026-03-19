@@ -1,11 +1,3 @@
-<script>
-const adminEmail = "youradmin@gmail.com";
-
-if(localStorage.getItem("user") !== adminEmail){
-alert("Admin only");
-location.href="index.html";
-}
-</script>
 <!DOCTYPE html>
 <html>
 <head>
@@ -87,6 +79,16 @@ margin:8px 0;
 
 <body>
 
+<!-- 🔐 ADMIN PROTECTION -->
+<script>
+const adminEmail = "your-real-email@gmail.com"; // এখানে নিজের Gmail বসাও
+
+if(localStorage.getItem("user") !== adminEmail){
+alert("Admin only");
+location.href="index.html";
+}
+</script>
+
 <div class="header">Admin Dashboard</div>
 
 <div class="container">
@@ -136,6 +138,11 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 // ADD PRODUCT
 function add(){
+if(!n.value || !p.value || !i.value){
+alert("Fill all fields");
+return;
+}
+
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -146,7 +153,10 @@ price:{integerValue:String(p.value)},
 image:{stringValue:i.value}
 }
 })
-}).then(loadPro);
+}).then(()=>{
+n.value=""; p.value=""; i.value="";
+loadPro();
+});
 }
 
 // LOAD PRODUCTS
@@ -163,12 +173,15 @@ let f=x.fields;
 pro.innerHTML+=`
 <div>
 <img src="${f.image.stringValue}" width="60"><br>
+
 <input id="name_${id}" value="${f.name.stringValue}">
 <input id="price_${id}" value="${f.price.integerValue}">
 <input id="img_${id}" value="${f.image.stringValue}">
+
 <br>
-<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
-<button class="deleteBtn" onclick="del('${id}')">🗑</button>
+
+<button class="updateBtn" onclick="updatePro('${id}')">✏️ Update</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑 Delete</button>
 </div>
 <hr>
 `;
@@ -194,7 +207,7 @@ image:{stringValue:img}
 }).then(loadPro);
 }
 
-// DELETE
+// DELETE PRODUCT
 function del(id){
 fetch(URL+"/products/"+id,{method:"DELETE"}).then(loadPro);
 }
@@ -232,8 +245,8 @@ TX: ${tx}<br>
 Amount: ${amount}<br>
 Status: ${status}<br>
 
-<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">✅</button>
-<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">❌</button>
+<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">✅ Approve</button>
+<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">❌ Decline</button>
 </div>
 `;
 
@@ -243,14 +256,14 @@ else declined.innerHTML+=html;
 
 });
 
-// DASHBOARD FIX
+// DASHBOARD
 document.getElementById("totalSales").innerText="Total Sales: "+totalSalesVal;
 document.getElementById("totalOrders").innerText="Orders: "+totalOrdersVal;
 document.getElementById("pendingCount").innerText="Pending: "+pendingVal;
 
 }
 
-// 🔥 FIXED UPDATE ORDER (MAIN FIX)
+// UPDATE ORDER (SAFE)
 function updateOrder(id,tx,amount,status){
 
 fetch(URL+"/orders/"+id,{
@@ -267,6 +280,7 @@ status:{stringValue:status}
 
 }
 
+// INIT
 loadPro();
 loadOrders();
 
