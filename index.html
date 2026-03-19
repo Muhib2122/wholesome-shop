@@ -6,40 +6,61 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;}
-.products{display:flex;flex-wrap:wrap;padding:10px;gap:10px;}
-.card{background:white;padding:10px;width:45%;border-radius:10px;}
-.cart{
-position:fixed;
-top:0;right:-100%;
-width:300px;height:100%;
+
+.header{
+background:#0ea5e9;
+color:white;
+padding:10px;
+display:flex;
+align-items:center;
+justify-content:space-between;
+}
+
+.header img{
+width:35px;height:35px;border-radius:50%;
+}
+
+.products{
+display:flex;
+flex-wrap:wrap;
+gap:10px;
+padding:10px;
+}
+
+.card{
 background:white;
 padding:10px;
+width:45%;
+border-radius:10px;
+}
+
+.cart{
+position:fixed;
+top:0;
+right:-100%;
+width:300px;
+height:100%;
+background:white;
 transition:0.4s;
+padding:10px;
 overflow:auto;
 }
+
 .cart.show{right:0;}
+
+button{padding:5px 10px;margin-top:5px;}
 </style>
 </head>
 
 <body>
 
 <div class="header">
-<b>🛒 Shop</b>
-<div>
-<button onclick="openCart()">Cart</button>
-<button onclick="location.href='profile.html'">Profile</button>
-</div>
+<div style="display:flex;align-items:center;gap:10px;">
+<img src="myshop.jpg">
+<b>Shop</b>
 </div>
 
-<!-- SEARCH + FILTER -->
-<div style="padding:10px;">
-<input id="search" placeholder="Search..." oninput="loadProducts()">
-<select id="sort" onchange="loadProducts()">
-<option value="">Sort</option>
-<option value="low">Low → High</option>
-<option value="high">High → Low</option>
-</select>
+<button onclick="openCart()">Cart</button>
 </div>
 
 <div class="products" id="products"></div>
@@ -48,60 +69,42 @@ overflow:auto;
 <div class="cart" id="cartBox">
 <button onclick="closeCart()">❌</button>
 <h3>Your Cart</h3>
+
 <div id="cartItems"></div>
 <h4 id="total"></h4>
-<button onclick="goCheckout()">Checkout</button>
+
+<button onclick="location.href='checkout.html'">Checkout</button>
 </div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// LOAD PRODUCTS
+// LOAD PRODUCTS (OLD LOGIC)
 function loadProducts(){
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 
-let search = document.getElementById("search").value.toLowerCase();
-let sort = document.getElementById("sort").value;
-
-let items=[];
+products.innerHTML="";
 
 (d.documents||[]).forEach(x=>{
 let f=x.fields;
 
-let name=f.name.stringValue;
-let price=parseInt(f.price.integerValue);
-let img=f.image.stringValue;
-
-if(name.toLowerCase().includes(search)){
-items.push({name,price,img});
-}
-});
-
-// SORT
-if(sort==="low") items.sort((a,b)=>a.price-b.price);
-if(sort==="high") items.sort((a,b)=>b.price-a.price);
-
-let html="";
-items.forEach(p=>{
-html+=`
+products.innerHTML+=`
 <div class="card">
-<img src="${p.img}" width="100%">
-<h4>${p.name}</h4>
-<p>${p.price} BDT</p>
-<button onclick="add('${p.name}',${p.price})">Add</button>
+<img src="${f.image.stringValue}" width="100%">
+<h4>${f.name.stringValue}</h4>
+<p>${f.price.integerValue} BDT</p>
+<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">Add</button>
 </div>
 `;
+
 });
-
-products.innerHTML=html;
-
 });
 }
 
-// CART
+// CART (OLD STYLE + FIXED)
 function getCart(){
 return JSON.parse(localStorage.getItem("cart"))||[];
 }
@@ -115,8 +118,8 @@ function add(name,price){
 let cart=getCart();
 let found=cart.find(i=>i.name===name);
 
-if(found){found.qty++;}
-else{cart.push({name,price,qty:1});}
+if(found) found.qty++;
+else cart.push({name,price,qty:1});
 
 save(cart);
 }
@@ -155,7 +158,7 @@ ${item.qty}
 });
 
 cartItems.innerHTML=html;
-document.getElementById("total").innerText="Total: "+total+" BDT";
+total.innerText="Total: "+total+" BDT";
 }
 
 function openCart(){
@@ -165,10 +168,6 @@ renderCart();
 
 function closeCart(){
 cartBox.classList.remove("show");
-}
-
-function goCheckout(){
-location.href="checkout.html";
 }
 
 loadProducts();
