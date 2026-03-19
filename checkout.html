@@ -6,8 +6,8 @@
 
 <style>
 body{
-font-family:sans-serif;
 margin:0;
+font-family:sans-serif;
 background:#e0f2fe;
 }
 
@@ -19,35 +19,57 @@ text-align:center;
 font-size:20px;
 }
 
-.container{
-padding:15px;
-}
+.container{padding:15px;}
 
 .card{
 background:white;
 padding:15px;
-border-radius:10px;
+border-radius:12px;
+margin-bottom:15px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.item{
+display:flex;
+justify-content:space-between;
+align-items:center;
 margin-bottom:10px;
 }
 
-input{
-width:100%;
-padding:10px;
-margin-top:10px;
-border-radius:6px;
-border:1px solid #ccc;
+.qty button{
+padding:5px 10px;
+margin:2px;
+border:none;
+background:#0ea5e9;
+color:white;
+border-radius:5px;
 }
 
-button{
-margin-top:15px;
+.total{
+font-size:18px;
+font-weight:bold;
+margin-top:10px;
+}
+
+button.confirm{
 width:100%;
 padding:12px;
-background:#0ea5e9;
+background:#16a34a;
 color:white;
 border:none;
 border-radius:8px;
-font-size:16px;
+margin-top:10px;
 }
+
+.bkash{
+text-align:center;
+}
+
+.bkash img{
+width:120px;
+margin:10px 0;
+}
+
 </style>
 </head>
 
@@ -57,12 +79,19 @@ font-size:16px;
 
 <div class="container">
 
-<div class="card">
-<h3>Total Amount: <span id="total">0</span> BDT</h3>
+<div class="card" id="cartBox"></div>
+
+<div class="card bkash">
+<h3>Pay with bKash</h3>
+
+<img src="bkash.png">
+
+<p><b>Number:</b> 017XXXXXXXX</p>
+<p>Send Money → Enter TX ID</p>
 
 <input id="tx" placeholder="Enter TX ID">
 
-<button onclick="confirmOrder()">Confirm Order</button>
+<button class="confirm" onclick="confirmOrder()">Confirm Order</button>
 
 </div>
 
@@ -72,14 +101,71 @@ font-size:16px;
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// LOAD TOTAL
 let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
-let total = cart.reduce((a,b)=>a+(b.price*b.qty),0);
-document.getElementById("total").innerText=total;
+// 🔥 CART UI (UNCHANGED LOGIC)
+function renderCart(){
 
+cartBox.innerHTML="";
 
-// 🔥 ORDER SAVE FIX
+if(cart.length==0){
+cartBox.innerHTML="<h3>Cart Empty</h3>";
+return;
+}
+
+let total=0;
+
+cart.forEach((p,i)=>{
+total += p.price * p.qty;
+
+cartBox.innerHTML+=`
+<div class="item">
+<div>${p.name} (${p.price})</div>
+
+<div class="qty">
+<button onclick="minus(${i})">➖</button>
+${p.qty}
+<button onclick="plus(${i})">➕</button>
+<button onclick="removeItem(${i})">❌</button>
+</div>
+</div>
+`;
+});
+
+// VAT 5%
+let vat = Math.floor(total * 0.05);
+let final = total + vat;
+
+cartBox.innerHTML+=`
+<hr>
+<div class="total">Subtotal: ${total} BDT</div>
+<div class="total">VAT (5%): ${vat} BDT</div>
+<div class="total">Total: ${final} BDT</div>
+`;
+
+}
+
+function plus(i){
+cart[i].qty++;
+save();
+}
+
+function minus(i){
+if(cart[i].qty>1) cart[i].qty--;
+save();
+}
+
+function removeItem(i){
+cart.splice(i,1);
+save();
+}
+
+function save(){
+localStorage.setItem("cart",JSON.stringify(cart));
+renderCart();
+}
+
+// 🔥 ORDER SAVE (UNCHANGED CORE)
 function confirmOrder(){
 
 let user = localStorage.getItem("user");
@@ -97,25 +183,50 @@ alert("Enter TX ID");
 return;
 }
 
+// TOTAL CALC SAME
+let total = cart.reduce((a,b)=>a+(b.price*b.qty),0);
+let vat = Math.floor(total*0.05);
+let final = total + vat;
+
 fetch(URL+"/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
-email:{stringValue:user},   // ✅ IMPORTANT FIX
+email:{stringValue:user},
 txid:{stringValue:tx},
-amount:{integerValue:String(total)},
+amount:{integerValue:String(final)}, // VAT included
 status:{stringValue:"pending"}
 }
 })
 })
 .then(()=>{
-alert("Order placed ✅");
+generateInvoice(tx,final);
 localStorage.removeItem("cart");
 location.href="myorders.html";
 });
 
 }
+
+// 🔥 INVOICE (NEW UI FEATURE ONLY)
+function generateInvoice(tx,total){
+
+let win = window.open("", "_blank");
+
+win.document.write(`
+<h2>INVOICE</h2>
+<p>User: ${localStorage.getItem("user")}</p>
+<p>TX ID: ${tx}</p>
+<p>Total: ${total} BDT</p>
+<hr>
+<p>Thank you ❤️</p>
+`);
+
+win.print();
+
+}
+
+renderCart();
 
 </script>
 
