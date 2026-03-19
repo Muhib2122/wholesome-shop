@@ -80,6 +80,9 @@ location.href="auth.html";
 
 // ================= PRODUCTS =================
 
+// 🔥 EDIT STATE
+let editDoc = null;
+
 function loadProducts(){
 fetch(URL+"/products")
 .then(r=>r.json())
@@ -102,7 +105,31 @@ ${f.name.stringValue} - ${f.price.integerValue} BDT<br>
 });
 }
 
+// 🔥 ADD + UPDATE (SAFE)
 function addProduct(){
+
+// 👉 EDIT MODE
+if(editDoc){
+
+fetch("https://firestore.googleapis.com/v1/"+editDoc,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value}
+}
+})
+}).then(()=>{
+editDoc = null;
+location.reload();
+});
+
+return;
+}
+
+// 👉 NORMAL ADD (UNCHANGED)
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -114,37 +141,25 @@ image:{stringValue:pimg.value}
 }
 })
 }).then(()=>location.reload());
+
+}
+
+// 🔥 EDIT (SAFE)
+function editProduct(doc,name,price,img){
+
+pname.value = name;
+pprice.value = price;
+pimg.value = img;
+
+editDoc = doc;
+
+alert("Now edit and press Add to update");
+
 }
 
 function deleteProduct(doc){
 fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());
-}
-
-// 🔥 EDIT ADD (ONLY NEW PART)
-function editProduct(doc,name,price,img){
-
-// input field e data set
-pname.value = name;
-pprice.value = price;
-pimg.value = img;
-
-// confirm
-if(!confirm("Update this product?")) return;
-
-// update firestore
-fetch("https://firestore.googleapis.com/v1/"+doc,{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:pname.value},
-price:{integerValue:pprice.value},
-image:{stringValue:pimg.value}
-}
-})
-}).then(()=>location.reload());
-
 }
 
 // ================= ORDERS =================
