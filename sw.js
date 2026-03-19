@@ -7,5 +7,5 @@ self.addEventListener("activate", e => {
 });
 
 self.addEventListener("fetch", e => {
-  // minimal fetch, no cache needed
+  e.respondWith(fetch(e.request));
 });
