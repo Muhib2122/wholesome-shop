@@ -1,3 +1,4 @@
+<!-- REPLACE FULL -->
 <!DOCTYPE html>
 <html>
 <head>
@@ -5,254 +6,165 @@
 <title>Shop</title>
 
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-background:#e0f2fe;
-}
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 
-/* HEADER */
 .header{
-background:#0ea5e9;
-color:white;
-padding:12px;
-display:flex;
-align-items:center;
-justify-content:space-between;
+background:#0ea5e9;color:white;padding:10px;
+display:flex;justify-content:space-between;align-items:center;
 }
 
-.header-left{
-display:flex;
-align-items:center;
-gap:10px;
-}
+.header img{width:35px;height:35px;border-radius:50%;}
 
-.header img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
+.products{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;padding:10px;}
 
-/* PRODUCTS */
-.products{
-display:grid;
-grid-template-columns:repeat(2,1fr);
-gap:10px;
-padding:10px;
-}
+.card{background:white;padding:10px;border-radius:10px;}
+.card img{width:100%;border-radius:10px;}
 
-.card{
-background:white;
-padding:10px;
-border-radius:12px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
-}
-
-.card img{
-width:100%;
-border-radius:10px;
-}
-
-.card h4{
-margin:5px 0;
-}
-
-.card button{
-background:#0ea5e9;
-color:white;
-border:none;
-padding:6px 10px;
-border-radius:6px;
-}
-
-/* CART */
 .cart{
-position:fixed;
-top:0;
-right:-100%;
-width:300px;
-height:100%;
-background:white;
-transition:0.4s;
-padding:15px;
-overflow:auto;
-box-shadow:-2px 0 10px rgba(0,0,0,0.2);
+position:fixed;top:0;right:-100%;
+width:300px;height:100%;
+background:white;padding:10px;
+transition:0.4s;overflow:auto;
 }
-
-.cart.show{
-right:0;
-}
-
-.cart-item{
-border-bottom:1px solid #ddd;
-padding:8px 0;
-}
-
-.qty-btn{
-padding:3px 8px;
-margin:0 5px;
-}
-
-/* TOTAL */
-.total{
-font-weight:bold;
-margin-top:10px;
-}
-
-.checkout-btn{
-width:100%;
-background:#16a34a;
-color:white;
-padding:10px;
-border:none;
-border-radius:8px;
-margin-top:10px;
-}
+.cart.show{right:0;}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-<div class="header-left">
+<div style="display:flex;align-items:center;gap:10px;">
 <img src="myshop.jpg">
 <b>Shop</b>
 </div>
 
+<div>
 <button onclick="openCart()">🛒</button>
+<button onclick="location.href='myorders.html'">📦</button>
+</div>
 </div>
 
-<!-- PRODUCTS -->
+<!-- SEARCH + FILTER -->
+<div style="padding:10px;">
+<input id="search" placeholder="Search..." oninput="loadProducts()">
+<select id="sort" onchange="loadProducts()">
+<option value="">Sort</option>
+<option value="low">Low → High</option>
+<option value="high">High → Low</option>
+</select>
+</div>
+
 <div class="products" id="products"></div>
 
 <!-- CART -->
 <div class="cart" id="cartBox">
-
 <button onclick="closeCart()">❌</button>
 <h3>Your Cart</h3>
 
 <div id="cartItems"></div>
+<h4 id="total"></h4>
 
-<div class="total" id="total"></div>
-
-<button class="checkout-btn" onclick="location.href='checkout.html'">
-Checkout
-</button>
-
+<button onclick="location.href='checkout.html'">Checkout</button>
 </div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// ================= PRODUCTS (UNCHANGED LOGIC)
 function loadProducts(){
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 
+let search=searchInput();
+let sort=sortValue();
+
+let list=[];
+
+(d.documents||[]).forEach(x=>{
+let f=x.fields;
+
+let name=f.name.stringValue;
+let price=parseInt(f.price.integerValue);
+
+if(name.toLowerCase().includes(search)){
+list.push({name,price,img:f.image.stringValue});
+}
+});
+
+if(sort==="low") list.sort((a,b)=>a.price-b.price);
+if(sort==="high") list.sort((a,b)=>b.price-a.price);
+
 products.innerHTML="";
 
-(d.documents||[]).forEach(doc=>{
-
-let f=doc.fields;
-
+list.forEach(p=>{
 products.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}">
-<h4>${f.name.stringValue}</h4>
-<p>${f.price.integerValue} BDT</p>
-<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">
-Add
-</button>
-</div>
-`;
-
+<img src="${p.img}">
+<h4>${p.name}</h4>
+<p>${p.price} BDT</p>
+<button onclick="add('${p.name}',${p.price})">Add</button>
+</div>`;
 });
 
 });
 }
 
-// ================= CART (UNCHANGED CORE)
-
-function getCart(){
-return JSON.parse(localStorage.getItem("cart"))||[];
+function searchInput(){
+return document.getElementById("search").value.toLowerCase();
+}
+function sortValue(){
+return document.getElementById("sort").value;
 }
 
-function save(cart){
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
+/* CART */
+function getCart(){return JSON.parse(localStorage.getItem("cart"))||[];}
+function save(c){localStorage.setItem("cart",JSON.stringify(c));renderCart();}
+
+function add(n,p){
+let c=getCart();
+let f=c.find(i=>i.name===n);
+if(f)f.qty++; else c.push({name:n,price:p,qty:1});
+save(c);
 }
 
-function add(name,price){
-let cart=getCart();
-
-let found=cart.find(i=>i.name===name);
-
-if(found) found.qty++;
-else cart.push({name,price,qty:1});
-
-save(cart);
-}
-
-function inc(i){
-let cart=getCart();
-cart[i].qty++;
-save(cart);
-}
-
+function inc(i){let c=getCart();c[i].qty++;save(c);}
 function dec(i){
-let cart=getCart();
-
-if(cart[i].qty>1) cart[i].qty--;
-else cart.splice(i,1);
-
-save(cart);
+let c=getCart();
+if(c[i].qty>1)c[i].qty--;
+else c.splice(i,1);
+save(c);
 }
 
 function renderCart(){
+let c=getCart();
+let html="";let total=0;
 
-let cart=getCart();
-let html="";
-let totalAmount=0;
-
-cart.forEach((item,i)=>{
-
-let subtotal=item.price*item.qty;
-totalAmount+=subtotal;
+c.forEach((i,x)=>{
+let t=i.price*i.qty;
+total+=t;
 
 html+=`
-<div class="cart-item">
-${item.name}<br>
-
-<button class="qty-btn" onclick="dec(${i})">➖</button>
-${item.qty}
-<button class="qty-btn" onclick="inc(${i})">➕</button>
-
-= ${subtotal} BDT
-</div>
-`;
-
+<div>
+${i.name}<br>
+➖ <button onclick="dec(${x})">-</button>
+${i.qty}
+<button onclick="inc(${x})">+</button> ➕
+= ${t}
+</div><hr>`;
 });
 
-document.getElementById("cartItems").innerHTML=html;
-document.getElementById("total").innerText="Total: "+totalAmount+" BDT";
-
+cartItems.innerHTML=html;
+totalText(total);
 }
 
-// ================= UI
-
-function openCart(){
-document.getElementById("cartBox").classList.add("show");
-renderCart();
+function totalText(t){
+document.getElementById("total").innerText="Total: "+t+" BDT";
 }
 
-function closeCart(){
-document.getElementById("cartBox").classList.remove("show");
-}
+function openCart(){cartBox.classList.add("show");renderCart();}
+function closeCart(){cartBox.classList.remove("show");}
 
-// INIT
 loadProducts();
 
 </script>
