@@ -5,77 +5,27 @@
 <title>Checkout</title>
 
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-background:#e0f2fe;
-}
-
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 .header{
-background:#0ea5e9;
-color:white;
-padding:15px;
-text-align:center;
-font-size:20px;
+background:#0ea5e9;color:white;padding:10px;
+display:flex;align-items:center;gap:10px;
 }
-
+.header img{width:35px;height:35px;border-radius:50%;}
 .container{padding:15px;}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-.item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-}
-
-.qty button{
-padding:5px 10px;
-margin:2px;
-border:none;
-background:#0ea5e9;
-color:white;
-border-radius:5px;
-}
-
-.total{
-font-size:18px;
-font-weight:bold;
-margin-top:10px;
-}
-
-button.confirm{
-width:100%;
-padding:12px;
-background:#16a34a;
-color:white;
-border:none;
-border-radius:8px;
-margin-top:10px;
-}
-
-.bkash{
-text-align:center;
-}
-
-.bkash img{
-width:120px;
-margin:10px 0;
-}
-
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:15px;}
+.total{font-size:18px;font-weight:bold;}
+.confirm{width:100%;padding:12px;background:#16a34a;color:white;border:none;border-radius:8px;}
+.bkash{text-align:center;}
+.bkash img{width:120px;}
 </style>
 </head>
 
 <body>
 
-<div class="header">Checkout</div>
+<div class="header">
+<img src="logo.png">
+<b>Checkout</b>
+</div>
 
 <div class="container">
 
@@ -84,15 +34,16 @@ margin:10px 0;
 <div class="card bkash">
 <h3>Pay with bKash</h3>
 
-<img src="bkash.png">
+<img src="bkash.jpg">
 
-<p><b>Number:</b> 017XXXXXXXX</p>
-<p>Send Money → Enter TX ID</p>
+<p style="font-size:16px;">
+📱 <b>bKash:</b> 
+<span style="color:#e2136e;font-weight:bold;">01764262579</span>
+</p>
 
 <input id="tx" placeholder="Enter TX ID">
 
 <button class="confirm" onclick="confirmOrder()">Confirm Order</button>
-
 </div>
 
 </div>
@@ -103,90 +54,29 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
-// 🔥 CART UI (UNCHANGED LOGIC)
 function renderCart(){
-
 cartBox.innerHTML="";
-
-if(cart.length==0){
-cartBox.innerHTML="<h3>Cart Empty</h3>";
-return;
-}
-
 let total=0;
 
-cart.forEach((p,i)=>{
-total += p.price * p.qty;
-
-cartBox.innerHTML+=`
-<div class="item">
-<div>${p.name} (${p.price})</div>
-
-<div class="qty">
-<button onclick="minus(${i})">➖</button>
-${p.qty}
-<button onclick="plus(${i})">➕</button>
-<button onclick="removeItem(${i})">❌</button>
-</div>
-</div>
-`;
+cart.forEach(p=>{
+total+=p.price*p.qty;
+cartBox.innerHTML+=`<div>${p.name} x${p.qty}</div>`;
 });
 
-// VAT 5%
-let vat = Math.floor(total * 0.05);
-let final = total + vat;
+let vat=Math.floor(total*0.05);
+let final=total+vat;
 
-cartBox.innerHTML+=`
-<hr>
-<div class="total">Subtotal: ${total} BDT</div>
-<div class="total">VAT (5%): ${vat} BDT</div>
-<div class="total">Total: ${final} BDT</div>
-`;
-
+cartBox.innerHTML+=`<hr>Total: ${final} BDT`;
 }
 
-function plus(i){
-cart[i].qty++;
-save();
-}
-
-function minus(i){
-if(cart[i].qty>1) cart[i].qty--;
-save();
-}
-
-function removeItem(i){
-cart.splice(i,1);
-save();
-}
-
-function save(){
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
-}
-
-// 🔥 ORDER SAVE (UNCHANGED CORE)
 function confirmOrder(){
 
-let user = localStorage.getItem("user");
+let user=localStorage.getItem("user");
+let tx=document.getElementById("tx").value;
 
-if(!user){
-alert("Login first");
-location.href="auth.html";
-return;
-}
-
-let tx = document.getElementById("tx").value;
-
-if(!tx){
-alert("Enter TX ID");
-return;
-}
-
-// TOTAL CALC SAME
 let total = cart.reduce((a,b)=>a+(b.price*b.qty),0);
-let vat = Math.floor(total*0.05);
-let final = total + vat;
+let vat=Math.floor(total*0.05);
+let final=total+vat;
 
 fetch(URL+"/orders",{
 method:"POST",
@@ -195,35 +85,27 @@ body:JSON.stringify({
 fields:{
 email:{stringValue:user},
 txid:{stringValue:tx},
-amount:{integerValue:String(final)}, // VAT included
+amount:{integerValue:String(final)},
 status:{stringValue:"pending"}
 }
 })
-})
-.then(()=>{
+}).then(()=>{
 generateInvoice(tx,final);
 localStorage.removeItem("cart");
 location.href="myorders.html";
 });
-
 }
 
-// 🔥 INVOICE (NEW UI FEATURE ONLY)
+// invoice
 function generateInvoice(tx,total){
-
-let win = window.open("", "_blank");
-
-win.document.write(`
-<h2>INVOICE</h2>
-<p>User: ${localStorage.getItem("user")}</p>
-<p>TX ID: ${tx}</p>
-<p>Total: ${total} BDT</p>
-<hr>
-<p>Thank you ❤️</p>
+let w=window.open("");
+w.document.write(`
+<img src="logo.png" width="80"><h2>Invoice</h2>
+User: ${localStorage.getItem("user")}<br>
+TX: ${tx}<br>
+Total: ${total} BDT
 `);
-
-win.print();
-
+w.print();
 }
 
 renderCart();
