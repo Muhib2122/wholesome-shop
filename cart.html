@@ -5,78 +5,36 @@
 <title>Cart</title>
 
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-background:#e0f2fe;
-}
-
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 .header{
-background:#0ea5e9;
-color:white;
-padding:15px;
-text-align:center;
-font-size:20px;
+background:#0ea5e9;color:white;padding:10px;
+display:flex;align-items:center;gap:10px;
 }
-
+.header img{width:35px;height:35px;border-radius:50%;}
 .container{padding:15px;}
-
-.card{
-background:white;
-padding:15px;
-border-radius:12px;
-margin-bottom:15px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-.item{
-display:flex;
-justify-content:space-between;
-align-items:center;
-margin-bottom:10px;
-}
-
-.qty button{
-padding:5px 10px;
-margin:2px;
-border:none;
-background:#0ea5e9;
-color:white;
-border-radius:5px;
-}
-
-.total{
-font-size:18px;
-font-weight:bold;
-margin-top:10px;
-}
-
-button.checkout{
-width:100%;
-padding:12px;
-background:#16a34a;
-color:white;
-border:none;
-border-radius:8px;
-margin-top:10px;
-}
+.card{background:white;padding:15px;border-radius:12px;margin-bottom:15px;}
+.item{display:flex;justify-content:space-between;margin-bottom:10px;}
+.qty button{padding:5px 10px;margin:2px;border:none;background:#0ea5e9;color:white;border-radius:5px;}
+.total{font-size:18px;font-weight:bold;margin-top:10px;}
+.checkout{width:100%;padding:12px;background:#16a34a;color:white;border:none;border-radius:8px;}
 </style>
 </head>
 
 <body>
 
-<div class="header">Your Cart</div>
+<div class="header">
+<img src="logo.png">
+<b>Your Cart</b>
+</div>
 
 <div class="container">
 <div class="card" id="cartBox"></div>
 </div>
 
 <script>
-
 let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
 function renderCart(){
-
 cartBox.innerHTML="";
 
 if(cart.length==0){
@@ -92,7 +50,6 @@ total += p.price * p.qty;
 cartBox.innerHTML+=`
 <div class="item">
 <div>${p.name} (${p.price} BDT)</div>
-
 <div class="qty">
 <button onclick="minus(${i})">➖</button>
 ${p.qty}
@@ -103,47 +60,27 @@ ${p.qty}
 `;
 });
 
-// VAT
-let vat = Math.floor(total * 0.05);
+let vat = Math.floor(total*0.05);
 let final = total + vat;
 
 cartBox.innerHTML+=`
 <hr>
-<div class="total">Subtotal: ${total} BDT</div>
-<div class="total">VAT (5%): ${vat} BDT</div>
-<div class="total">Total: ${final} BDT</div>
-
-<button class="checkout" onclick="goCheckout()">Checkout</button>
+<div class="total">Subtotal: ${total}</div>
+<div class="total">VAT: ${vat}</div>
+<div class="total">Total: ${final}</div>
+<button class="checkout" onclick="location.href='checkout.html'">Checkout</button>
 `;
-
 }
 
-function plus(i){
-cart[i].qty++;
-save();
-}
-
-function minus(i){
-if(cart[i].qty>1) cart[i].qty--;
-save();
-}
-
-function removeItem(i){
-cart.splice(i,1);
-save();
-}
-
+function plus(i){cart[i].qty++;save();}
+function minus(i){if(cart[i].qty>1) cart[i].qty--;save();}
+function removeItem(i){cart.splice(i,1);save();}
 function save(){
 localStorage.setItem("cart",JSON.stringify(cart));
 renderCart();
 }
 
-function goCheckout(){
-location.href="checkout.html";
-}
-
 renderCart();
-
 </script>
 
 </body>
