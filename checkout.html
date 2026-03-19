@@ -4,49 +4,39 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
 <style>
-
-body{
-font-family:sans-serif;
-margin:0;
-background:#e0f2fe;
-}
+body{font-family:sans-serif;margin:0;background:#e0f2fe;}
 
 .header{
 background:#0ea5e9;
 color:white;
-padding:15px;
-text-align:center;
-font-size:20px;
-font-weight:bold;
+padding:10px;
+display:flex;
+align-items:center;
+gap:10px;
 }
 
-.container{
-padding:15px;
+.header img{
+width:35px;
+border-radius:50%;
 }
 
 .card{
 background:white;
+margin:10px;
 padding:15px;
 border-radius:12px;
-margin-bottom:15px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 table{
 width:100%;
 border-collapse:collapse;
-margin-top:10px;
 }
 
-th,td{
-border:1px solid #ccc;
+td,th{
 padding:8px;
+border-bottom:1px solid #ddd;
 text-align:center;
-}
-
-.totalBox{
-margin-top:15px;
-font-weight:bold;
 }
 
 button{
@@ -57,86 +47,64 @@ padding:10px;
 border-radius:8px;
 width:100%;
 margin-top:10px;
-font-size:16px;
 }
 
-input{
-width:100%;
+.total{
+background:#0ea5e9;
+color:white;
 padding:10px;
-margin-top:10px;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-.bkash{
+border-radius:10px;
 text-align:center;
-margin-top:15px;
+margin-top:10px;
 }
-
-.bkash img{
-width:120px;
-}
-
 </style>
-
 </head>
 
 <body>
 
-<div class="header">Checkout</div>
-
-<div class="container">
+<div class="header">
+<img src="myshop.jpg">
+<b>Checkout</b>
+</div>
 
 <div class="card">
 
-<h3>🧾 Order Summary</h3>
+<h3>Order Summary</h3>
 
-<table>
-<thead>
+<table id="tbl">
 <tr>
 <th>Product</th>
 <th>Price</th>
 <th>Qty</th>
 <th>Total</th>
 </tr>
-</thead>
-<tbody id="table"></tbody>
 </table>
 
-<div class="totalBox" id="vat"></div>
-<div class="totalBox" id="total"></div>
+<div class="total" id="grandTotal">Total: 0</div>
 
 </div>
 
 <div class="card">
+<h3>bKash Send Money</h3>
+<p><b>01764262579</b></p>
 
-<div class="bkash">
-<img src="bkash.png">
-<p><b>bKash Send Money</b></p>
-<p>01764262579</p>
-</div>
-
-<input id="tx" placeholder="Enter TX ID">
+<input id="tx" placeholder="Enter TX ID" style="width:100%;padding:10px;border-radius:8px;border:1px solid #ccc;">
 
 <button onclick="placeOrder()">Confirm Order</button>
-
-</div>
-
 </div>
 
 <script>
 
 // LOAD CART
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
-
-let html="";
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let total=0;
+let html="";
 
 cart.forEach(item=>{
-let t = item.price * item.qty;
-total += t;
+let t=item.price*item.qty;
+total+=t;
 
-html += `
+html+=`
 <tr>
 <td>${item.name}</td>
 <td>${item.price}</td>
@@ -146,19 +114,13 @@ html += `
 `;
 });
 
-document.getElementById("table").innerHTML = html;
+document.getElementById("tbl").innerHTML+=html;
+document.getElementById("grandTotal").innerText="Total: "+total+" BDT";
 
-// VAT (4%)
-let vat = total * 0.04;
-let grandTotal = total + vat;
-
-document.getElementById("vat").innerText = "VAT: " + vat.toFixed(2);
-document.getElementById("total").innerText = "Total: " + grandTotal.toFixed(2);
-
-// 🔥 FINAL ORDER FUNCTION
+// PLACE ORDER
 function placeOrder(){
 
-let tx = document.getElementById("tx").value;
+let tx=document.getElementById("tx").value;
 
 if(!tx){
 alert("Enter TX ID");
@@ -171,19 +133,16 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx},
-amount:{integerValue:String(Math.floor(grandTotal))},
+amount:{integerValue:String(total)},
 status:{stringValue:"pending"}
 }
 })
 })
 .then(()=>{
 alert("Order placed ✅");
-
 localStorage.removeItem("cart");
-
 location.href="index.html";
 });
-
 }
 
 </script>
