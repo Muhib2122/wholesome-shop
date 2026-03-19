@@ -2,52 +2,122 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin</title>
+<title>Admin Panel</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-.header{background:#0ea5e9;color:white;padding:10px;}
-.container{padding:15px;}
-.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}
-button{margin:5px;}
+body{
+margin:0;
+font-family:sans-serif;
+background:#e0f2fe;
+}
+
+.header{
+background:#0ea5e9;
+color:white;
+padding:10px;
+display:flex;
+align-items:center;
+gap:10px;
+font-size:18px;
+font-weight:bold;
+}
+
+.header img{
+width:35px;
+height:35px;
+border-radius:50%;
+}
+
+.container{
+padding:15px;
+}
+
+.card{
+background:white;
+padding:12px;
+margin-bottom:10px;
+border-radius:10px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
+
+.status{
+font-weight:bold;
+margin:5px 0;
+}
+
+button{
+padding:6px 10px;
+margin:5px;
+border:none;
+border-radius:6px;
+cursor:pointer;
+}
+
+.approve{
+background:#16a34a;
+color:white;
+}
+
+.decline{
+background:#dc2626;
+color:white;
+}
 </style>
 </head>
 
 <body>
 
-<div class="header">Admin Panel</div>
+<div class="header">
+<img src="myshop.jpg">
+Admin Panel
+</div>
 
 <div class="container" id="orders"></div>
 
 <script>
+
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
+// 🔥 LOAD ALL ORDERS (LOGIC SAME)
 fetch(URL+"/orders")
-.then(r=>r.json())
-.then(d=>{
-let docs=d.documents||[];
+.then(res=>res.json())
+.then(data=>{
+
+let docs = data.documents || [];
+orders.innerHTML="";
 
 docs.forEach(doc=>{
-let f=doc.fields;
-let name=doc.name;
 
-orders.innerHTML+=`
+let f = doc.fields;
+let docName = doc.name;
+
+orders.innerHTML += `
 <div class="card">
-<div>👤 ${f.email.stringValue}</div>
-<div>💰 ${f.amount.integerValue} BDT</div>
-<div>TX: ${f.txid.stringValue}</div>
-<div>Status: ${f.status.stringValue}</div>
 
-<button onclick="update('${name}','approved')">✅</button>
-<button onclick="update('${name}','declined')">❌</button>
+<div>👤 <b>${f.email?.stringValue || "N/A"}</b></div>
+<div>💰 ${f.amount?.integerValue || 0} BDT</div>
+<div>TX: ${f.txid?.stringValue || "-"}</div>
+
+<div class="status">Status: ${f.status?.stringValue}</div>
+
+<button class="approve" onclick="updateStatus('${docName}','approved')">✅ Approve</button>
+<button class="decline" onclick="updateStatus('${docName}','declined')">❌ Decline</button>
+
 </div>
 `;
-});
+
 });
 
-function update(name,status){
+if(orders.innerHTML===""){
+orders.innerHTML="<h3>No Orders Found</h3>";
+}
 
-fetch("https://firestore.googleapis.com/v1/"+name+"?updateMask.fieldPaths=status",{
+});
+
+// 🔥 UPDATE STATUS (LOGIC SAME)
+function updateStatus(docName,status){
+
+fetch("https://firestore.googleapis.com/v1/"+docName+"?updateMask.fieldPaths=status",{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
@@ -55,9 +125,14 @@ fields:{
 status:{stringValue:status}
 }
 })
-}).then(()=>location.reload());
+})
+.then(()=>{
+alert("Updated ✔");
+location.reload();
+});
 
 }
+
 </script>
 
 </body>
