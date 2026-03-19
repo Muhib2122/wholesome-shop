@@ -5,31 +5,25 @@
 <title>Admin Panel</title>
 
 <style>
-body{
-margin:0;
-font-family:sans-serif;
-background:#e0f2fe;
-}
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 
 .header{
 background:#0ea5e9;
 color:white;
 padding:10px;
 display:flex;
+justify-content:space-between;
 align-items:center;
-gap:10px;
+}
+
+.header img{width:35px;height:35px;border-radius:50%;}
+
+.container{padding:15px;}
+
+.section-title{
 font-size:18px;
+margin:10px 0;
 font-weight:bold;
-}
-
-.header img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
-
-.container{
-padding:15px;
 }
 
 .card{
@@ -37,30 +31,39 @@ background:white;
 padding:12px;
 margin-bottom:10px;
 border-radius:10px;
-box-shadow:0 2px 10px rgba(0,0,0,0.1);
-}
-
-.status{
-font-weight:bold;
-margin:5px 0;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
 button{
 padding:6px 10px;
-margin:5px;
+margin:3px;
 border:none;
 border-radius:6px;
-cursor:pointer;
 }
 
-.approve{
-background:#16a34a;
-color:white;
+.approve{background:#16a34a;color:white;}
+.decline{background:#dc2626;color:white;}
+.delete{background:black;color:white;}
+
+input{
+padding:8px;
+margin:5px 0;
+width:100%;
+border-radius:6px;
+border:1px solid #ccc;
 }
 
-.decline{
-background:#dc2626;
-color:white;
+.topbox{
+display:flex;
+gap:10px;
+}
+
+.topbox div{
+flex:1;
+background:white;
+padding:10px;
+border-radius:10px;
+text-align:center;
 }
 </style>
 </head>
@@ -68,56 +71,187 @@ color:white;
 <body>
 
 <div class="header">
-<img src="myshop.jpg">
-Admin Panel
+<div>
+<img src="myshop.jpg"> Admin Panel
+</div>
+<button onclick="logout()">Logout</button>
 </div>
 
-<div class="container" id="orders"></div>
+<div class="container">
+
+<!-- DASHBOARD -->
+<div class="topbox">
+<div>💰 Sales: <span id="sales">0</span></div>
+<div>📦 Orders: <span id="totalOrder">0</span></div>
+<div>⏳ Pending: <span id="pending">0</span></div>
+</div>
+
+<!-- PRODUCT SECTION -->
+<div class="section-title">🛒 Products</div>
+
+<div class="card">
+<input id="pname" placeholder="Name">
+<input id="pprice" placeholder="Price">
+<input id="pimg" placeholder="Image URL">
+<button onclick="addProduct()">Add Product</button>
+</div>
+
+<div id="products"></div>
+
+<!-- ORDER SECTION -->
+<div class="section-title">📦 Orders</div>
+<div id="orders"></div>
+
+</div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// 🔥 LOAD ALL ORDERS (LOGIC SAME)
-fetch(URL+"/orders")
-.then(res=>res.json())
-.then(data=>{
+// 🔐 LOGIN CHECK
+if(localStorage.getItem("admin") !== "true"){
+alert("Admin only");
+location.href="auth.html";
+}
 
-let docs = data.documents || [];
-orders.innerHTML="";
+// LOGOUT
+function logout(){
+localStorage.removeItem("admin");
+location.href="auth.html";
+}
+
+// =====================
+// 🔥 PRODUCTS SECTION
+// =====================
+
+function loadProducts(){
+
+fetch(URL+"/products")
+.then(r=>r.json())
+.then(d=>{
+
+products.innerHTML="";
+let docs = d.documents || [];
 
 docs.forEach(doc=>{
 
 let f = doc.fields;
-let docName = doc.name;
+let name = doc.name;
+
+products.innerHTML += `
+<div class="card">
+<img src="${f.image.stringValue}" width="80"><br>
+<b>${f.name.stringValue}</b><br>
+💰 ${f.price.integerValue}
+
+<br>
+
+<button onclick="deleteProduct('${name}')" class="delete">Delete</button>
+</div>
+`;
+
+});
+
+});
+
+}
+
+// ADD PRODUCT (same logic)
+function addProduct(){
+
+let name = pname.value;
+let price = pprice.value;
+let img = pimg.value;
+
+fetch(URL+"/products",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:name},
+price:{integerValue:price},
+image:{stringValue:img}
+}
+})
+}).then(()=>{
+alert("Added");
+location.reload();
+});
+
+}
+
+// DELETE PRODUCT
+function deleteProduct(docName){
+
+fetch("https://firestore.googleapis.com/v1/"+docName,{
+method:"DELETE"
+}).then(()=>{
+alert("Deleted");
+location.reload();
+});
+
+}
+
+// =====================
+// 🔥 ORDER SECTION
+// =====================
+
+function loadOrders(){
+
+fetch(URL+"/orders")
+.then(r=>r.json())
+.then(d=>{
+
+orders.innerHTML="";
+let docs = d.documents || [];
+
+let totalSales=0;
+let totalOrder=docs.length;
+let pendingCount=0;
+
+docs.forEach(doc=>{
+
+let f = doc.fields;
+let name = doc.name;
+
+let amount = parseInt(f.amount?.integerValue || 0);
+let status = f.status?.stringValue;
+
+if(status==="approved") totalSales += amount;
+if(status==="pending") pendingCount++;
 
 orders.innerHTML += `
 <div class="card">
 
-<div>👤 <b>${f.email?.stringValue || "N/A"}</b></div>
-<div>💰 ${f.amount?.integerValue || 0} BDT</div>
-<div>TX: ${f.txid?.stringValue || "-"}</div>
+👤 ${f.email?.stringValue || "N/A"} <br>
+💰 ${amount} BDT <br>
+TX: ${f.txid?.stringValue || "-"} <br>
 
-<div class="status">Status: ${f.status?.stringValue}</div>
+<b>Status: ${status}</b>
 
-<button class="approve" onclick="updateStatus('${docName}','approved')">✅ Approve</button>
-<button class="decline" onclick="updateStatus('${docName}','declined')">❌ Decline</button>
+<br>
+
+<button class="approve" onclick="update('${name}','approved')">✅</button>
+<button class="decline" onclick="update('${name}','declined')">❌</button>
 
 </div>
 `;
 
 });
 
-if(orders.innerHTML===""){
-orders.innerHTML="<h3>No Orders Found</h3>";
-}
+// DASHBOARD UPDATE
+sales.innerText = totalSales;
+totalOrder.innerText = totalOrder;
+pending.innerText = pendingCount;
 
 });
 
-// 🔥 UPDATE STATUS (LOGIC SAME)
-function updateStatus(docName,status){
+}
 
-fetch("https://firestore.googleapis.com/v1/"+docName+"?updateMask.fieldPaths=status",{
+// UPDATE STATUS (same logic)
+function update(name,status){
+
+fetch("https://firestore.googleapis.com/v1/"+name+"?updateMask.fieldPaths=status",{
 method:"PATCH",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
@@ -126,12 +260,13 @@ status:{stringValue:status}
 }
 })
 })
-.then(()=>{
-alert("Updated ✔");
-location.reload();
-});
+.then(()=>location.reload());
 
 }
+
+// INIT
+loadProducts();
+loadOrders();
 
 </script>
 
