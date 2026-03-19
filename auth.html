@@ -1,117 +1,37 @@
-<!DOCTYPE html>
-<html>
-<head>
-<meta name="viewport" content="width=device-width, initial-scale=1">
-
-<style>
-body{background:#e0f2fe;font-family:sans-serif;}
-
-.box{
-background:white;
-margin:20px;
-padding:20px;
-border-radius:12px;
-}
-
-input{
-width:100%;
-padding:10px;
-margin:5px 0;
-border-radius:8px;
-border:1px solid #ccc;
-}
-
-button{
-width:100%;
-padding:10px;
-margin-top:5px;
-background:#0ea5e9;
-color:white;
-border:none;
-border-radius:8px;
-}
-
-.eye{
-position:absolute;
-right:20px;
-margin-top:-35px;
-cursor:pointer;
-}
-</style>
-</head>
-
-<body>
-
-<div class="box">
-
-<h3>Signup</h3>
-
-<input id="name" placeholder="Full Name">
-<input id="username" placeholder="Username">
-<input id="email" placeholder="Email">
-
-<div style="display:flex;gap:5px;">
-<input id="code" placeholder="Verification Code">
-<button onclick="sendCode()">Send</button>
-</div>
-
-<input id="pass" type="password" placeholder="Password">
-<span class="eye" onclick="togglePass()">👁️</span>
-
-<button onclick="signup()">Create Account</button>
-
-<hr>
-
-<button onclick="login()">Login</button>
-
-</div>
-
 <script>
-
 let generatedCode="";
 
-// SEND CODE
 function sendCode(){
 generatedCode = Math.floor(1000+Math.random()*9000);
-alert("Your Code: "+generatedCode);
+alert("Code: "+generatedCode);
 }
 
-// PASSWORD TOGGLE
-function togglePass(){
-let p=document.getElementById("pass");
-p.type = p.type==="password" ? "text" : "password";
-}
-
-// SIGNUP
 function signup(){
+let name=document.getElementById("name").value;
+let username=document.getElementById("username").value;
+let email=document.getElementById("email").value;
+let code=document.getElementById("code").value;
 
-let name=nameInput.value;
-let username=usernameInput.value;
-let email=emailInput.value;
-let code=codeInput.value;
-
-if(code != generatedCode){
-alert("Wrong Code ❌");
+if(code!=generatedCode){
+alert("Wrong code");
 return;
 }
 
-localStorage.setItem("user", email);
-localStorage.setItem("name", name);
-localStorage.setItem("username", username);
+localStorage.setItem("user",email);
+localStorage.setItem("name",name);
+localStorage.setItem("username",username);
 
-alert("Account Created ✅");
 location.href="index.html";
-
 }
 
-// LOGIN
 function login(){
 let email=document.getElementById("email").value;
-localStorage.setItem("user", email);
+localStorage.setItem("user",email);
 location.href="index.html";
 }
 
+function togglePass(){
+let p=document.getElementById("pass");
+p.type=p.type==="password"?"text":"password";
+}
 </script>
-
-</body>
-</html>
