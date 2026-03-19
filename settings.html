@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<style>
+body{font-family:sans-serif;background:#e0f2fe;}
+.card{background:white;margin:10px;padding:15px;border-radius:10px;}
+input{width:100%;padding:10px;margin:5px;}
+button{width:100%;padding:10px;background:#0ea5e9;color:white;border:none;}
+</style>
+</head>
+
+<body>
+
+<div class="card">
+<h3>User Settings</h3>
+
+<input id="name">
+<input id="username">
+<input id="password" placeholder="New Password">
+
+<button onclick="save()">Save</button>
+
+</div>
+
+<script>
+
+name.value = localStorage.getItem("name") || "";
+username.value = localStorage.getItem("username") || "";
+
+function save(){
+localStorage.setItem("name", name.value);
+localStorage.setItem("username", username.value);
+alert("Updated ✅");
+}
+
+</script>
+
+</body>
+</html>
