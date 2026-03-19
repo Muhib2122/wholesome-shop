@@ -1,3 +1,5 @@
+
+
 <!DOCTYPE html>
 <html>
 <head>
@@ -22,6 +24,7 @@
 
 <script>
 
+// ===== EXISTING LOGIC =====
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let html="<tr><th>Name</th><th>Qty</th><th>Total</th></tr>";
 let total=0;
@@ -32,9 +35,18 @@ total+=t;
 html+=`<tr><td>${i.name}</td><td>${i.qty}</td><td>${t}</td></tr>`;
 });
 
-html+=`<tr><td colspan="2">Total</td><td>${total}</td></tr>`;
+// 🔥 VAT ADD (4%)
+let vat = Math.round(total * 0.04);
+let finalTotal = total + vat;
+
+// TABLE UPDATE (ONLY ADD)
+html+=`<tr><td colspan="2">Subtotal</td><td>${total}</td></tr>`;
+html+=`<tr><td colspan="2">VAT (4%)</td><td>${vat}</td></tr>`;
+html+=`<tr><td colspan="2"><b>Total</b></td><td><b>${finalTotal}</b></td></tr>`;
+
 table.innerHTML=html;
 
+// ===== ORDER SAVE (UNCHANGED JUST FINAL TOTAL) =====
 function place(){
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
@@ -43,7 +55,7 @@ headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx.value},
-amount:{integerValue:String(total)},
+amount:{integerValue:String(finalTotal)}, // শুধু এটায় VAT add
 status:{stringValue:"pending"},
 email:{stringValue:localStorage.getItem("user")||"N/A"}
 }
@@ -55,14 +67,17 @@ location.href="myorders.html";
 });
 }
 
+// ===== PDF (same logic, just VAT show) =====
 function generatePDF(){
 let w=window.open("");
+
 w.document.write(`
 <h2>Wholesome Shop</h2>
 <img src="myshop.jpg" width="50"><hr>
 ${html}
-<h3>Total: ${total} BDT</h3>
+<h3>Total: ${finalTotal} BDT</h3>
 `);
+
 w.print();
 }
 
