@@ -3,56 +3,39 @@
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <style>
-body{font-family:sans-serif;margin:0;background:#e0f2fe;}
+body{margin:0;font-family:sans-serif;background:#fce7f3;}
 
 .header{
-background:#0ea5e9;
+background:#e2136e;
 color:white;
-padding:10px;
+padding:12px;
 display:flex;
 align-items:center;
 gap:10px;
 }
 
-.header img{
-width:35px;
-border-radius:50%;
-}
+.header img{width:35px;border-radius:50%;}
 
 .card{
 background:white;
 margin:10px;
 padding:15px;
 border-radius:12px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
-}
-
-table{
-width:100%;
-border-collapse:collapse;
-}
-
-td,th{
-padding:8px;
-border-bottom:1px solid #ddd;
-text-align:center;
 }
 
 .total{
-background:#0ea5e9;
+background:#e2136e;
 color:white;
 padding:10px;
 border-radius:10px;
 text-align:center;
-margin-top:10px;
 }
 
 button{
-background:#0ea5e9;
+background:#e2136e;
 color:white;
 border:none;
 padding:12px;
@@ -62,15 +45,12 @@ margin-top:10px;
 font-weight:bold;
 }
 
-.bkashBox{
-display:flex;
-align-items:center;
-gap:10px;
-margin-bottom:10px;
+.qr{
+text-align:center;
 }
 
-.bkashBox img{
-width:50px;
+.qr img{
+width:150px;
 }
 
 input{
@@ -84,106 +64,68 @@ border:1px solid #ccc;
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
 <img src="myshop.jpg">
-<b>Checkout</b>
+<b>bKash Payment</b>
 </div>
 
-<!-- ORDER -->
 <div class="card">
 
-<h3>Order Summary</h3>
+<h3>Scan & Pay</h3>
 
-<table id="tbl">
-<tr>
-<th>Product</th>
-<th>Price</th>
-<th>Qty</th>
-<th>Total</th>
-</tr>
-</table>
-
-<div class="total" id="grandTotal">Total: 0</div>
+<div class="qr">
+<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=01764262579">
+<p>01764262579</p>
+</div>
 
 </div>
 
-<!-- BKASH -->
 <div class="card">
 
-<div class="bkashBox">
-<img src="bkash.png"> <!-- 👉 এইটা GitHub এ upload করতে হবে -->
-<h3>bKash Send Money</h3>
-</div>
+<h3>Enter TX ID</h3>
+<input id="tx" placeholder="Ex: 8N7XK2P9">
 
-<p><b>01764262579</b></p>
-
-<input id="tx" placeholder="Enter TX ID">
-
-<button onclick="placeOrder()">Confirm Order</button>
+<button onclick="pay()">Verify & Complete Payment</button>
 
 </div>
 
 <script>
 
-// LOAD CART
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let total=0;
-let html="";
 
-cart.forEach(item=>{
-let t=item.price*item.qty;
-total+=t;
+cart.forEach(i=> total += i.price*i.qty);
 
-html+=`
-<tr>
-<td>${item.name}</td>
-<td>${item.price}</td>
-<td>${item.qty}</td>
-<td>${t}</td>
-</tr>
-`;
-});
-
-document.getElementById("tbl").innerHTML+=html;
-document.getElementById("grandTotal").innerText="Total: "+total+" BDT";
+// 🔥 FAKE SMART VERIFY
+function verifyTX(tx){
+return tx.length >= 8 && /[A-Z0-9]/.test(tx);
+}
 
 // PDF
-function generatePDF(tx){
+function pdf(tx){
 const { jsPDF } = window.jspdf;
-const doc = new jsPDF();
+let doc=new jsPDF();
 
 doc.addImage("myshop.jpg","JPEG",10,10,20,20);
+doc.text("Invoice",40,20);
 
-doc.setFontSize(16);
-doc.text("MyShop Invoice", 40, 20);
-
-doc.setFontSize(10);
-doc.text("TX ID: "+tx, 10, 40);
-doc.text("Date: "+new Date().toLocaleString(), 10, 48);
-
-let y=60;
-
-cart.forEach(item=>{
-doc.text(`${item.name} | ${item.price} x ${item.qty} = ${item.price*item.qty}`,10,y);
-y+=8;
-});
-
-doc.text("Total: "+total+" BDT",10,y+10);
+doc.text("TX: "+tx,10,40);
+doc.text("Total: "+total+" BDT",10,50);
 
 doc.save("invoice.pdf");
 }
 
-// PLACE ORDER
-function placeOrder(){
+// PAY
+function pay(){
 
 let tx=document.getElementById("tx").value;
 
-if(!tx){
-alert("Enter TX ID");
+if(!verifyTX(tx)){
+alert("Invalid TX ID ❌");
 return;
 }
 
+// SAVE ORDER
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -197,9 +139,9 @@ status:{stringValue:"pending"}
 })
 .then(()=>{
 
-generatePDF(tx);
+pdf(tx);
 
-alert("Order placed + Invoice downloaded ✅");
+alert("Payment Verified ✅");
 
 localStorage.removeItem("cart");
 location.href="index.html";
