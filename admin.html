@@ -1,10 +1,155 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel</title>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
+.container{padding:15px;}
+
+.topbox{display:flex;gap:10px;margin-bottom:10px;}
+.topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
+
+.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}
+button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}
+.approve{background:#16a34a;color:white;}
+.decline{background:#dc2626;color:white;}
+.delete{background:black;color:white;}
+.edit{background:orange;color:white;}
+
+input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}
+.section{margin-top:15px;}
+select{padding:5px;margin-top:5px;border-radius:6px;}
+</style>
+</head>
+
+<body>
+
+<div class="header">
+<b>Admin Panel</b>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<!-- DASHBOARD -->
+<div class="topbox">
+<div>💰 <span id="sales">0</span></div>
+<div>📦 <span id="ordersCount">0</span></div>
+<div>⏳ <span id="pending">0</span></div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section">
+<h3>Products</h3>
+
+<div class="card">
+<input id="pname" placeholder="Name">
+<input id="pprice" placeholder="Price">
+<input id="pimg" placeholder="Image URL">
+<button onclick="addProduct()">Add</button>
+</div>
+
+<div id="products"></div>
+</div>
+
 <!-- ORDERS -->
 <div class="section">
 <h3>Orders</h3>
 <div id="orders"></div>
 </div>
 
+</div>
+
 <script>
+
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+
+// 🔐 CHECK
+if(localStorage.getItem("admin")!=="true"){
+alert("Admin only");
+location.href="auth.html";
+}
+
+// LOGOUT
+function logout(){
+localStorage.removeItem("admin");
+location.href="auth.html";
+}
+
+// ================= PRODUCTS =================
+
+let editDoc=null;
+
+function loadProducts(){
+fetch(URL+"/products")
+.then(r=>r.json())
+.then(d=>{
+products.innerHTML="";
+(d.documents||[]).forEach(doc=>{
+let f=doc.fields;
+let name=doc.name;
+
+products.innerHTML+=`
+<div class="card">
+<img src="${f.image.stringValue}" width="60"><br>
+${f.name.stringValue} - ${f.price.integerValue} BDT<br>
+
+<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}')">Edit</button>
+<button class="delete" onclick="deleteProduct('${name}')">Delete</button>
+</div>
+`;
+});
+});
+}
+
+function addProduct(){
+
+if(editDoc){
+fetch("https://firestore.googleapis.com/v1/"+editDoc,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value}
+}
+})
+}).then(()=>{
+editDoc=null;
+location.reload();
+});
+return;
+}
+
+fetch(URL+"/products",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value}
+}
+})
+}).then(()=>location.reload());
+}
+
+function editProduct(doc,name,price,img){
+pname.value=name;
+pprice.value=price;
+pimg.value=img;
+editDoc=doc;
+alert("Edit and press Add");
+}
+
+function deleteProduct(doc){
+fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
+.then(()=>location.reload());
+}
 
 // ================= ORDERS =================
 
@@ -26,21 +171,22 @@ let name=doc.name;
 
 let amount=parseInt(f.amount?.integerValue||0);
 let status=f.status?.stringValue||"pending";
-
-// 🔥 NEW STATUS STEP
 let step=f.statusStep?.stringValue||"Pending";
+let orderId=f.orderId?.stringValue||"N/A";
 
 if(status==="approved") total+=amount;
 if(status==="pending") pendingCount++;
 
 orders.innerHTML+=`
 <div class="card">
+
+🆔 ${orderId}<br>
 👤 ${f.email?.stringValue||"N/A"}<br>
 💰 ${amount} BDT<br>
 TX: ${f.txid?.stringValue||"-"}<br>
 Status: ${status}<br>
 
-<!-- 🔥 STATUS DROPDOWN -->
+<!-- 🔥 STEP UPDATE (NEW) -->
 <select onchange="updateStep('${name}',this.value)">
 <option ${step=="Pending"?"selected":""}>Pending</option>
 <option ${step=="Approved"?"selected":""}>Approved</option>
@@ -53,6 +199,7 @@ Status: ${status}<br>
 
 <button class="approve" onclick="update('${name}','approved')">✅</button>
 <button class="decline" onclick="update('${name}','declined')">❌</button>
+
 </div>
 `;
 
@@ -65,7 +212,18 @@ pending.innerText=pendingCount;
 });
 }
 
-// 🔥 UPDATE STEP
+// 🔥 UPDATE STATUS
+function update(doc,status){
+fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{status:{stringValue:status}}
+})
+}).then(()=>location.reload());
+}
+
+// 🔥 UPDATE STEP (NEW ONLY)
 function updateStep(doc,value){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
 method:"PATCH",
@@ -76,4 +234,11 @@ fields:{statusStep:{stringValue:value}}
 });
 }
 
+// INIT
+loadProducts();
+loadOrders();
+
 </script>
+
+</body>
+</html>
