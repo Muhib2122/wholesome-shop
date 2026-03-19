@@ -1,3 +1,11 @@
+<script>
+const adminEmail = "youradmin@gmail.com";
+
+if(localStorage.getItem("user") !== adminEmail){
+alert("Admin only");
+location.href="index.html";
+}
+</script>
 <!DOCTYPE html>
 <html>
 <head>
