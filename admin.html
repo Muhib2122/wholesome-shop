@@ -14,16 +14,9 @@ background:#e0f2fe;
 background:#0ea5e9;
 color:white;
 padding:15px;
-display:flex;
-justify-content:center;
-align-items:center;
-gap:10px;
+text-align:center;
+font-size:20px;
 font-weight:bold;
-}
-
-.header img{
-width:35px;
-border-radius:50%;
 }
 
 .container{padding:15px;}
@@ -33,6 +26,7 @@ background:white;
 padding:15px;
 border-radius:12px;
 margin-bottom:15px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
 }
 
 .dashboard{
@@ -62,6 +56,7 @@ button{
 padding:6px 10px;
 border:none;
 border-radius:6px;
+cursor:pointer;
 margin:3px;
 }
 
@@ -83,23 +78,21 @@ margin:8px 0;
 <body>
 
 <script>
-const adminEmail="aiub58muhib@gmail.com";
+// 🔐 ADMIN CHECK (UNCHANGED LOGIC)
+const adminEmail = "aiub58muhib@gmail.com";
 
-if(localStorage.getItem("user")!==adminEmail){
+if(localStorage.getItem("user") !== adminEmail){
 alert("Admin only");
 location.href="index.html";
 }
 </script>
 
-<div class="header">
-<img src="myshop.jpg">
-Admin Dashboard
-</div>
+<div class="header">Admin Dashboard</div>
 
 <div class="container">
 
 <div class="card">
-<h3>Dashboard</h3>
+<h3>📊 Dashboard</h3>
 <div class="dashboard">
 <div class="box" id="totalSales">Total Sales: 0</div>
 <div class="box" id="totalOrders">Orders: 0</div>
@@ -112,7 +105,7 @@ Admin Dashboard
 <input id="n" placeholder="Name">
 <input id="p" placeholder="Price">
 <input id="i" placeholder="Image URL">
-<button class="addBtn" onclick="add()">Add</button>
+<button class="addBtn" onclick="add()">➕ Add</button>
 </div>
 
 <div class="card">
@@ -121,17 +114,17 @@ Admin Dashboard
 </div>
 
 <div class="card">
-<h3>Pending Orders</h3>
+<h3>Pending Orders ⏳</h3>
 <div id="pending"></div>
 </div>
 
 <div class="card">
-<h3>Approved Orders</h3>
+<h3>Approved Orders ✅</h3>
 <div id="approved"></div>
 </div>
 
 <div class="card">
-<h3>Declined Orders</h3>
+<h3>Declined Orders ❌</h3>
 <div id="declined"></div>
 </div>
 
@@ -143,6 +136,11 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 // ADD PRODUCT
 function add(){
+if(!n.value || !p.value || !i.value){
+alert("Fill all fields");
+return;
+}
+
 fetch(URL+"/products",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -153,7 +151,10 @@ price:{integerValue:String(p.value)},
 image:{stringValue:i.value}
 }
 })
-}).then(loadPro);
+}).then(()=>{
+n.value=""; p.value=""; i.value="";
+loadPro();
+});
 }
 
 // LOAD PRODUCTS
@@ -170,19 +171,22 @@ let f=x.fields;
 pro.innerHTML+=`
 <div>
 <img src="${f.image.stringValue}" width="60"><br>
+
 <input id="name_${id}" value="${f.name.stringValue}">
 <input id="price_${id}" value="${f.price.integerValue}">
 <input id="img_${id}" value="${f.image.stringValue}">
+
 <br>
-<button class="updateBtn" onclick="updatePro('${id}')">Update</button>
-<button class="deleteBtn" onclick="del('${id}')">Delete</button>
+
+<button class="updateBtn" onclick="updatePro('${id}')">✏️</button>
+<button class="deleteBtn" onclick="del('${id}')">🗑</button>
 </div>
 <hr>
 `;
 });
 }
 
-// UPDATE PRODUCT
+// UPDATE
 function updatePro(id){
 let name=document.getElementById("name_"+id).value;
 let price=document.getElementById("price_"+id).value;
@@ -216,9 +220,9 @@ pending.innerHTML="";
 approved.innerHTML="";
 declined.innerHTML="";
 
-let totalSales=0;
-let totalOrders=0;
-let pendingNum=0;
+let totalSalesVal=0;
+let totalOrdersVal=0;
+let pendingVal=0;
 
 d.documents?.forEach(x=>{
 let id=x.name.split("/").pop();
@@ -228,10 +232,10 @@ let tx=f.txid?.stringValue || "N/A";
 let amount=parseInt(f.amount?.integerValue || 0);
 let status=f.status?.stringValue || "pending";
 
-totalOrders++;
+totalOrdersVal++;
 
-if(status==="approved") totalSales+=amount;
-if(status==="pending") pendingNum++;
+if(status==="approved") totalSalesVal+=amount;
+if(status==="pending") pendingVal++;
 
 let html=`
 <div class="order">
@@ -239,8 +243,8 @@ TX: ${tx}<br>
 Amount: ${amount}<br>
 Status: ${status}<br>
 
-<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">Approve</button>
-<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">Decline</button>
+<button class="approveBtn" onclick="updateOrder('${id}','${tx}',${amount},'approved')">✅</button>
+<button class="declineBtn" onclick="updateOrder('${id}','${tx}',${amount},'declined')">❌</button>
 </div>
 `;
 
@@ -250,9 +254,9 @@ else declined.innerHTML+=html;
 
 });
 
-document.getElementById("totalSales").innerText="Total Sales: "+totalSales;
-document.getElementById("totalOrders").innerText="Orders: "+totalOrders;
-document.getElementById("pendingCount").innerText="Pending: "+pendingNum;
+totalSales.innerText="Total Sales: "+totalSalesVal;
+totalOrders.innerText="Orders: "+totalOrdersVal;
+pendingCount.innerText="Pending: "+pendingVal;
 }
 
 // UPDATE ORDER
@@ -270,6 +274,7 @@ status:{stringValue:status}
 }).then(loadOrders);
 }
 
+// INIT
 loadPro();
 loadOrders();
 
