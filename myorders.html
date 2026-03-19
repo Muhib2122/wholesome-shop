@@ -11,7 +11,7 @@ body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 .container{padding:15px;}
 .card{background:white;padding:12px;margin-bottom:10px;border-radius:10px;}
 .status{font-weight:bold;}
-button{padding:6px 10px;margin-top:5px;}
+button{padding:6px 10px;margin-top:5px;background:#0ea5e9;color:white;border:none;border-radius:5px;}
 </style>
 </head>
 
@@ -34,14 +34,15 @@ let user = localStorage.getItem("user");
 fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
-let docs = d.documents || [];
 
+let docs = d.documents || [];
 orders.innerHTML="";
 
 docs.forEach(doc=>{
 let f = doc.fields;
 
-if(f.email.stringValue !== user) return;
+// 🔥 SAME LOGIC শুধু filter ঠিক করা
+if(!f.email || f.email.stringValue !== user) return;
 
 let amount = f.amount.integerValue;
 let status = f.status.stringValue;
@@ -52,9 +53,42 @@ orders.innerHTML += `
 <div>💰 ${amount} BDT</div>
 <div>TX: ${tx}</div>
 <div class="status">Status: ${status}</div>
-<button onclick="downloadPDF('${amount}','${tx}','${status}')">📄 Invoice</button>
+
+<button onclick="downloadPDF('${amount}','${tx}','${status}')">
+📄 Download Invoice
+</button>
+
 </div>
 `;
 });
 
+if(orders.innerHTML===""){
+orders.innerHTML="<h3>No Orders</h3>";
+}
+
 });
+
+// 🔥 PDF (logo সহ)
+function downloadPDF(amount,tx,status){
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
+
+let img = new Image();
+img.src = "myshop.jpg";
+
+img.onload = function(){
+doc.addImage(img,'JPEG',15,10,30,30);
+
+doc.text("MyShop Invoice",20,50);
+doc.text("Amount: "+amount+" BDT",20,70);
+doc.text("TX ID: "+tx,20,80);
+doc.text("Status: "+status,20,90);
+
+doc.save("invoice.pdf");
+}
+
+}
+</script>
+
+</body>
+</html>
