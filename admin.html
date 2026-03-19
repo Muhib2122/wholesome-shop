@@ -58,6 +58,11 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
 <!-- ORDERS -->
 <div class="section">
 <h3>Orders</h3>
+
+<!-- 🔥 NEW SEARCH BAR (ONLY ADD) -->
+<input id="orderSearch" placeholder="Search Order ID">
+<button onclick="searchOrders()">Search</button>
+
 <div id="orders"></div>
 </div>
 
@@ -66,6 +71,8 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+
+let allOrders=[];
 
 // 🔐 CHECK
 if(localStorage.getItem("admin")!=="true"){
@@ -151,6 +158,7 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());
 }
 
+
 // ================= ORDERS =================
 
 function loadOrders(){
@@ -159,12 +167,23 @@ fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
+allOrders=d.documents||[];
+
+renderOrders(allOrders);
+
+});
+}
+
+
+// 🔥 RENDER (UNCHANGED LOGIC)
+function renderOrders(list){
+
 let total=0;
 let pendingCount=0;
 
 orders.innerHTML="";
 
-(d.documents||[]).forEach(doc=>{
+list.forEach(doc=>{
 
 let f=doc.fields;
 let name=doc.name;
@@ -186,7 +205,6 @@ orders.innerHTML+=`
 TX: ${f.txid?.stringValue||"-"}<br>
 Status: ${status}<br>
 
-<!-- 🔥 STEP UPDATE (NEW) -->
 <select onchange="updateStep('${name}',this.value)">
 <option ${step=="Pending"?"selected":""}>Pending</option>
 <option ${step=="Approved"?"selected":""}>Approved</option>
@@ -206,13 +224,33 @@ Status: ${status}<br>
 });
 
 sales.innerText=total;
-ordersCount.innerText=d.documents?.length||0;
+ordersCount.innerText=list.length;
 pending.innerText=pendingCount;
 
-});
 }
 
-// 🔥 UPDATE STATUS
+
+// 🔥 SEARCH (NEW ONLY)
+function searchOrders(){
+
+let val=orderSearch.value.trim();
+
+if(!val){
+renderOrders(allOrders);
+return;
+}
+
+let filtered=allOrders.filter(doc=>{
+let id=doc.fields.orderId?.stringValue||"";
+return id.includes(val);
+});
+
+renderOrders(filtered);
+
+}
+
+
+// UPDATE STATUS (UNCHANGED)
 function update(doc,status){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
 method:"PATCH",
@@ -223,7 +261,8 @@ fields:{status:{stringValue:status}}
 }).then(()=>location.reload());
 }
 
-// 🔥 UPDATE STEP (NEW ONLY)
+
+// UPDATE STEP (UNCHANGED)
 function updateStep(doc,value){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
 method:"PATCH",
@@ -233,6 +272,7 @@ fields:{statusStep:{stringValue:value}}
 })
 });
 }
+
 
 // INIT
 loadProducts();
