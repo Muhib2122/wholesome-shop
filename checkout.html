@@ -2,6 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Checkout</title>
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
@@ -16,7 +17,9 @@ gap:10px;
 }
 
 .header img{
-width:35px;height:35px;border-radius:50%;
+width:35px;
+height:35px;
+border-radius:50%;
 }
 
 .container{padding:15px;}
@@ -35,13 +38,18 @@ padding:8px 0;
 border-bottom:1px solid #eee;
 }
 
-.total{
-font-weight:bold;
-margin-top:10px;
-}
+.total{font-weight:bold;}
 
 .bkash{text-align:center;}
 .bkash img{width:120px;}
+
+input{
+width:100%;
+padding:10px;
+margin-top:10px;
+border-radius:6px;
+border:1px solid #ccc;
+}
 
 button{
 width:100%;
@@ -59,7 +67,7 @@ margin-top:10px;
 
 <div class="header">
 <img src="myshop.jpg">
-<b>Checkout</b>
+Checkout
 </div>
 
 <div class="container">
@@ -67,7 +75,8 @@ margin-top:10px;
 <div class="card" id="cartBox"></div>
 
 <div class="card bkash">
-<h3>Pay with bKash</h3>
+
+<h3>💳 Pay with bKash</h3>
 
 <img src="bkash.png">
 
@@ -76,51 +85,74 @@ margin-top:10px;
 <input id="tx" placeholder="Enter TX ID">
 
 <button onclick="confirmOrder()">Confirm Order</button>
+
 </div>
 
 </div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-let cart = JSON.parse(localStorage.getItem("cart")||"[]");
+let cart = JSON.parse(localStorage.getItem("cart") || "[]");
 
+// 🔥 CART RENDER (UNCHANGED LOGIC)
 function renderCart(){
 
 cartBox.innerHTML="";
 
+if(cart.length===0){
+cartBox.innerHTML="<h3>Cart Empty</h3>";
+return;
+}
+
 let total=0;
 
 cart.forEach(p=>{
-total+=p.price*p.qty;
+total += p.price * p.qty;
 
-cartBox.innerHTML+=`
+cartBox.innerHTML += `
 <div class="row">
 <div>${p.name} x${p.qty}</div>
-<div>${p.price*p.qty} BDT</div>
+<div>${p.price * p.qty} BDT</div>
 </div>
 `;
 });
 
-let vat=Math.floor(total*0.05);
-let final=total+vat;
+let vat = Math.floor(total*0.05);
+let final = total + vat;
 
-cartBox.innerHTML+=`
+cartBox.innerHTML += `
 <hr>
-<div class="row total"><div>Total</div><div>${final} BDT</div></div>
+<div class="row total"><div>Subtotal</div><div>${total}</div></div>
+<div class="row total"><div>VAT</div><div>${vat}</div></div>
+<div class="row total"><div>Total</div><div>${final}</div></div>
 `;
 }
 
-// 🔥 LOGIC SAME
+// 🔥 ORDER SAVE (LOGIC SAME)
 function confirmOrder(){
 
-let user=localStorage.getItem("user");
-let tx=document.getElementById("tx").value;
+let user = localStorage.getItem("user");
+
+if(!user){
+alert("Login first");
+location.href="auth.html";
+return;
+}
+
+let tx = document.getElementById("tx").value;
+
+if(!tx){
+alert("Enter TX ID");
+return;
+}
 
 let total = cart.reduce((a,b)=>a+(b.price*b.qty),0);
-let vat=Math.floor(total*0.05);
-let final=total+vat;
+let vat = Math.floor(total*0.05);
+let final = total + vat;
 
 fetch(URL+"/orders",{
 method:"POST",
@@ -133,10 +165,39 @@ amount:{integerValue:String(final)},
 status:{stringValue:"pending"}
 }
 })
-}).then(()=>{
+})
+.then(()=>{
+
+// 🔥 AUTO PDF DOWNLOAD
+downloadPDF(final, tx, "pending");
+
 localStorage.removeItem("cart");
+alert("Order placed ✅");
 location.href="myorders.html";
+
 });
+
+}
+
+// 🔥 PDF FUNCTION (logo সহ)
+function downloadPDF(amount,tx,status){
+const { jsPDF } = window.jspdf;
+let doc = new jsPDF();
+
+let img = new Image();
+img.src="myshop.jpg";
+
+img.onload=function(){
+doc.addImage(img,'JPEG',15,10,30,30);
+
+doc.text("MyShop Invoice",20,50);
+doc.text("Amount: "+amount+" BDT",20,70);
+doc.text("TX ID: "+tx,20,80);
+doc.text("Status: "+status,20,90);
+
+doc.save("invoice.pdf");
+}
+
 }
 
 renderCart();
