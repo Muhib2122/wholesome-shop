@@ -2,271 +2,139 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Panel</title>
+<title>Login / Signup</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
+body{
+margin:0;
+font-family:sans-serif;
+background:#e0f2fe;
 display:flex;
-justify-content:space-between;
+justify-content:center;
 align-items:center;
+height:100vh;
 }
 
-.header img{width:35px;height:35px;border-radius:50%;}
-
-.container{padding:15px;}
-
-.section-title{
-font-size:18px;
-margin:10px 0;
-font-weight:bold;
-}
-
-.card{
+.box{
 background:white;
-padding:12px;
-margin-bottom:10px;
-border-radius:10px;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
+padding:20px;
+border-radius:12px;
+width:90%;
+max-width:350px;
+box-shadow:0 2px 10px rgba(0,0,0,0.2);
+text-align:center;
 }
 
-button{
-padding:6px 10px;
-margin:3px;
-border:none;
-border-radius:6px;
-}
-
-.approve{background:#16a34a;color:white;}
-.decline{background:#dc2626;color:white;}
-.delete{background:black;color:white;}
+h2{margin-bottom:15px;}
 
 input{
-padding:8px;
-margin:5px 0;
 width:100%;
+padding:10px;
+margin:8px 0;
 border-radius:6px;
 border:1px solid #ccc;
 }
 
-.topbox{
-display:flex;
-gap:10px;
+button{
+width:100%;
+padding:10px;
+margin-top:10px;
+border:none;
+border-radius:6px;
+font-size:15px;
 }
 
-.topbox div{
-flex:1;
-background:white;
-padding:10px;
-border-radius:10px;
-text-align:center;
+.login{background:#0ea5e9;color:white;}
+.google{background:#ef4444;color:white;}
+
+.switch{
+margin-top:10px;
+color:#555;
+cursor:pointer;
 }
 </style>
 </head>
 
 <body>
 
-<div class="header">
-<div>
-<img src="myshop.jpg"> Admin Panel
-</div>
-<button onclick="logout()">Logout</button>
-</div>
+<div class="box">
 
-<div class="container">
+<h2 id="title">Login</h2>
 
-<!-- DASHBOARD -->
-<div class="topbox">
-<div>💰 Sales: <span id="sales">0</span></div>
-<div>📦 Orders: <span id="totalOrder">0</span></div>
-<div>⏳ Pending: <span id="pending">0</span></div>
-</div>
+<input id="name" placeholder="Full Name" style="display:none;">
+<input id="email" placeholder="Email">
+<input id="password" type="password" placeholder="Password">
 
-<!-- PRODUCT SECTION -->
-<div class="section-title">🛒 Products</div>
+<button class="login" onclick="submit()">Continue</button>
 
-<div class="card">
-<input id="pname" placeholder="Name">
-<input id="pprice" placeholder="Price">
-<input id="pimg" placeholder="Image URL">
-<button onclick="addProduct()">Add Product</button>
-</div>
+<button class="google" onclick="googleLogin()">Google Sign</button>
 
-<div id="products"></div>
-
-<!-- ORDER SECTION -->
-<div class="section-title">📦 Orders</div>
-<div id="orders"></div>
+<div class="switch" onclick="toggle()">Switch Login / Signup</div>
 
 </div>
 
 <script>
 
-const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+let isLogin = true;
 
-// 🔐 LOGIN CHECK
-if(localStorage.getItem("admin") !== "true"){
-alert("Admin only");
-location.href="auth.html";
+// 🔄 SWITCH LOGIN/SIGNUP
+function toggle(){
+isLogin = !isLogin;
+
+title.innerText = isLogin ? "Login" : "Signup";
+name.style.display = isLogin ? "none" : "block";
 }
 
-// LOGOUT
-function logout(){
+// 🔐 MAIN LOGIN/SIGNUP
+function submit(){
+
+let email = document.getElementById("email").value;
+let pass = document.getElementById("password").value;
+let fullname = document.getElementById("name").value;
+
+// BASIC VALIDATION
+if(!email || !pass){
+alert("Fill all fields");
+return;
+}
+
+// 👉 SAVE USER
+localStorage.setItem("user", email);
+
+// 👉 ADMIN CHECK
+if(email === "aiub58muhib@gmail.com"){
+localStorage.setItem("admin","true");
+location.href = "admin.html";
+return;
+}else{
 localStorage.removeItem("admin");
-location.href="auth.html";
 }
 
-// =====================
-// 🔥 PRODUCTS SECTION
-// =====================
-
-function loadProducts(){
-
-fetch(URL+"/products")
-.then(r=>r.json())
-.then(d=>{
-
-products.innerHTML="";
-let docs = d.documents || [];
-
-docs.forEach(doc=>{
-
-let f = doc.fields;
-let name = doc.name;
-
-products.innerHTML += `
-<div class="card">
-<img src="${f.image.stringValue}" width="80"><br>
-<b>${f.name.stringValue}</b><br>
-💰 ${f.price.integerValue}
-
-<br>
-
-<button onclick="deleteProduct('${name}')" class="delete">Delete</button>
-</div>
-`;
-
-});
-
-});
+// 👉 NORMAL USER
+location.href = "index.html";
 
 }
 
-// ADD PRODUCT (same logic)
-function addProduct(){
+// 🔴 GOOGLE LOGIN (UI BASED)
+function googleLogin(){
 
-let name = pname.value;
-let price = pprice.value;
-let img = pimg.value;
+let email = prompt("Enter Google Email:");
 
-fetch(URL+"/products",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:name},
-price:{integerValue:price},
-image:{stringValue:img}
-}
-})
-}).then(()=>{
-alert("Added");
-location.reload();
-});
+if(!email) return;
 
+// SAVE USER
+localStorage.setItem("user", email);
+
+// ADMIN CHECK
+if(email === "aiub58muhib@gmail.com"){
+localStorage.setItem("admin","true");
+location.href="admin.html";
+}else{
+localStorage.removeItem("admin");
+location.href="index.html";
 }
 
-// DELETE PRODUCT
-function deleteProduct(docName){
-
-fetch("https://firestore.googleapis.com/v1/"+docName,{
-method:"DELETE"
-}).then(()=>{
-alert("Deleted");
-location.reload();
-});
-
 }
-
-// =====================
-// 🔥 ORDER SECTION
-// =====================
-
-function loadOrders(){
-
-fetch(URL+"/orders")
-.then(r=>r.json())
-.then(d=>{
-
-orders.innerHTML="";
-let docs = d.documents || [];
-
-let totalSales=0;
-let totalOrder=docs.length;
-let pendingCount=0;
-
-docs.forEach(doc=>{
-
-let f = doc.fields;
-let name = doc.name;
-
-let amount = parseInt(f.amount?.integerValue || 0);
-let status = f.status?.stringValue;
-
-if(status==="approved") totalSales += amount;
-if(status==="pending") pendingCount++;
-
-orders.innerHTML += `
-<div class="card">
-
-👤 ${f.email?.stringValue || "N/A"} <br>
-💰 ${amount} BDT <br>
-TX: ${f.txid?.stringValue || "-"} <br>
-
-<b>Status: ${status}</b>
-
-<br>
-
-<button class="approve" onclick="update('${name}','approved')">✅</button>
-<button class="decline" onclick="update('${name}','declined')">❌</button>
-
-</div>
-`;
-
-});
-
-// DASHBOARD UPDATE
-sales.innerText = totalSales;
-totalOrder.innerText = totalOrder;
-pending.innerText = pendingCount;
-
-});
-
-}
-
-// UPDATE STATUS (same logic)
-function update(name,status){
-
-fetch("https://firestore.googleapis.com/v1/"+name+"?updateMask.fieldPaths=status",{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-status:{stringValue:status}
-}
-})
-})
-.then(()=>location.reload());
-
-}
-
-// INIT
-loadProducts();
-loadOrders();
 
 </script>
 
