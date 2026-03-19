@@ -2,31 +2,22 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Shop</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#f1f5f9;}
+body{font-family:sans-serif;margin:0;background:#e0f2fe;}
 
 .header{
+background:#0ea5e9;
+color:white;
+padding:12px;
 display:flex;
 justify-content:space-between;
 align-items:center;
-background:#0ea5e9;
-color:white;
-padding:10px;
 }
 
-.btn{
-background:white;
-color:#0ea5e9;
-padding:5px 10px;
-border-radius:5px;
-cursor:pointer;
-}
-
-.grid{
-display:grid;
-grid-template-columns:repeat(2,1fr);
+.products{
+display:flex;
+flex-wrap:wrap;
 gap:10px;
 padding:10px;
 }
@@ -35,119 +26,106 @@ padding:10px;
 background:white;
 padding:10px;
 border-radius:10px;
-text-align:center;
+width:45%;
+box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
 
-.cartBox{
-position:fixed;
-right:0;
-top:0;
-width:260px;
-height:100%;
-background:white;
-padding:10px;
-display:none;
-overflow:auto;
+button{
+background:#0ea5e9;
+color:white;
+border:none;
+padding:6px;
+border-radius:6px;
+margin-top:5px;
 }
 
-.cartItem{
-display:flex;
-justify-content:space-between;
-margin:5px 0;
+.cartBtn{
+background:#22c55e;
 }
+
 </style>
 </head>
 
 <body>
 
+<script>
+if(!localStorage.getItem("user")){
+location.href="auth.html";
+}
+</script>
+
 <div class="header">
-<b>Wholesome Shop</b>
+<div>🛒 Shop</div>
+
 <div>
-<span class="btn" onclick="openCart()">Cart</span>
-<span class="btn" onclick="goCheckout()">Checkout</span>
+<button onclick="goOrders()">My Orders</button>
+<button onclick="logout()">Logout</button>
 </div>
 </div>
 
-<div id="products" class="grid"></div>
-
-<div id="cartBox" class="cartBox">
-<button onclick="closeCart()">Close</button>
-<h3>Cart</h3>
-<div id="cartItems"></div>
-<h4 id="total"></h4>
-</div>
+<div class="products" id="products"></div>
 
 <script>
 
-const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
+function logout(){
+localStorage.removeItem("user");
+location.href="auth.html";
+}
 
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
+function goOrders(){
+location.href="myorders.html";
+}
 
-// LOAD PRODUCTS
-async function load(){
-let r=await fetch(URL+"/products");
-let d=await r.json();
-
-products.innerHTML="";
+// 🔥 LOAD PRODUCTS FROM FIRESTORE
+fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products")
+.then(r=>r.json())
+.then(d=>{
+let html="";
 
 d.documents?.forEach(x=>{
 let f=x.fields;
 
-products.innerHTML+=`
+let name=f.name.stringValue;
+let price=parseInt(f.price.integerValue);
+let img=f.image.stringValue;
+
+html+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="100"><br>
-<b>${f.name.stringValue}</b><br>
-${f.price.integerValue} BDT
-<button onclick="add('${f.name.stringValue}',${f.price.integerValue})">Add</button>
-</div>`;
+<img src="${img}" width="100%">
+<h4>${name}</h4>
+<p>${price} BDT</p>
+
+<button onclick="add('${name}',${price})">Add to Cart</button>
+</div>
+`;
 });
-}
+
+products.innerHTML=html;
+});
 
 // CART
-function add(n,p){
-let f=cart.find(i=>i.name===n);
-if(f)f.qty++;
-else cart.push({name:n,price:p,qty:1});
-save();
+function add(name,price){
+let cart=JSON.parse(localStorage.getItem("cart"))||[];
+
+let found=cart.find(i=>i.name===name);
+
+if(found){
+found.qty++;
+}else{
+cart.push({name,price,qty:1});
 }
 
-function save(){
 localStorage.setItem("cart",JSON.stringify(cart));
-render();
+
+alert("Added");
 }
 
-function render(){
-cartItems.innerHTML="";
-let t=0;
-
-cart.forEach((i,x)=>{
-t+=i.price*i.qty;
-
-cartItems.innerHTML+=`
-<div class="cartItem">
-${i.name} (${i.qty})
-<div>
-<button onclick="plus(${x})">+</button>
-<button onclick="minus(${x})">-</button>
-<button onclick="del(${x})">❌</button>
+// GO CHECKOUT
+document.body.insertAdjacentHTML("beforeend",`
+<div style="position:fixed;bottom:10px;right:10px;">
+<button class="cartBtn" onclick="location.href='checkout.html'">Checkout</button>
 </div>
-</div>`;
-});
-
-total.innerText="Total: "+t;
-}
-
-function plus(x){cart[x].qty++;save();}
-function minus(x){if(cart[x].qty>1)cart[x].qty--;save();}
-function del(x){cart.splice(x,1);save();}
-
-// UI
-function openCart(){cartBox.style.display="block";}
-function closeCart(){cartBox.style.display="none";}
-function goCheckout(){location="checkout.html";}
-
-render();
-load();
+`);
 
 </script>
 
