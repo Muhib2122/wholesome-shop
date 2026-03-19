@@ -1,277 +1,239 @@
-<!DOCTYPE html>
-<html>
-<head>
+<!DOCTYPE html>  
+<html>  
+<head>  
+<meta name="viewport" content="width=device-width, initial-scale=1">  
+<title>Admin Panel</title>  
 
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Admin Panel</title>
-
-<!-- 🔥 APP (UPDATED MANIFEST) -->
 <link rel="manifest" href="admin-manifest.json">
 <meta name="theme-color" content="#0ea5e9">
+  
+<style>  
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}  
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}  
+.container{padding:15px;}  
+  
+.topbox{display:flex;gap:10px;margin-bottom:10px;}  
+.topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}  
+  
+.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}  
+button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}  
+.approve{background:#16a34a;color:white;}  
+.decline{background:#dc2626;color:white;}  
+.delete{background:black;color:white;}  
+.edit{background:orange;color:white;}  
+  
+input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}  
+.section{margin-top:15px;}  
+select{padding:5px;margin-top:5px;border-radius:6px;}  
+</style>  
+</head>  
+  
+<body>  
+  
+<div class="header">  
+<b>Admin Panel</b>  
+<button onclick="logout()">Logout</button>  
+</div>  
+  
+<div class="container">  
+  
+<div class="topbox">  
+<div>💰 <span id="sales">0</span></div>  
+<div>📦 <span id="ordersCount">0</span></div>  
+<div>⏳ <span id="pending">0</span></div>  
+</div>  
+  
+<div class="section">  
+<h3>Products</h3>  
+  
+<div class="card">  
+<input id="pname" placeholder="Name">  
+<input id="pprice" placeholder="Price">  
+<input id="pimg" placeholder="Image URL">  
+<button onclick="addProduct()">Add</button>  
+</div>  
+  
+<div id="products"></div>  
+</div>  
+  
+<div class="section">  
+<h3>Orders</h3>  
+<div id="orders"></div>  
+</div>  
+  
+</div>  
+  
+<script>  
+  
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";  
+  
+if(localStorage.getItem("admin")!=="true"){  
+alert("Admin only");  
+location.href="auth.html";  
+}  
+  
+function logout(){  
+localStorage.removeItem("admin");  
+location.href="auth.html";  
+}  
+  
+let editDoc=null;  
+  
+function loadProducts(){  
+fetch(URL+"/products")  
+.then(r=>r.json())  
+.then(d=>{  
+products.innerHTML="";  
+(d.documents||[]).forEach(doc=>{  
+let f=doc.fields;  
+let name=doc.name;  
+  
+products.innerHTML+=`  
+<div class="card">  
+<img src="${f.image.stringValue}" width="60"><br>  
+${f.name.stringValue} - ${f.price.integerValue} BDT<br>  
+  
+<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}')">Edit</button>  
+<button class="delete" onclick="deleteProduct('${name}')">Delete</button>  
+</div>  
+`;  
+});  
+});  
+}  
+  
+function addProduct(){  
+  
+if(editDoc){  
+fetch("https://firestore.googleapis.com/v1/"+editDoc,{  
+method:"PATCH",  
+headers:{"Content-Type":"application/json"},  
+body:JSON.stringify({  
+fields:{  
+name:{stringValue:pname.value},  
+price:{integerValue:pprice.value},  
+image:{stringValue:pimg.value}  
+}  
+})  
+}).then(()=>{  
+editDoc=null;  
+location.reload();  
+});  
+return;  
+}  
+  
+fetch(URL+"/products",{  
+method:"POST",  
+headers:{"Content-Type":"application/json"},  
+body:JSON.stringify({  
+fields:{  
+name:{stringValue:pname.value},  
+price:{integerValue:pprice.value},  
+image:{stringValue:pimg.value}  
+}  
+})  
+}).then(()=>location.reload());  
+}  
+  
+function editProduct(doc,name,price,img){  
+pname.value=name;  
+pprice.value=price;  
+pimg.value=img;  
+editDoc=doc;  
+alert("Edit and press Add");  
+}  
+  
+function deleteProduct(doc){  
+fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})  
+.then(()=>location.reload());  
+}  
+  
+function loadOrders(){  
+  
+fetch(URL+"/orders")  
+.then(r=>r.json())  
+.then(d=>{  
+  
+let total=0;  
+let pendingCount=0;  
+  
+orders.innerHTML="";  
+  
+(d.documents||[]).forEach(doc=>{  
+  
+let f=doc.fields;  
+let name=doc.name;  
+  
+let amount=parseInt(f.amount?.integerValue||0);  
+let status=f.status?.stringValue||"pending";  
+let step=f.statusStep?.stringValue||"Pending";  
+let orderId=f.orderId?.stringValue||"N/A";  
+  
+if(status==="approved") total+=amount;  
+if(status==="pending") pendingCount++;  
+  
+orders.innerHTML+=`  
+<div class="card">  
+  
+🆔 ${orderId}<br>  
+👤 ${f.email?.stringValue||"N/A"}<br>  
+💰 ${amount} BDT<br>  
+TX: ${f.txid?.stringValue||"-"}<br>  
+Status: ${status}<br>  
+  
+<select onchange="updateStep('${name}',this.value)">  
+<option ${step=="Pending"?"selected":""}>Pending</option>  
+<option ${step=="Approved"?"selected":""}>Approved</option>  
+<option ${step=="Processing"?"selected":""}>Processing</option>  
+<option ${step=="Shipped"?"selected":""}>Shipped</option>  
+<option ${step=="Delivered"?"selected":""}>Delivered</option>  
+</select>  
+  
+<br>  
+  
+<button class="approve" onclick="update('${name}','approved')">✅</button>  
+<button class="decline" onclick="update('${name}','declined')">❌</button>  
+  
+</div>  
+`;  
+  
+});  
+  
+sales.innerText=total;  
+ordersCount.innerText=d.documents?.length||0;  
+pending.innerText=pendingCount;  
+  
+});  
+}  
+  
+function update(doc,status){  
+fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{  
+method:"PATCH",  
+headers:{"Content-Type":"application/json"},  
+body:JSON.stringify({  
+fields:{status:{stringValue:status}}  
+})  
+}).then(()=>location.reload());  
+}  
+  
+function updateStep(doc,value){  
+fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{  
+method:"PATCH",  
+headers:{"Content-Type":"application/json"},  
+body:JSON.stringify({  
+fields:{statusStep:{stringValue:value}}  
+})  
+});  
+}  
+  
+loadProducts();  
+loadOrders();  
 
-<style>
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
-.container{padding:15px;}
-
-.topbox{display:flex;gap:10px;margin-bottom:10px;}
-.topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
-
-.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}
-button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}
-.approve{background:#16a34a;color:white;}
-.decline{background:#dc2626;color:white;}
-.delete{background:black;color:white;}
-.edit{background:orange;color:white;}
-
-input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}
-.section{margin-top:15px;}
-select{padding:5px;margin-top:5px;border-radius:6px;}
-</style>
-
-</head>
-
-<body>
-
-<div class="header">
-<b>Admin Panel</b>
-<button onclick="logout()">Logout</button>
-</div>
-
-<div class="container">
-
-<div class="topbox">
-<div>💰 <span id="sales">0</span></div>
-<div>📦 <span id="ordersCount">0</span></div>
-<div>⏳ <span id="pending">0</span></div>
-</div>
-
-<div class="section">
-<h3>Products</h3>
-
-<div class="card">
-<input id="pname" placeholder="Name">
-<input id="pprice" placeholder="Price">
-<input id="pimg" placeholder="Image URL">
-<button onclick="addProduct()">Add</button>
-</div>
-
-<div id="products"></div>
-</div>
-
-<div class="section">
-<h3>Orders</h3>
-
-<input id="orderSearch" placeholder="Search Order ID">
-<button onclick="searchOrders()">Search</button>
-
-<div id="orders"></div>
-</div>
-
-</div>
-
-<script>
-
-// 🔥 SERVICE WORKER (APP MODE)
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js');
+// 🔥 ONLY NEW PART (SW REGISTER)
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
-
-// ===== ORIGINAL LOGIC (UNCHANGED) =====
-
-const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
-
-let allOrders=[];
-
-if(localStorage.getItem("admin")!=="true"){
-alert("Admin only");
-location.href="auth.html";
-}
-
-function logout(){
-localStorage.removeItem("admin");
-location.href="auth.html";
-}
-
-let editDoc=null;
-
-function loadProducts(){
-fetch(URL+"/products")
-.then(r=>r.json())
-.then(d=>{
-products.innerHTML="";
-(d.documents||[]).forEach(doc=>{
-let f=doc.fields;
-let name=doc.name;
-
-products.innerHTML+=`
-<div class="card">
-<img src="${f.image.stringValue}" width="60"><br>
-${f.name.stringValue} - ${f.price.integerValue} BDT<br>
-
-<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}')">Edit</button>
-<button class="delete" onclick="deleteProduct('${name}')">Delete</button>
-</div>
-`;
-});
-});
-}
-
-function addProduct(){
-
-if(editDoc){
-fetch("https://firestore.googleapis.com/v1/"+editDoc,{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:pname.value},
-price:{integerValue:pprice.value},
-image:{stringValue:pimg.value}
-}
-})
-}).then(()=>{
-editDoc=null;
-location.reload();
-});
-return;
-}
-
-fetch(URL+"/products",{
-method:"POST",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{
-name:{stringValue:pname.value},
-price:{integerValue:pprice.value},
-image:{stringValue:pimg.value}
-}
-})
-}).then(()=>location.reload());
-}
-
-function editProduct(doc,name,price,img){
-pname.value=name;
-pprice.value=price;
-pimg.value=img;
-editDoc=doc;
-alert("Edit and press Add");
-}
-
-function deleteProduct(doc){
-fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
-.then(()=>location.reload());
-}
-
-
-// ===== ORDERS =====
-
-function loadOrders(){
-
-fetch(URL+"/orders")
-.then(r=>r.json())
-.then(d=>{
-allOrders=d.documents||[];
-renderOrders(allOrders);
-});
-}
-
-function renderOrders(list){
-
-let total=0;
-let pendingCount=0;
-
-orders.innerHTML="";
-
-list.forEach(doc=>{
-
-let f=doc.fields;
-let name=doc.name;
-
-let amount=parseInt(f.amount?.integerValue||0);
-let status=f.status?.stringValue||"pending";
-let step=f.statusStep?.stringValue||"Pending";
-let orderId=f.orderId?.stringValue||"N/A";
-
-if(status==="approved") total+=amount;
-if(status==="pending") pendingCount++;
-
-orders.innerHTML+=`
-<div class="card">
-
-🆔 ${orderId}<br>
-👤 ${f.email?.stringValue||"N/A"}<br>
-💰 ${amount} BDT<br>
-TX: ${f.txid?.stringValue||"-"}<br>
-Status: ${status}<br>
-
-<select onchange="updateStep('${name}',this.value)">
-<option ${step=="Pending"?"selected":""}>Pending</option>
-<option ${step=="Approved"?"selected":""}>Approved</option>
-<option ${step=="Processing"?"selected":""}>Processing</option>
-<option ${step=="Shipped"?"selected":""}>Shipped</option>
-<option ${step=="Delivered"?"selected":""}>Delivered</option>
-</select>
-
-<br>
-
-<button class="approve" onclick="update('${name}','approved')">✅</button>
-<button class="decline" onclick="update('${name}','declined')">❌</button>
-
-</div>
-`;
-
-});
-
-sales.innerText=total;
-ordersCount.innerText=list.length;
-pending.innerText=pendingCount;
-
-}
-
-function searchOrders(){
-
-let val=orderSearch.value.trim();
-
-if(!val){
-renderOrders(allOrders);
-return;
-}
-
-let filtered=allOrders.filter(doc=>{
-let id=doc.fields.orderId?.stringValue||"";
-return id.includes(val);
-});
-
-renderOrders(filtered);
-
-}
-
-function update(doc,status){
-fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{status:{stringValue:status}}
-})
-}).then(()=>location.reload());
-}
-
-function updateStep(doc,value){
-fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
-method:"PATCH",
-headers:{"Content-Type":"application/json"},
-body:JSON.stringify({
-fields:{statusStep:{stringValue:value}}
-})
-});
-}
-
-// INIT
-loadProducts();
-loadOrders();
-
-</script>
-
-</body>
+  
+</script>  
+  
+</body>  
 </html>
