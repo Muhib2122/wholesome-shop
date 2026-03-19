@@ -2,10 +2,7 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-
-<!-- jsPDF -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-
 </head>
 
 <body style="font-family:sans-serif;background:#e0f2fe;padding:15px;">
@@ -26,7 +23,7 @@
 
 <script>
 
-// ===== EXISTING LOGIC =====
+// ===== CART (UNCHANGED)
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let html="<tr><th>Name</th><th>Qty</th><th>Total</th></tr>";
 let total=0;
@@ -45,18 +42,26 @@ let finalTotal = total + vat;
 html+=`<tr><td colspan="2">Subtotal</td><td>${total}</td></tr>`;
 html+=`<tr><td colspan="2">VAT (4%)</td><td>${vat}</td></tr>`;
 html+=`<tr><td colspan="2"><b>Total</b></td><td><b>${finalTotal}</b></td></tr>`;
-
 table.innerHTML=html;
 
 
-// ===== ORDER SAVE (UNCHANGED) =====
+// ===== 🔥 ORDER ID GENERATOR (NEW)
+function generateOrderId(){
+return "ORD-"+Date.now();
+}
+
+
+// ===== PLACE ORDER (LOGIC SAME + ORDER ID ADD)
 function place(){
+
+let orderId = generateOrderId();
 
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
+orderId:{stringValue:orderId}, // 🔥 NEW
 txid:{stringValue:tx.value},
 amount:{integerValue:String(finalTotal)},
 status:{stringValue:"pending"},
@@ -64,20 +69,20 @@ email:{stringValue:localStorage.getItem("user")||"N/A"}
 }
 })
 }).then(()=>{
-generatePDF(); // 🔥 new premium pdf
+generatePDF(orderId); // 🔥 PASS ID
 localStorage.removeItem("cart");
 location.href="myorders.html";
 });
 }
 
 
-// ===== 🔥 PREMIUM PDF =====
-function generatePDF(){
+// ===== PDF (UNCHANGED DESIGN + ORDER ID ADD)
+function generatePDF(orderId){
 
 const { jsPDF } = window.jspdf;
 let doc = new jsPDF();
 
-// HEADER BOX
+// HEADER
 doc.setFillColor(14,165,233);
 doc.rect(0,0,210,25,"F");
 
@@ -85,23 +90,24 @@ doc.setTextColor(255,255,255);
 doc.setFontSize(16);
 doc.text("Wholesome Shop", 15,15);
 
-// LOGO (small)
 doc.addImage("myshop.jpg", "JPEG", 160,5,15,15);
 
-// RESET COLOR
 doc.setTextColor(0,0,0);
 
-// INVOICE TITLE
+// TITLE
 doc.setFontSize(14);
 doc.text("Invoice", 15,35);
 
+// 🔥 ORDER ID
+doc.setFontSize(10);
+doc.text("Order ID: "+orderId, 15,42);
+
 // DATE
 let date = new Date().toLocaleString();
-doc.setFontSize(10);
-doc.text("Date: "+date, 15,42);
+doc.text("Date: "+date, 15,48);
 
 // TABLE HEADER
-let y = 55;
+let y = 60;
 doc.setFillColor(220,220,220);
 doc.rect(15,y,180,8,"F");
 
@@ -111,7 +117,6 @@ doc.text("Total", 150,y+5);
 
 // ITEMS
 y+=10;
-
 cart.forEach(i=>{
 doc.text(i.name,20,y);
 doc.text(String(i.qty),110,y);
@@ -123,15 +128,9 @@ y+=8;
 doc.line(15,y,195,y);
 y+=8;
 
-// SUBTOTAL
-doc.text("Subtotal: "+total+" BDT",140,y);
-y+=8;
+doc.text("Subtotal: "+total+" BDT",140,y); y+=8;
+doc.text("VAT (4%): "+vat+" BDT",140,y); y+=8;
 
-// VAT
-doc.text("VAT (4%): "+vat+" BDT",140,y);
-y+=8;
-
-// FINAL
 doc.setFontSize(12);
 doc.text("Total: "+finalTotal+" BDT",140,y);
 
@@ -139,8 +138,7 @@ doc.text("Total: "+finalTotal+" BDT",140,y);
 doc.setFontSize(10);
 doc.text("Thank you for shopping ❤️",15,280);
 
-// SAVE AUTO DOWNLOAD
-doc.save("invoice.pdf");
+doc.save("invoice-"+orderId+".pdf");
 
 }
 
