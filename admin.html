@@ -6,7 +6,7 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;}
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
 .container{padding:15px;}
 
 .topbox{display:flex;gap:10px;margin-bottom:10px;}
@@ -33,6 +33,7 @@ input{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #cc
 
 <div class="container">
 
+<!-- DASHBOARD -->
 <div class="topbox">
 <div>💰 <span id="sales">0</span></div>
 <div>📦 <span id="ordersCount">0</span></div>
@@ -84,16 +85,17 @@ fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 products.innerHTML="";
-
 (d.documents||[]).forEach(doc=>{
 let f=doc.fields;
+let name=doc.name;
 
 products.innerHTML+=`
 <div class="card">
-<img src="${f.image?.stringValue}" width="60"><br>
-${f.name?.stringValue} - ${f.price?.integerValue} BDT<br>
+<img src="${f.image.stringValue}" width="60"><br>
+${f.name.stringValue} - ${f.price.integerValue} BDT<br>
 
-<button class="delete" onclick="deleteProduct('${doc.name}')">Delete</button>
+<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}')">Edit</button>
+<button class="delete" onclick="deleteProduct('${name}')">Delete</button>
 </div>
 `;
 });
@@ -119,6 +121,32 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());
 }
 
+// 🔥 EDIT ADD (ONLY NEW PART)
+function editProduct(doc,name,price,img){
+
+// input field e data set
+pname.value = name;
+pprice.value = price;
+pimg.value = img;
+
+// confirm
+if(!confirm("Update this product?")) return;
+
+// update firestore
+fetch("https://firestore.googleapis.com/v1/"+doc,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value}
+}
+})
+}).then(()=>location.reload());
+
+}
+
 // ================= ORDERS =================
 
 function loadOrders(){
@@ -127,59 +155,43 @@ fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
-orders.innerHTML="";
-
-let docs = d.documents || [];
-
 let total=0;
 let pendingCount=0;
 
-docs.forEach(doc=>{
+orders.innerHTML="";
 
-let f = doc.fields || {};
+(d.documents||[]).forEach(doc=>{
 
-// 🔥 SAFE PARSE
-let email = f.email?.stringValue || f.user?.stringValue || "N/A";
+let f=doc.fields;
+let name=doc.name;
 
-let amount = 0;
-if(f.amount?.integerValue){
-amount = parseInt(f.amount.integerValue);
-}else if(f.amount?.stringValue){
-amount = parseInt(f.amount.stringValue);
-}
+let amount=parseInt(f.amount.integerValue||0);
+let status=f.status.stringValue;
 
-let status = f.status?.stringValue || "pending";
-let tx = f.txid?.stringValue || "-";
-
-// 🔥 COUNT FIX
-if(status==="approved") total += amount;
+if(status==="approved") total+=amount;
 if(status==="pending") pendingCount++;
 
-// UI
 orders.innerHTML+=`
 <div class="card">
-👤 ${email}<br>
+👤 ${f.email?.stringValue||"N/A"}<br>
 💰 ${amount} BDT<br>
-TX: ${tx}<br>
+TX: ${f.txid?.stringValue||"-"}<br>
 Status: ${status}<br>
 
-<button class="approve" onclick="update('${doc.name}','approved')">✅</button>
-<button class="decline" onclick="update('${doc.name}','declined')">❌</button>
+<button class="approve" onclick="update('${name}','approved')">✅</button>
+<button class="decline" onclick="update('${name}','declined')">❌</button>
 </div>
 `;
 
 });
 
-// 🔥 DASHBOARD FIX
-sales.innerText = total;
-ordersCount.innerText = docs.length;
-pending.innerText = pendingCount;
+sales.innerText=total;
+ordersCount.innerText=d.documents?.length||0;
+pending.innerText=pendingCount;
 
 });
-
 }
 
-// UPDATE STATUS
 function update(doc,status){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
 method:"PATCH",
