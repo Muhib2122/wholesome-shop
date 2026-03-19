@@ -1,11 +1,11 @@
 self.addEventListener("install", e => {
-  self.skipWaiting(); // 🔥 important
+  self.skipWaiting();
 });
 
 self.addEventListener("activate", e => {
-  console.log("SW Activated");
+  clients.claim();
 });
 
 self.addEventListener("fetch", e => {
-  // no cache (safe)
+  // minimal fetch, no cache needed
 });
