@@ -44,17 +44,12 @@ color:white;
 font-weight:bold;
 }
 
-.google{
-background:#ef4444;
-}
+.google{background:#ef4444;}
 
-.row{
-display:flex;
-gap:5px;
-}
+.row{display:flex;gap:5px;}
 
 .eye{
-width:40px;
+width:45px;
 background:#ddd;
 }
 </style>
@@ -73,11 +68,11 @@ background:#ddd;
 
 <div class="row">
 <input id="password" type="password" placeholder="Password">
-<button class="eye" onclick="toggle()">👁</button>
+<button class="eye" onclick="togglePass()">👁</button>
 </div>
 
 <button onclick="submit()">Continue</button>
-<button class="google" onclick="google()">Google Sign</button>
+<button class="google" onclick="googleLogin()">Google Sign</button>
 
 <p onclick="switchMode()" style="text-align:center;cursor:pointer">
 Switch Login / Signup
@@ -85,9 +80,9 @@ Switch Login / Signup
 
 </div>
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<!-- ✅ FIXED FIREBASE (v8) -->
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
 
 <script>
 const firebaseConfig = {
@@ -99,83 +94,90 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-let isSignup=false;
+let isSignup = false;
 
-// TOGGLE PASSWORD
-function toggle(){
-let p=document.getElementById("password");
-p.type = p.type==="password"?"text":"password";
+// 👁 password toggle
+function togglePass(){
+let p = document.getElementById("password");
+p.type = p.type==="password" ? "text" : "password";
 }
 
-// SWITCH MODE
+// 🔄 switch login/signup
 function switchMode(){
-isSignup=!isSignup;
+isSignup = !isSignup;
 
-fullname.style.display=isSignup?"block":"none";
-username.style.display=isSignup?"block":"none";
-title.innerText=isSignup?"Signup":"Login";
+fullname.style.display = isSignup ? "block" : "none";
+username.style.display = isSignup ? "block" : "none";
+title.innerText = isSignup ? "Signup" : "Login";
 }
 
-// SUBMIT
+// 🚀 MAIN SUBMIT
 function submit(){
 
-let email=emailInput();
-let pass=password.value;
+let email = document.getElementById("email").value;
+let pass = document.getElementById("password").value;
+
+if(!email || !pass){
+alert("Fill all fields");
+return;
+}
 
 if(isSignup){
 
-auth.createUserWithEmailAndPassword(email,pass)
+auth.createUserWithEmailAndPassword(email, pass)
 .then(res=>{
 
-// EMAIL VERIFY SEND
 res.user.sendEmailVerification();
 
-alert("Verification email sent 📩");
+localStorage.setItem("user", email);
 
-// user data save
-localStorage.setItem("user",email);
+alert("Signup success! Verify email 📩");
 
+// redirect
 location.href="index.html";
-});
+
+})
+.catch(e=>alert(e.message));
 
 }else{
 
-auth.signInWithEmailAndPassword(email,pass)
+auth.signInWithEmailAndPassword(email, pass)
 .then(res=>{
 
-localStorage.setItem("user",res.user.email);
+localStorage.setItem("user", res.user.email);
 
-// ADMIN CHECK
+// admin redirect
 if(res.user.email==="aiub58muhib@gmail.com"){
 location.href="admin.html";
 }else{
 location.href="index.html";
 }
 
-});
+})
+.catch(e=>alert(e.message));
 
 }
 }
 
-// GOOGLE LOGIN
-function google(){
-let provider=new firebase.auth.GoogleAuthProvider();
+// 🔥 GOOGLE LOGIN
+function googleLogin(){
+
+let provider = new firebase.auth.GoogleAuthProvider();
 
 auth.signInWithPopup(provider)
 .then(res=>{
-localStorage.setItem("user",res.user.email);
+
+localStorage.setItem("user", res.user.email);
 
 if(res.user.email==="aiub58muhib@gmail.com"){
 location.href="admin.html";
 }else{
 location.href="index.html";
 }
-});
-}
 
-// helper
-function emailInput(){
-return document.getElementById("email").value;
+})
+.catch(e=>alert(e.message));
+
 }
 </script>
 
