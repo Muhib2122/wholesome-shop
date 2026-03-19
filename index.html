@@ -15,17 +15,8 @@ justify-content:space-between;
 align-items:center;
 }
 
-.logo{
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.logo img{
-width:35px;
-height:35px;
-border-radius:50%;
-}
+.logo{display:flex;align-items:center;gap:10px;}
+.logo img{width:35px;border-radius:50%;}
 
 .products{
 display:flex;
@@ -39,8 +30,21 @@ background:white;
 padding:10px;
 border-radius:10px;
 width:45%;
-box-shadow:0 2px 8px rgba(0,0,0,0.1);
 }
+
+.cartPanel{
+position:fixed;
+right:-100%;
+top:0;
+width:80%;
+height:100%;
+background:white;
+transition:.3s;
+padding:15px;
+overflow:auto;
+}
+
+.cartPanel.active{right:0;}
 
 button{
 background:#0ea5e9;
@@ -51,21 +55,7 @@ border-radius:6px;
 margin-top:5px;
 }
 
-.cartPanel{
-position:fixed;
-right:-100%;
-top:0;
-width:80%;
-height:100%;
-background:white;
-transition:0.3s;
-padding:15px;
-overflow:auto;
-}
-
-.cartPanel.active{right:0;}
-
-.qtyBtn{background:#38bdf8;padding:5px;margin:2px;}
+.qtyBtn{background:#38bdf8;}
 
 .totalBox{
 background:#0ea5e9;
@@ -86,7 +76,6 @@ location.href="auth.html";
 </script>
 
 <div class="header">
-
 <div class="logo">
 <img src="myshop.jpg">
 <b>MyShop</b>
@@ -95,35 +84,36 @@ location.href="auth.html";
 <div>
 <button onclick="openCart()">Cart</button>
 <button onclick="location.href='myorders.html'">My Orders</button>
+<button onclick="location.href='settings.html'">Settings</button>
 <button onclick="logout()">Logout</button>
 </div>
-
 </div>
 
-<div class="products" id="products"></div>
+<div id="products" class="products"></div>
 
 <div id="cartPanel" class="cartPanel">
-<h3>🛒 Cart</h3>
+<h3>Cart</h3>
 <div id="cartItems"></div>
-<div class="totalBox" id="totalBox">Total: 0</div>
+<div id="totalBox" class="totalBox">Total: 0</div>
 <button onclick="location.href='checkout.html'">Checkout</button>
 <button onclick="closeCart()">Close</button>
 </div>
 
 <script>
-// same logic (unchanged)
 
 function logout(){
-localStorage.removeItem("user");
+localStorage.clear();
 location.href="auth.html";
 }
 
+// LOAD PRODUCTS
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/products")
 .then(r=>r.json())
 .then(d=>{
 let html="";
 d.documents?.forEach(x=>{
 let f=x.fields;
+
 html+=`
 <div class="card">
 <img src="${f.image.stringValue}" width="100%">
@@ -136,6 +126,7 @@ html+=`
 products.innerHTML=html;
 });
 
+// CART
 function add(name,price){
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
 let f=cart.find(i=>i.name===name);
@@ -151,10 +142,11 @@ let html="";
 let sum=0;
 
 cart.forEach((item,i)=>{
-sum += item.price * item.qty;
+sum+=item.price*item.qty;
+
 html+=`
 <div>
-<b>${item.name}</b><br>
+${item.name}<br>
 ${item.price} × ${item.qty}<br>
 <button class="qtyBtn" onclick="changeQty(${i},1)">➕</button>
 <button class="qtyBtn" onclick="changeQty(${i},-1)">➖</button>
@@ -165,7 +157,7 @@ ${item.price} × ${item.qty}<br>
 });
 
 cartItems.innerHTML=html;
-document.getElementById("totalBox").innerText="Total: "+sum+" BDT";
+totalBox.innerText="Total: "+sum+" BDT";
 }
 
 function changeQty(i,v){
@@ -191,6 +183,7 @@ loadCart();
 function closeCart(){
 document.getElementById("cartPanel").classList.remove("active");
 }
+
 </script>
 
 </body>
