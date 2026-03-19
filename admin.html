@@ -58,6 +58,11 @@ select{padding:5px;margin-top:5px;border-radius:6px;}
   
 <div class="section">  
 <h3>Orders</h3>  
+
+<!-- 🔍 NEW SEARCH BAR -->
+<input id="searchOrder" placeholder="Search Order ID">
+<button onclick="searchOrder()">Search</button>
+
 <div id="orders"></div>  
 </div>  
   
@@ -78,7 +83,8 @@ location.href="auth.html";
 }  
   
 let editDoc=null;  
-  
+let allOrders=[]; // 🔥 store all orders
+
 function loadProducts(){  
 fetch(URL+"/products")  
 .then(r=>r.json())  
@@ -147,64 +153,90 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());  
 }  
   
+function renderOrders(list){
+orders.innerHTML="";
+
+list.forEach(doc=>{
+let f=doc.fields;
+let name=doc.name;
+
+let amount=parseInt(f.amount?.integerValue||0);
+let status=f.status?.stringValue||"pending";
+let step=f.statusStep?.stringValue||"Pending";
+let orderId=f.orderId?.stringValue||"N/A";
+
+orders.innerHTML+=`
+<div class="card">
+
+🆔 ${orderId}<br>
+👤 ${f.email?.stringValue||"N/A"}<br>
+💰 ${amount} BDT<br>
+TX: ${f.txid?.stringValue||"-"}<br>
+Status: ${status}<br>
+
+<select onchange="updateStep('${name}',this.value)">
+<option ${step=="Pending"?"selected":""}>Pending</option>
+<option ${step=="Approved"?"selected":""}>Approved</option>
+<option ${step=="Processing"?"selected":""}>Processing</option>
+<option ${step=="Shipped"?"selected":""}>Shipped</option>
+<option ${step=="Delivered"?"selected":""}>Delivered</option>
+</select>
+
+<br>
+
+<button class="approve" onclick="update('${name}','approved')">✅</button>
+<button class="decline" onclick="update('${name}','declined')">❌</button>
+
+</div>
+`;
+});
+}
+
 function loadOrders(){  
-  
 fetch(URL+"/orders")  
 .then(r=>r.json())  
 .then(d=>{  
-  
+
+allOrders = d.documents || [];
+
 let total=0;  
 let pendingCount=0;  
-  
-orders.innerHTML="";  
-  
-(d.documents||[]).forEach(doc=>{  
-  
-let f=doc.fields;  
-let name=doc.name;  
-  
-let amount=parseInt(f.amount?.integerValue||0);  
-let status=f.status?.stringValue||"pending";  
-let step=f.statusStep?.stringValue||"Pending";  
-let orderId=f.orderId?.stringValue||"N/A";  
-  
-if(status==="approved") total+=amount;  
-if(status==="pending") pendingCount++;  
-  
-orders.innerHTML+=`  
-<div class="card">  
-  
-🆔 ${orderId}<br>  
-👤 ${f.email?.stringValue||"N/A"}<br>  
-💰 ${amount} BDT<br>  
-TX: ${f.txid?.stringValue||"-"}<br>  
-Status: ${status}<br>  
-  
-<select onchange="updateStep('${name}',this.value)">  
-<option ${step=="Pending"?"selected":""}>Pending</option>  
-<option ${step=="Approved"?"selected":""}>Approved</option>  
-<option ${step=="Processing"?"selected":""}>Processing</option>  
-<option ${step=="Shipped"?"selected":""}>Shipped</option>  
-<option ${step=="Delivered"?"selected":""}>Delivered</option>  
-</select>  
-  
-<br>  
-  
-<button class="approve" onclick="update('${name}','approved')">✅</button>  
-<button class="decline" onclick="update('${name}','declined')">❌</button>  
-  
-</div>  
-`;  
-  
-});  
-  
+
+allOrders.forEach(doc=>{
+let f=doc.fields;
+let amount=parseInt(f.amount?.integerValue||0);
+let status=f.status?.stringValue||"pending";
+
+if(status==="approved") total+=amount;
+if(status==="pending") pendingCount++;
+});
+
+renderOrders(allOrders);
+
 sales.innerText=total;  
-ordersCount.innerText=d.documents?.length||0;  
+ordersCount.innerText=allOrders.length;  
 pending.innerText=pendingCount;  
-  
+
 });  
 }  
-  
+
+// 🔍 SEARCH FUNCTION
+function searchOrder(){
+let val = document.getElementById("searchOrder").value.trim();
+
+if(!val){
+renderOrders(allOrders);
+return;
+}
+
+let filtered = allOrders.filter(doc=>{
+return doc.fields.orderId?.stringValue === val;
+});
+
+renderOrders(filtered);
+}
+
+// 🔥 UPDATE STATUS  
 function update(doc,status){  
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{  
 method:"PATCH",  
@@ -214,7 +246,7 @@ fields:{status:{stringValue:status}}
 })  
 }).then(()=>location.reload());  
 }  
-  
+
 function updateStep(doc,value){  
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{  
 method:"PATCH",  
@@ -224,15 +256,44 @@ fields:{statusStep:{stringValue:value}}
 })  
 });  
 }  
-  
+
 loadProducts();  
 loadOrders();  
 
-// 🔥 ONLY NEW PART (SW REGISTER)
+// 🔥 SERVICE WORKER
 if ("serviceWorker" in navigator) {
   navigator.serviceWorker.register("sw.js");
 }
-  
+
+// 🔥 INSTALL BUTTON (STEP 2)
+let deferredPrompt;
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+
+  let btn = document.createElement("button");
+  btn.innerText = "Install App";
+  btn.style.position = "fixed";
+  btn.style.bottom = "20px";
+  btn.style.right = "20px";
+  btn.style.padding = "10px";
+  btn.style.background = "#0ea5e9";
+  btn.style.color = "white";
+  btn.style.border = "none";
+  btn.style.borderRadius = "8px";
+
+  document.body.appendChild(btn);
+
+  btn.onclick = () => {
+    deferredPrompt.prompt();
+    deferredPrompt.userChoice.then(() => {
+      deferredPrompt = null;
+      btn.remove();
+    });
+  };
+});
+
 </script>  
   
 </body>  
