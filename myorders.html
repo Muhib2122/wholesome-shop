@@ -18,21 +18,54 @@ fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databas
 orders.innerHTML="";
 
 (d.documents||[]).forEach(doc=>{
+
 let f=doc.fields;
 
 if((f.email?.stringValue||"N/A")===user){
 
+let orderId = f.orderId?.stringValue || "N/A";
+
 orders.innerHTML+=`
 <div style="background:white;padding:10px;margin:10px;border-radius:10px;">
+🆔 ${orderId}<br>
 💰 ${f.amount.integerValue} BDT<br>
 TX: ${f.txid.stringValue}<br>
-Status: ${f.status.stringValue}
-</div>`;
+Status: ${f.status.stringValue}<br><br>
+
+<button onclick="download('${orderId}',${f.amount.integerValue})">
+📄 Download PDF
+</button>
+
+</div>
+`;
+
 }
+
 });
 
 });
+
+
+// 🔥 SIMPLE PDF DOWNLOAD FROM ORDER PAGE
+function download(orderId, amount){
+
+let w=window.open("");
+
+w.document.write(`
+<h2>Wholesome Shop</h2>
+<img src="myshop.jpg" width="50"><hr>
+
+<p><b>Order ID:</b> ${orderId}</p>
+<p><b>Total:</b> ${amount} BDT</p>
+
+<br><hr>
+<p>Thank you sir, you are welcome 😊❤️</p>
+`);
+
+w.print();
+}
+
 </script>
 
 </body>
-</html>
+</htyou 
