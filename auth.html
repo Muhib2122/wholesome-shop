@@ -1,37 +1,145 @@
-<script>
-let generatedCode="";
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
 
-function sendCode(){
-generatedCode = Math.floor(1000+Math.random()*9000);
-alert("Code: "+generatedCode);
+<style>
+body{
+background:#e0f2fe;
+font-family:sans-serif;
+margin:0;
 }
 
-function signup(){
-let name=document.getElementById("name").value;
-let username=document.getElementById("username").value;
-let email=document.getElementById("email").value;
-let code=document.getElementById("code").value;
+.box{
+background:white;
+margin:20px;
+padding:20px;
+border-radius:12px;
+box-shadow:0 2px 10px rgba(0,0,0,0.1);
+}
 
-if(code!=generatedCode){
-alert("Wrong code");
+h3{text-align:center;}
+
+input{
+width:100%;
+padding:10px;
+margin:6px 0;
+border-radius:8px;
+border:1px solid #ccc;
+}
+
+button{
+width:100%;
+padding:10px;
+margin-top:6px;
+background:#0ea5e9;
+color:white;
+border:none;
+border-radius:8px;
+font-weight:bold;
+}
+
+.row{
+display:flex;
+gap:5px;
+}
+
+.eye{
+position:absolute;
+right:25px;
+margin-top:-38px;
+cursor:pointer;
+font-size:18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="box">
+
+<h3>Login / Signup</h3>
+
+<input id="name" placeholder="Full Name">
+<input id="username" placeholder="Username">
+<input id="email" placeholder="Email">
+
+<div class="row">
+<input id="code" placeholder="Verification Code">
+<button onclick="sendCode()">Send</button>
+</div>
+
+<input id="pass" type="password" placeholder="Password">
+<span class="eye" onclick="togglePass()">👁️</span>
+
+<button onclick="signup()">Create Account</button>
+
+<hr>
+
+<button onclick="login()">Login</button>
+
+</div>
+
+<script>
+
+let generatedCode="";
+
+// ✅ SEND CODE
+function sendCode(){
+generatedCode = Math.floor(1000 + Math.random()*9000);
+alert("Your Code: " + generatedCode);
+}
+
+// ✅ PASSWORD SHOW/HIDE
+function togglePass(){
+let p = document.getElementById("pass");
+p.type = (p.type === "password") ? "text" : "password";
+}
+
+// ✅ SIGNUP
+function signup(){
+
+let name = document.getElementById("name").value;
+let username = document.getElementById("username").value;
+let email = document.getElementById("email").value;
+let code = document.getElementById("code").value;
+
+if(!name || !username || !email){
+alert("Fill all fields ❌");
 return;
 }
 
-localStorage.setItem("user",email);
-localStorage.setItem("name",name);
-localStorage.setItem("username",username);
-
-location.href="index.html";
+if(code != generatedCode){
+alert("Wrong Code ❌");
+return;
 }
 
+// SAVE USER DATA
+localStorage.setItem("user", email);
+localStorage.setItem("name", name);
+localStorage.setItem("username", username);
+
+alert("Account Created ✅");
+location.href = "index.html";
+}
+
+// ✅ LOGIN
 function login(){
-let email=document.getElementById("email").value;
-localStorage.setItem("user",email);
-location.href="index.html";
+
+let email = document.getElementById("email").value;
+
+if(!email){
+alert("Enter email ❌");
+return;
 }
 
-function togglePass(){
-let p=document.getElementById("pass");
-p.type=p.type==="password"?"text":"password";
+localStorage.setItem("user", email);
+
+alert("Login Success ✅");
+location.href = "index.html";
 }
+
 </script>
+
+</body>
+</html>
