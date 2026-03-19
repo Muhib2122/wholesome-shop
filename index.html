@@ -15,7 +15,7 @@ justify-content:space-between;
 align-items:center;
 }
 
-.logo{display:flex;align-items:center;gap:10px;}
+.logo{display:flex;gap:10px;align-items:center;}
 .logo img{width:35px;border-radius:50%;}
 
 .products{
@@ -70,6 +70,7 @@ margin-top:10px;
 <body>
 
 <script>
+// 🔥 SAFE LOGIN CHECK
 if(!localStorage.getItem("user")){
 location.href="auth.html";
 }
@@ -101,8 +102,9 @@ location.href="auth.html";
 
 <script>
 
+// ✅ FIXED LOGOUT
 function logout(){
-localStorage.clear();
+localStorage.removeItem("user"); // 🔥 only user remove
 location.href="auth.html";
 }
 
