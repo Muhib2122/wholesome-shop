@@ -2,12 +2,18 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 
 <body style="font-family:sans-serif;background:#e0f2fe;padding:20px;">
 
+<div style="display:flex;align-items:center;gap:10px;">
+<img src="myshop.jpg" width="40">
 <h2>Checkout</h2>
+</div>
+
+<h3>Pay with bKash</h3>
+<img src="bkash.png" width="120"><br>
+<b>01764262579</b><br><br>
 
 <input id="tx" placeholder="Enter TX ID"><br><br>
 
@@ -22,51 +28,44 @@ let total=0;
 
 cart.forEach(i=> total+=i.price*i.qty);
 
-let vat=total*0.04;
-let final=total+vat;
-
-// SAVE ORDER (unchanged logic)
+// OLD LOGIC KEEP
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
 body:JSON.stringify({
 fields:{
 txid:{stringValue:tx.value},
-amount:{integerValue:String(final)},
-status:{stringValue:"pending"}
+amount:{integerValue:String(total)},
+status:{stringValue:"pending"},
+email:{stringValue:localStorage.getItem("user")||"N/A"}
 }
 })
 }).then(()=>{
 
-generatePDF(cart,total,vat,final);
+generatePDF(cart,total);
 
 localStorage.removeItem("cart");
-location.href="index.html";
+location.href="myorders.html";
 
 });
 
 }
 
-// PDF
-function generatePDF(cart,total,vat,final){
+// PDF (PREMIUM SIMPLE)
+function generatePDF(cart,total){
 
-const {jsPDF}=window.jspdf;
-let doc=new jsPDF();
+let win=window.open("");
 
-doc.text("Wholesome Shop",20,20);
+let html=`
+<h2>Wholesome Shop</h2>
+<hr>
+${cart.map(i=>`${i.name} x${i.qty} = ${i.price*i.qty}`).join("<br>")}
+<hr>
+<h3>Total: ${total} BDT</h3>
+`;
 
-let y=40;
-
-cart.forEach(i=>{
-doc.text(`${i.name} x${i.qty} = ${i.price*i.qty}`,20,y);
-y+=10;
-});
-
-doc.text("Subtotal: "+total,20,y+10);
-doc.text("VAT (4%): "+vat,20,y+20);
-doc.text("Total: "+final,20,y+30);
-
-doc.save("invoice.pdf");
+win.document.write(html);
+win.print();
 }
 
 </script>
