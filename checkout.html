@@ -4,16 +4,17 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 </head>
 
-<body style="font-family:sans-serif;background:#e0f2fe;padding:20px;">
+<body style="font-family:sans-serif;background:#e0f2fe;padding:15px;">
 
-<div style="display:flex;align-items:center;gap:10px;">
 <img src="myshop.jpg" width="40">
 <h2>Checkout</h2>
-</div>
 
 <h3>Pay with bKash</h3>
 <img src="bkash.png" width="120"><br>
 <b>01764262579</b><br><br>
+
+<table border="1" width="100%" id="table"></table>
+<br>
 
 <input id="tx" placeholder="Enter TX ID"><br><br>
 
@@ -21,14 +22,21 @@
 
 <script>
 
-function place(){
-
 let cart=JSON.parse(localStorage.getItem("cart"))||[];
+let html="<tr><th>Name</th><th>Qty</th><th>Total</th></tr>";
 let total=0;
 
-cart.forEach(i=> total+=i.price*i.qty);
+cart.forEach(i=>{
+let t=i.price*i.qty;
+total+=t;
+html+=`<tr><td>${i.name}</td><td>${i.qty}</td><td>${t}</td></tr>`;
+});
 
-// OLD LOGIC KEEP
+html+=`<tr><td colspan="2">Total</td><td>${total}</td></tr>`;
+table.innerHTML=html;
+
+function place(){
+
 fetch("https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents/orders",{
 method:"POST",
 headers:{"Content-Type":"application/json"},
@@ -41,31 +49,21 @@ email:{stringValue:localStorage.getItem("user")||"N/A"}
 }
 })
 }).then(()=>{
-
-generatePDF(cart,total);
-
+generatePDF();
 localStorage.removeItem("cart");
 location.href="myorders.html";
-
 });
-
 }
 
-// PDF (PREMIUM SIMPLE)
-function generatePDF(cart,total){
-
-let win=window.open("");
-
-let html=`
+function generatePDF(){
+let w=window.open("");
+w.document.write(`
 <h2>Wholesome Shop</h2>
-<hr>
-${cart.map(i=>`${i.name} x${i.qty} = ${i.price*i.qty}`).join("<br>")}
-<hr>
+<img src="myshop.jpg" width="50"><hr>
+${html}
 <h3>Total: ${total} BDT</h3>
-`;
-
-win.document.write(html);
-win.print();
+`);
+w.print();
 }
 
 </script>
