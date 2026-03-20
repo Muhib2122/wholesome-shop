@@ -70,9 +70,8 @@ input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px so
 <div class="section">
 <h3>Orders</h3>
 
-<!-- 🔎 SEARCH (ONLY ADD) -->
-<input id="searchOrder" placeholder="Search Order ID">
-<button onclick="searchOrders()">Search</button>
+<!-- 🔎 LIVE SEARCH -->
+<input id="searchOrder" onkeyup="searchOrders()" placeholder="Search Order ID">
 
 <div id="orders"></div>
 </div>
@@ -174,7 +173,6 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 
 // 🔔 NOTIFICATION
 let lastAdminCount = 0;
-
 function adminNotify(list){
 if(lastAdminCount===0){
 lastAdminCount=list.length;
@@ -185,6 +183,9 @@ alert("🛒 New Order Received!");
 }
 lastAdminCount=list.length;
 }
+
+// 🔒 SEARCH LOCK
+let isSearching = false;
 
 let allOrders = [];
 
@@ -200,14 +201,26 @@ adminNotify(list);
 
 allOrders=list;
 
+// ❌ stop auto overwrite during search
+if(isSearching) return;
+
 renderOrders(list);
 
 });
 }
 
-// 🔎 SEARCH
+// 🔎 SEARCH FUNCTION (FIXED)
 function searchOrders(){
-let val=searchOrder.value.toLowerCase();
+
+let val = searchOrder.value.toLowerCase();
+
+if(val===""){
+isSearching=false;
+loadOrders();
+return;
+}
+
+isSearching=true;
 
 let filtered=allOrders.filter(doc=>{
 let id=doc.fields.orderId?.stringValue||"";
@@ -291,7 +304,7 @@ fields:{statusStep:{stringValue:value}}
 });
 }
 
-// AUTO REFRESH
+// 🔁 AUTO REFRESH
 setInterval(loadOrders,3000);
 
 // INIT
