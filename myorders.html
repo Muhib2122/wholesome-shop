@@ -6,57 +6,25 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;padding:15px;}
-
-.card{
-background:white;
-padding:15px;
-margin-bottom:10px;
-border-radius:12px;
-box-shadow:0 2px 5px rgba(0,0,0,0.1);
-}
-
-input{
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
-width:65%;
-}
-
-button{
-padding:8px 12px;
-border:none;
-border-radius:6px;
-background:#0ea5e9;
-color:white;
-}
-
-.timeline{
-display:flex;
-justify-content:space-between;
-margin-top:10px;
-font-size:12px;
-}
-
-.step{
-flex:1;
-text-align:center;
-color:#999;
-}
-
-.active{
-color:#16a34a;
-font-weight:bold;
-}
+.header{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
+.card{background:white;padding:12px;margin-bottom:12px;border-radius:12px;}
+input{padding:10px;border-radius:8px;border:1px solid #ccc;width:65%;}
+button{padding:10px;border:none;border-radius:8px;background:#0ea5e9;color:white;}
+.steps{margin-top:8px;font-size:13px;color:#999;}
+.steps span{margin-right:8px;}
+.active{color:green;font-weight:bold;}
 </style>
+
 </head>
 
 <body>
 
-<img src="myshop.jpg" width="60"><br><br>
-
+<div class="header">
+<img src="myshop.jpg" width="50">
 <h2>My Orders</h2>
+</div>
 
-<input id="oid" placeholder="Enter Order ID">
+<input id="search" placeholder="Enter Order ID">
 <button onclick="searchOrder()">Search</button>
 
 <div id="orders"></div>
@@ -67,69 +35,43 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 let allOrders=[];
 
-// 🔔 NOTIFICATION SYSTEM
-let lastSeenCount = 0;
-
-function notifyUser(newList){
-
-if(lastSeenCount === 0){
-lastSeenCount = newList.length;
+// 🔔 notification
+let lastSeen=0;
+function notify(list){
+if(lastSeen===0){
+lastSeen=list.length;
 return;
 }
-
-if(newList.length > lastSeenCount){
+if(list.length>lastSeen){
 alert("🆕 New update in your orders!");
 }
-
-lastSeenCount = newList.length;
+lastSeen=list.length;
 }
 
-// 🔥 AUTO REFRESH
-setInterval(loadOrders,3000);
-
+// load orders
 function loadOrders(){
-
 fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
-
-// 🔥 SORT (LATEST FIRST)
-let list = (d.documents||[]).sort((a,b)=>{
-return new Date(b.createTime) - new Date(a.createTime);
+let list=(d.documents||[]).sort((a,b)=>{
+return new Date(b.createTime)-new Date(a.createTime);
 });
 
-// 🔔 NOTIFY
-notifyUser(list);
+notify(list);
 
-allOrders = list;
-
-render(allOrders);
-
+allOrders=list;
+render(list);
 });
-
 }
 
-function searchOrder(){
-
-let val=oid.value.trim();
-
-let filtered=allOrders.filter(doc=>{
-return (doc.fields.orderId?.stringValue||"").includes(val);
-});
-
-render(filtered);
-
-}
-
+// render
 function render(list){
-
 orders.innerHTML="";
 
-list.forEach(doc=>{
+list.forEach(order=>{
+let f=order.fields;
 
-let f=doc.fields;
-
-let orderId=f.orderId?.stringValue||"N/A";
+let id=f.orderId?.stringValue||"N/A";
 let amount=f.amount?.integerValue||0;
 let status=f.status?.stringValue||"pending";
 let step=f.statusStep?.stringValue||"Pending";
@@ -137,39 +79,146 @@ let step=f.statusStep?.stringValue||"Pending";
 orders.innerHTML+=`
 <div class="card">
 
-🆔 ${orderId}<br>
+🆔 ${id}<br>
 💰 ${amount} BDT<br>
 Status: ${status}<br>
 📦 Step: ${step}
 
-<div class="timeline">
-
-<div class="step ${step=='Pending'?'active':''}">Pending</div>
-<div class="step ${step=='Approved'?'active':''}">Approved</div>
-<div class="step ${step=='Processing'?'active':''}">Processing</div>
-<div class="step ${step=='Shipped'?'active':''}">Shipped</div>
-<div class="step ${step=='Delivered'?'active':''}">Delivered</div>
-
+<div class="steps">
+<span class="${step=="Pending"?"active":""}">Pending</span>
+<span class="${step=="Approved"?"active":""}">Approved</span>
+<span class="${step=="Processing"?"active":""}">Processing</span>
+<span class="${step=="Shipped"?"active":""}">Shipped</span>
+<span class="${step=="Delivered"?"active":""}">Delivered</span>
 </div>
 
 <br>
 
-<button onclick="generatePDF('${orderId}')">Download PDF</button>
+<button onclick='downloadPDF(${JSON.stringify(order)})'>Download PDF</button>
 
 </div>
 `;
+});
+}
 
+// search
+function searchOrder(){
+let val=search.value.toLowerCase();
+
+if(val===""){
+render(allOrders);
+return;
+}
+
+let filtered=allOrders.filter(o=>{
+let id=o.fields.orderId?.stringValue||"";
+return id.toLowerCase().includes(val);
 });
 
+render(filtered);
 }
 
-// 🔥 KEEP EXISTING PDF LOGIC
-function generatePDF(orderId){
-window.print(); // tor existing function thakle eta replace korbi
-}
-
-// INIT
 loadOrders();
+setInterval(loadOrders,3000);
+
+// ================= PDF FUNCTION (ONLY UPDATED PART) =================
+
+function downloadPDF(order){
+
+let f = order.fields;
+
+// basic info
+let orderId = f.orderId?.stringValue || "N/A";
+let email = f.email?.stringValue || "N/A";
+let status = f.status?.stringValue || "pending";
+let step = f.statusStep?.stringValue || "Pending";
+
+// 🧠 CART FIX
+let items = [];
+try{
+items = JSON.parse(f.items?.stringValue || "[]");
+}catch(e){
+items = [];
+}
+
+// qty normalize
+let map = {};
+items.forEach(i=>{
+if(!map[i.name]){
+map[i.name]={name:i.name,price:parseInt(i.price||0),qty:1};
+}else{
+map[i.name].qty++;
+}
+});
+
+let finalItems=Object.values(map);
+
+// calculation
+let subtotal=0;
+finalItems.forEach(i=>{
+subtotal+=i.price*i.qty;
+});
+
+let vat=Math.round(subtotal*0.04);
+let total=subtotal+vat;
+
+// time
+let orderTime=new Date(order.createTime).toLocaleString();
+let now=new Date().toLocaleString();
+
+// html
+let html=`
+<html>
+<head>
+<style>
+body{font-family:sans-serif;padding:20px;}
+h2{text-align:center;}
+table{width:100%;border-collapse:collapse;margin-top:10px;}
+td,th{border:1px solid #ccc;padding:8px;text-align:center;}
+.footer{text-align:center;margin-top:20px;}
+</style>
+</head>
+
+<body>
+
+<h2>🛍️ WHOLESOME SHOP</h2>
+
+<p><b>Order ID:</b> ${orderId}</p>
+<p><b>Email:</b> ${email}</p>
+<p><b>Status:</b> ${status} (${step})</p>
+<p><b>Order Time:</b> ${orderTime}</p>
+<p><b>Download Time:</b> ${now}</p>
+
+<table>
+<tr><th>Name</th><th>Qty</th><th>Total</th></tr>
+
+${finalItems.map(i=>`
+<tr>
+<td>${i.name}</td>
+<td>${i.qty}</td>
+<td>${i.price*i.qty}</td>
+</tr>
+`).join("")}
+
+<tr><td colspan="2">Subtotal</td><td>${subtotal}</td></tr>
+<tr><td colspan="2">VAT (4%)</td><td>${vat}</td></tr>
+<tr><td colspan="2"><b>Total</b></td><td><b>${total}</b></td></tr>
+
+</table>
+
+<div class="footer">
+<p>Stay connected with us. Thanks for your order sir ❤️</p>
+</div>
+
+</body>
+</html>
+`;
+
+let win=window.open("");
+win.document.write(html);
+win.document.close();
+win.print();
+}
 
 </script>
 
