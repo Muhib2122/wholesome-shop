@@ -2,112 +2,58 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Shop</title>
 
-<!-- 🔥 PWA -->
 <link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#0ea5e9">
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
-display:flex;
-justify-content:space-between;
-align-items:center;
-}
-
-.logo{
-display:flex;
-align-items:center;
-gap:8px;
-}
-
-.products{
-display:flex;
-flex-wrap:wrap;
-padding:10px;
-gap:10px;
-}
-
-.card{
-background:white;
-padding:10px;
-width:45%;
-border-radius:12px;
-box-shadow:0 2px 6px rgba(0,0,0,0.1);
-}
-
-.card img{
-width:100%;
-border-radius:10px;
-}
-
-button{
-margin-top:5px;
-padding:6px 10px;
-border:none;
-border-radius:6px;
-background:#0ea5e9;
-color:white;
-}
-
-.topbar{
-display:flex;
-gap:5px;
-padding:10px;
-}
-
-.topbar input,.topbar select{
-flex:1;
-padding:8px;
-border-radius:6px;
-border:1px solid #ccc;
-}
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
+.container{padding:15px;}
+.card{background:white;padding:10px;margin-bottom:15px;border-radius:15px;}
+button{padding:8px 12px;border:none;background:#0ea5e9;color:white;border-radius:8px;}
+input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5px;}
+.topbar{display:flex;gap:5px;margin-bottom:15px;flex-wrap:wrap;}
 </style>
 </head>
 
 <body>
 
-<!-- HEADER -->
 <div class="header">
-<div class="logo">
-<img src="myshop.jpg" width="35">
 <b>Shop</b>
-</div>
-
 <div>
-<button onclick="openCart()">🛒</button>
-<button onclick="location.href='myorders.html'">📦</button>
+🛒
 </div>
 </div>
 
-<!-- 🔍 SEARCH + SORT -->
+<div class="container">
+
+<!-- 🔥 TOP FILTER BAR -->
 <div class="topbar">
 <input id="search" placeholder="Search product...">
+
 <select id="sort">
 <option value="">Sort</option>
-<option value="low">Low → High</option>
-<option value="high">High → Low</option>
+<option value="low">Low to High</option>
+<option value="high">High to Low</option>
 </select>
-<button onclick="load()">Go</button>
+
+<!-- 🔥 NEW CATEGORY -->
+<select id="category">
+<option value="all">All products</option>
+<option value="clothing">clothing</option>
+<option value="health accessory">health accessory</option>
+<option value="makeup accessory">makeup accessory</option>
+<option value="playing accessory">playing accessory</option>
+<option value="toy">toy</option>
+<option value="home accessory">home accessory</option>
+</select>
+
+<button onclick="loadProducts()">Go</button>
 </div>
 
-<!-- PRODUCTS -->
-<div class="products" id="products"></div>
-
-<!-- CART -->
-<div id="cartBox" style="position:fixed;right:-100%;top:0;width:80%;height:100%;background:white;padding:10px;transition:.3s;overflow:auto;">
-
-<button onclick="closeCart()">❌</button>
-<h2>Your Cart</h2>
-
-<div id="cartItems"></div>
-
-<h3 id="total"></h3>
-
-<button onclick="checkout()">Checkout</button>
+<div id="products"></div>
 
 </div>
 
@@ -115,50 +61,50 @@ border:1px solid #ccc;
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// CART
-let cart=JSON.parse(localStorage.getItem("cart"))||[];
-
-// ================= LOAD PRODUCTS =================
-
-function load(){
+// 🔥 UPDATED LOAD FUNCTION (FILTER + SEARCH + SORT)
+function loadProducts(){
 
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 
-let list=(d.documents||[]).map(doc=>{
-let f=doc.fields;
-return {
-name:f.name.stringValue,
-price:parseInt(f.price.integerValue),
-image:f.image.stringValue
-};
+let data = d.documents || [];
+
+let searchVal = document.getElementById("search").value.toLowerCase();
+let sortVal = document.getElementById("sort").value;
+let catVal = document.getElementById("category").value;
+
+products.innerHTML="";
+
+// 🔍 FILTER
+data = data.filter(doc=>{
+let f = doc.fields;
+let name = f.name.stringValue.toLowerCase();
+let cat = f.category?.stringValue || "toy";
+
+return name.includes(searchVal) && (catVal==="all" || cat===catVal);
 });
 
-// 🔍 SEARCH
-let s=search.value.toLowerCase();
-if(s){
-list=list.filter(p=>p.name.toLowerCase().includes(s));
-}
+// 🔃 SORT
+data.sort((a,b)=>{
+let pa = parseInt(a.fields.price.integerValue);
+let pb = parseInt(b.fields.price.integerValue);
 
-// ↕ SORT
-if(sort.value=="low"){
-list.sort((a,b)=>a.price-b.price);
-}
-if(sort.value=="high"){
-list.sort((a,b)=>b.price-a.price);
-}
+if(sortVal==="low") return pa-pb;
+if(sortVal==="high") return pb-pa;
+return 0;
+});
 
-// SHOW
-products.innerHTML="";
-list.forEach(p=>{
+// 🎯 RENDER
+data.forEach(doc=>{
+let f=doc.fields;
+
 products.innerHTML+=`
 <div class="card">
-<img src="${p.image}">
-<b>${p.name}</b><br>
-${p.price} BDT<br>
-
-<button onclick='add(${JSON.stringify(p)})'>Add</button>
+<img src="${f.image.stringValue}" width="100%">
+<h3>${f.name.stringValue}</h3>
+<p>${f.price.integerValue} BDT</p>
+<button onclick="addCart('${f.name.stringValue}',${f.price.integerValue})">Add</button>
 </div>
 `;
 });
@@ -166,90 +112,15 @@ ${p.price} BDT<br>
 });
 }
 
-// ================= CART =================
+// 🔥 CATEGORY AUTO RELOAD
+document.getElementById("category").addEventListener("change",loadProducts);
 
-function add(p){
+// 🔥 INITIAL LOAD
+loadProducts();
 
-let found=cart.find(i=>i.name==p.name);
-
-if(found){
-found.qty++;
-}else{
-p.qty=1;
-cart.push(p);
-}
-
-localStorage.setItem("cart",JSON.stringify(cart));
-alert("Added to cart");
-}
-
-// OPEN CART
-function openCart(){
-cartBox.style.right="0";
-renderCart();
-}
-
-// CLOSE CART
-function closeCart(){
-cartBox.style.right="-100%";
-}
-
-// RENDER CART
-function renderCart(){
-
-cartItems.innerHTML="";
-let totalPrice=0;
-
-cart.forEach((i,index)=>{
-
-let t=i.price*i.qty;
-totalPrice+=t;
-
-cartItems.innerHTML+=`
-<div>
-<b>${i.name}</b><br>
-
-<button onclick="minus(${index})">➖</button>
-${i.qty}
-<button onclick="plus(${index})">➕</button>
-
-= ${t}
-<hr>
-</div>
-`;
-});
-
-total.innerText="Total: "+totalPrice+" BDT";
-}
-
-// ➕➖
-function plus(i){
-cart[i].qty++;
-updateCart();
-}
-
-function minus(i){
-cart[i].qty--;
-if(cart[i].qty<=0) cart.splice(i,1);
-updateCart();
-}
-
-function updateCart(){
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
-}
-
-// CHECKOUT
-function checkout(){
-location.href="checkout.html";
-}
-
-// INIT
-load();
-
-// 🔥 SERVICE WORKER REGISTER (PWA)
-if("serviceWorker" in navigator){
-navigator.serviceWorker.register("sw.js");
+// SW
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("sw.js");
 }
 
 </script>
