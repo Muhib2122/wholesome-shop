@@ -2,23 +2,25 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Settings</title>
 
 <style>
-body{font-family:sans-serif;background:#e0f2fe;}
-.card{background:white;margin:10px;padding:15px;border-radius:10px;}
-input{width:100%;padding:10px;margin:5px;}
-button{width:100%;padding:10px;background:#0ea5e9;color:white;border:none;}
+body{font-family:sans-serif;background:#e0f2fe;padding:15px;}
+.card{background:white;padding:15px;border-radius:10px;}
+input{width:100%;padding:10px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}
+button{padding:10px;border:none;border-radius:6px;background:#0ea5e9;color:white;width:100%;}
 </style>
-</head>
 
+</head>
 <body>
 
 <div class="card">
-<h3>User Settings</h3>
 
-<input id="name">
-<input id="username">
-<input id="password" placeholder="New Password">
+<h3>⚙️ Settings</h3>
+
+<input id="name" placeholder="Full Name">
+<input id="username" placeholder="Username">
+<input id="pass" placeholder="New Password">
 
 <button onclick="save()">Save</button>
 
@@ -26,13 +28,25 @@ button{width:100%;padding:10px;background:#0ea5e9;color:white;border:none;}
 
 <script>
 
-name.value = localStorage.getItem("name") || "";
-username.value = localStorage.getItem("username") || "";
+let email = localStorage.getItem("user");
+let data = JSON.parse(localStorage.getItem("userData")) || {};
+
+name.value = data.name || "";
+username.value = data.username || "";
 
 function save(){
-localStorage.setItem("name", name.value);
-localStorage.setItem("username", username.value);
+
+data.name = name.value;
+data.username = username.value;
+
+if(pass.value){
+data.password = pass.value;
+}
+
+localStorage.setItem("userData", JSON.stringify(data));
+
 alert("Updated ✅");
+
 }
 
 </script>
