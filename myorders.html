@@ -1,7 +1,73 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>My Orders</title>
+
+<style>
+body{margin:0;font-family:sans-serif;background:#e0f2fe;padding:15px;}
+
+.card{
+background:white;
+padding:15px;
+margin-bottom:10px;
+border-radius:12px;
+box-shadow:0 2px 5px rgba(0,0,0,0.1);
+}
+
+input{
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
+width:65%;
+}
+
+button{
+padding:8px 12px;
+border:none;
+border-radius:6px;
+background:#0ea5e9;
+color:white;
+}
+
+.timeline{
+display:flex;
+justify-content:space-between;
+margin-top:10px;
+font-size:12px;
+}
+
+.step{
+flex:1;
+text-align:center;
+color:#999;
+}
+
+.active{
+color:#16a34a;
+font-weight:bold;
+}
+</style>
+</head>
+
+<body>
+
+<img src="myshop.jpg" width="60"><br><br>
+
+<h2>My Orders</h2>
+
+<input id="oid" placeholder="Enter Order ID">
+<button onclick="searchOrder()">Search</button>
+
+<div id="orders"></div>
+
 <script>
 
-// 🔔 USER NOTIFICATION SYSTEM
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
+let allOrders=[];
+
+// 🔔 NOTIFICATION SYSTEM
 let lastSeenCount = 0;
 
 function notifyUser(newList){
@@ -12,27 +78,27 @@ return;
 }
 
 if(newList.length > lastSeenCount){
-
 alert("🆕 New update in your orders!");
-
 }
 
 lastSeenCount = newList.length;
-
 }
 
-// 🔥 modify loadOrders (only add this line)
+// 🔥 AUTO REFRESH
+setInterval(loadOrders,3000);
+
 function loadOrders(){
 
 fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
+// 🔥 SORT (LATEST FIRST)
 let list = (d.documents||[]).sort((a,b)=>{
 return new Date(b.createTime) - new Date(a.createTime);
 });
 
-// 🔔 CALL
+// 🔔 NOTIFY
 notifyUser(list);
 
 allOrders = list;
@@ -43,4 +109,69 @@ render(allOrders);
 
 }
 
+function searchOrder(){
+
+let val=oid.value.trim();
+
+let filtered=allOrders.filter(doc=>{
+return (doc.fields.orderId?.stringValue||"").includes(val);
+});
+
+render(filtered);
+
+}
+
+function render(list){
+
+orders.innerHTML="";
+
+list.forEach(doc=>{
+
+let f=doc.fields;
+
+let orderId=f.orderId?.stringValue||"N/A";
+let amount=f.amount?.integerValue||0;
+let status=f.status?.stringValue||"pending";
+let step=f.statusStep?.stringValue||"Pending";
+
+orders.innerHTML+=`
+<div class="card">
+
+🆔 ${orderId}<br>
+💰 ${amount} BDT<br>
+Status: ${status}<br>
+📦 Step: ${step}
+
+<div class="timeline">
+
+<div class="step ${step=='Pending'?'active':''}">Pending</div>
+<div class="step ${step=='Approved'?'active':''}">Approved</div>
+<div class="step ${step=='Processing'?'active':''}">Processing</div>
+<div class="step ${step=='Shipped'?'active':''}">Shipped</div>
+<div class="step ${step=='Delivered'?'active':''}">Delivered</div>
+
+</div>
+
+<br>
+
+<button onclick="generatePDF('${orderId}')">Download PDF</button>
+
+</div>
+`;
+
+});
+
+}
+
+// 🔥 KEEP EXISTING PDF LOGIC
+function generatePDF(orderId){
+window.print(); // tor existing function thakle eta replace korbi
+}
+
+// INIT
+loadOrders();
+
 </script>
+
+</body>
+</html>
