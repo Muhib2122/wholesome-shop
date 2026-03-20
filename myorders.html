@@ -67,7 +67,7 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 let allOrders=[];
 
-// 🔥 LIVE AUTO REFRESH (every 3 sec)
+// 🔥 LIVE AUTO REFRESH
 setInterval(loadOrders,3000);
 
 function loadOrders(){
@@ -76,7 +76,11 @@ fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
-allOrders=d.documents||[];
+// 🔥 NEW: SORT BY LATEST (ONLY ADD)
+allOrders = (d.documents||[]).sort((a,b)=>{
+return new Date(b.createTime) - new Date(a.createTime);
+});
+
 render(allOrders);
 
 });
@@ -116,7 +120,6 @@ orders.innerHTML+=`
 Status: ${status}<br>
 📦 Step: ${step}
 
-<!-- 🔥 TIMELINE -->
 <div class="timeline">
 
 <div class="step ${step=='Pending'?'active':''}">Pending</div>
@@ -129,7 +132,7 @@ Status: ${status}<br>
 
 <br>
 
-<button onclick="generatePDF('${orderId}',${amount},'${step}','${status}')">Download PDF</button>
+<button onclick="generatePDF('${orderId}')">Download PDF</button>
 
 </div>
 `;
@@ -138,11 +141,9 @@ Status: ${status}<br>
 
 }
 
-// 🔥 KEEP YOUR EXISTING PDF FUNCTION
-function generatePDF(orderId,amount,step,status){
-
-window.print(); // placeholder (tor existing function thakbe)
-
+// 🔥 KEEP YOUR EXISTING PDF LOGIC
+function generatePDF(orderId){
+window.print(); // placeholder (tor existing thakbe)
 }
 
 loadOrders();
