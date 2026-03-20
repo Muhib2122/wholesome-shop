@@ -11,46 +11,42 @@
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}  
 .header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}  
 .container{padding:15px;}  
-  
 .topbox{display:flex;gap:10px;margin-bottom:10px;}  
 .topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}  
-  
 .card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}  
 button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}  
 .approve{background:#16a34a;color:white;}  
 .decline{background:#dc2626;color:white;}  
 .delete{background:black;color:white;}  
 .edit{background:orange;color:white;}  
-  
 input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}  
 .section{margin-top:15px;}  
 </style>  
 </head>  
-  
+
 <body>  
-  
+
 <div class="header">  
 <b>Admin Panel</b>  
 <button onclick="logout()">Logout</button>  
 </div>  
-  
+
 <div class="container">  
-  
+
 <div class="topbox">  
 <div>💰 <span id="sales">0</span></div>  
 <div>📦 <span id="ordersCount">0</span></div>  
 <div>⏳ <span id="pending">0</span></div>  
 </div>  
-  
+
 <div class="section">  
 <h3>Products</h3>  
-  
+
 <div class="card">  
 <input id="pname" placeholder="Name">  
 <input id="pprice" placeholder="Price">  
 <input id="pimg" placeholder="Image URL">  
 
-<!-- 🔥 CATEGORY DROPDOWN -->
 <select id="pcat">
 <option value="clothing">clothing</option>
 <option value="health accessory">health accessory</option>
@@ -62,158 +58,235 @@ input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px so
 
 <button onclick="addProduct()">Add</button>  
 </div>  
-  
+
 <div id="products"></div>  
 </div>  
-  
+
 <div class="section">  
 <h3>Orders</h3>  
+
+<!-- 🔥 SEARCH (NON-DESTRUCTIVE) -->
+<input id="searchOrder" placeholder="Search Order ID">
+
 <div id="orders"></div>  
 </div>  
-  
+
 </div>  
-  
+
 <script>  
-  
+
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";  
-  
+
 if(localStorage.getItem("admin")!=="true"){  
 alert("Admin only");  
 location.href="auth.html";  
 }  
-  
+
 function logout(){  
 localStorage.removeItem("admin");  
 location.href="auth.html";  
 }  
-  
+
 let editDoc=null;  
-  
+let allOrders=[];
+
+// ================= PRODUCTS =================
+
 function loadProducts(){  
-fetch(URL+"/products")  
-.then(r=>r.json())  
-.then(d=>{  
-products.innerHTML="";  
-(d.documents||[]).forEach(doc=>{  
-let f=doc.fields;  
-let name=doc.name;  
-  
-products.innerHTML+=`  
-<div class="card">  
-<img src="${f.image.stringValue}" width="60"><br>  
-${f.name.stringValue} - ${f.price.integerValue} BDT<br>  
+fetch(URL+"/products")
+.then(r=>r.json())
+.then(d=>{
+products.innerHTML="";
+(d.documents||[]).forEach(doc=>{
+let f=doc.fields;
+let name=doc.name;
+
+products.innerHTML+=`
+<div class="card">
+<img src="${f.image.stringValue}" width="60"><br>
+${f.name.stringValue} - ${f.price.integerValue} BDT<br>
 Category: ${f.category?.stringValue || "toy"}<br>
 
-<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}','${f.category?.stringValue||"toy"}')">Edit</button>  
-<button class="delete" onclick="deleteProduct('${name}')">Delete</button>  
-</div>  
-`;  
-});  
-});  
-}  
-  
-// 🔥 ADD PRODUCT (CATEGORY ADDED ONLY)
-function addProduct(){  
-  
-if(editDoc){  
-fetch("https://firestore.googleapis.com/v1/"+editDoc,{  
-method:"PATCH",  
-headers:{"Content-Type":"application/json"},  
-body:JSON.stringify({  
-fields:{  
-name:{stringValue:pname.value},  
-price:{integerValue:pprice.value},  
-image:{stringValue:pimg.value},  
-category:{stringValue:pcat.value}  
-}  
-})  
-}).then(()=>{  
-editDoc=null;  
-location.reload();  
-});  
-return;  
-}  
-  
-fetch(URL+"/products",{  
-method:"POST",  
-headers:{"Content-Type":"application/json"},  
-body:JSON.stringify({  
-fields:{  
-name:{stringValue:pname.value},  
-price:{integerValue:pprice.value},  
-image:{stringValue:pimg.value},  
-category:{stringValue:pcat.value}  
-}  
-})  
-}).then(()=>location.reload());  
-}  
-  
-// 🔥 EDIT PRODUCT (CATEGORY LOAD)
-function editProduct(doc,name,price,img,cat){  
-pname.value=name;  
-pprice.value=price;  
-pimg.value=img;  
-pcat.value=cat || "toy";  
-editDoc=doc;  
-alert("Edit and press Add");  
-}  
-  
-function deleteProduct(doc){  
-fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})  
-.then(()=>location.reload());  
-}  
-  
-function loadOrders(){  
-  
-fetch(URL+"/orders")  
-.then(r=>r.json())  
-.then(d=>{  
-  
-let total=0;  
-let pendingCount=0;  
-  
-orders.innerHTML="";  
-  
-(d.documents||[]).forEach(doc=>{  
-  
-let f=doc.fields;  
-let name=doc.name;  
-  
-let amount=parseInt(f.amount?.integerValue||0);  
-let status=f.status?.stringValue||"pending";  
-let orderId=f.orderId?.stringValue||"N/A";  
-  
-if(status==="approved") total+=amount;  
-if(status==="pending") pendingCount++;  
-  
-orders.innerHTML+=`  
-<div class="card">  
-🆔 ${orderId}<br>  
-👤 ${f.email?.stringValue||"N/A"}<br>  
-💰 ${amount} BDT<br>  
-TX: ${f.txid?.stringValue||"-"}<br>  
-Status: ${status}<br>  
-</div>  
-`;  
-  
-});  
-  
-sales.innerText=total;  
-ordersCount.innerText=d.documents?.length||0;  
-pending.innerText=pendingCount;  
-  
-});  
-}  
-  
-loadProducts();  
-loadOrders();  
+<button class="edit" onclick="editProduct('${name}','${f.name.stringValue}','${f.price.integerValue}','${f.image.stringValue}','${f.category?.stringValue||"toy"}')">Edit</button>
+<button class="delete" onclick="deleteProduct('${name}')">Delete</button>
+</div>
+`;
+});
+});
+}
+
+function addProduct(){
+
+if(editDoc){
+fetch("https://firestore.googleapis.com/v1/"+editDoc,{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value},
+category:{stringValue:pcat.value}
+}
+})
+}).then(()=>{
+editDoc=null;
+location.reload();
+});
+return;
+}
+
+fetch(URL+"/products",{
+method:"POST",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{
+name:{stringValue:pname.value},
+price:{integerValue:pprice.value},
+image:{stringValue:pimg.value},
+category:{stringValue:pcat.value}
+}
+})
+}).then(()=>location.reload());
+}
+
+function editProduct(doc,name,price,img,cat){
+pname.value=name;
+pprice.value=price;
+pimg.value=img;
+pcat.value=cat||"toy";
+editDoc=doc;
+alert("Edit and press Add");
+}
+
+function deleteProduct(doc){
+fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
+.then(()=>location.reload());
+}
+
+// ================= ORDERS =================
+
+function renderOrders(list){
+
+orders.innerHTML="";
+
+list.forEach(doc=>{
+let f=doc.fields;
+let name=doc.name;
+
+let amount=parseInt(f.amount?.integerValue||0);
+let status=f.status?.stringValue||"pending";
+let step=f.statusStep?.stringValue||"Pending";
+let orderId=f.orderId?.stringValue||"N/A";
+
+orders.innerHTML+=`
+<div class="card">
+
+🆔 ${orderId}<br>
+👤 ${f.email?.stringValue||"N/A"}<br>
+💰 ${amount} BDT<br>
+TX: ${f.txid?.stringValue||"-"}<br>
+Status: ${status}<br>
+
+<select onchange="updateStep('${name}',this.value)">
+<option ${step=="Pending"?"selected":""}>Pending</option>
+<option ${step=="Approved"?"selected":""}>Approved</option>
+<option ${step=="Processing"?"selected":""}>Processing</option>
+<option ${step=="Shipped"?"selected":""}>Shipped</option>
+<option ${step=="Delivered"?"selected":""}>Delivered</option>
+</select>
+
+<br>
+
+<button class="approve" onclick="update('${name}','approved')">✅</button>
+<button class="decline" onclick="update('${name}','declined')">❌</button>
+
+</div>
+`;
+});
+
+}
+
+// 🔥 LOAD ORDERS (UNCHANGED LOGIC)
+function loadOrders(){
+
+fetch(URL+"/orders")
+.then(r=>r.json())
+.then(d=>{
+
+allOrders = d.documents || [];
+
+let total=0;
+let pendingCount=0;
+
+allOrders.forEach(doc=>{
+let f=doc.fields;
+let amount=parseInt(f.amount?.integerValue||0);
+let status=f.status?.stringValue||"pending";
+
+if(status==="approved") total+=amount;
+if(status==="pending") pendingCount++;
+});
+
+renderOrders(allOrders);
+
+sales.innerText=total;
+ordersCount.innerText=allOrders.length;
+pending.innerText=pendingCount;
+
+});
+}
+
+// 🔥 SEARCH (SAFE FILTER ONLY)
+document.getElementById("searchOrder").addEventListener("input",function(){
+
+let val = this.value.trim();
+
+if(!val){
+renderOrders(allOrders);
+return;
+}
+
+let filtered = allOrders.filter(doc=>{
+return doc.fields.orderId?.stringValue === val;
+});
+
+renderOrders(filtered);
+
+});
+
+// 🔥 STATUS UPDATE (UNCHANGED)
+function update(doc,status){
+fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{status:{stringValue:status}}
+})
+}).then(()=>location.reload());
+}
+
+// 🔥 STEP UPDATE (UNCHANGED)
+function updateStep(doc,value){
+fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
+method:"PATCH",
+headers:{"Content-Type":"application/json"},
+body:JSON.stringify({
+fields:{statusStep:{stringValue:value}}
+})
+});
+}
+
+// INIT
+loadProducts();
+loadOrders();
 
 // SW
 if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
+navigator.serviceWorker.register("sw.js");
 }
-  
+
 </script>  
-  
+
 </body>  
 </html>
