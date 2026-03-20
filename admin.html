@@ -1,51 +1,55 @@
-<!DOCTYPE html>  
-<html>  
-<head>  
-<meta name="viewport" content="width=device-width, initial-scale=1">  
-<title>Admin Panel</title>  
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Admin Panel</title>
 
 <link rel="manifest" href="admin-manifest.json">
 <meta name="theme-color" content="#0ea5e9">
-  
-<style>  
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}  
-.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}  
-.container{padding:15px;}  
-.topbox{display:flex;gap:10px;margin-bottom:10px;}  
-.topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}  
-.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}  
-button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}  
-.approve{background:#16a34a;color:white;}  
-.decline{background:#dc2626;color:white;}  
-.delete{background:black;color:white;}  
-.edit{background:orange;color:white;}  
-input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}  
-.section{margin-top:15px;}  
-</style>  
-</head>  
 
-<body>  
+<style>
+body{margin:0;font-family:sans-serif;background:#e0f2fe;}
+.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
+.container{padding:15px;}
 
-<div class="header">  
-<b>Admin Panel</b>  
-<button onclick="logout()">Logout</button>  
-</div>  
+.topbox{display:flex;gap:10px;margin-bottom:10px;}
+.topbox div{flex:1;background:white;padding:10px;border-radius:10px;text-align:center;}
 
-<div class="container">  
+.card{background:white;padding:10px;margin-bottom:10px;border-radius:10px;}
+button{margin:3px;padding:6px 10px;border:none;border-radius:6px;}
+.approve{background:#16a34a;color:white;}
+.decline{background:#dc2626;color:white;}
+.delete{background:black;color:white;}
+.edit{background:orange;color:white;}
 
-<div class="topbox">  
-<div>💰 <span id="sales">0</span></div>  
-<div>📦 <span id="ordersCount">0</span></div>  
-<div>⏳ <span id="pending">0</span></div>  
-</div>  
+input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px solid #ccc;}
+.section{margin-top:15px;}
+</style>
+</head>
 
-<div class="section">  
-<h3>Products</h3>  
+<body>
 
-<div class="card">  
-<input id="pname" placeholder="Name">  
-<input id="pprice" placeholder="Price">  
-<input id="pimg" placeholder="Image URL">  
+<div class="header">
+<b>Admin Panel</b>
+<button onclick="logout()">Logout</button>
+</div>
+
+<div class="container">
+
+<div class="topbox">
+<div>💰 <span id="sales">0</span></div>
+<div>📦 <span id="ordersCount">0</span></div>
+<div>⏳ <span id="pending">0</span></div>
+</div>
+
+<!-- PRODUCTS -->
+<div class="section">
+<h3>Products</h3>
+
+<div class="card">
+<input id="pname" placeholder="Name">
+<input id="pprice" placeholder="Price">
+<input id="pimg" placeholder="Image URL">
 
 <select id="pcat">
 <option value="clothing">clothing</option>
@@ -56,43 +60,41 @@ input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px so
 <option value="home accessory">home accessory</option>
 </select>
 
-<button onclick="addProduct()">Add</button>  
-</div>  
+<button onclick="addProduct()">Add</button>
+</div>
 
-<div id="products"></div>  
-</div>  
+<div id="products"></div>
+</div>
 
-<div class="section">  
-<h3>Orders</h3>  
+<!-- ORDERS -->
+<div class="section">
+<h3>Orders</h3>
+<div id="orders"></div>
+</div>
 
-<!-- 🔥 SEARCH (NON-DESTRUCTIVE) -->
-<input id="searchOrder" placeholder="Search Order ID">
+</div>
 
-<div id="orders"></div>  
-</div>  
+<script>
 
-</div>  
+const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-<script>  
+// 🔐 ADMIN CHECK
+if(localStorage.getItem("admin")!=="true"){
+alert("Admin only");
+location.href="auth.html";
+}
 
-const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";  
-
-if(localStorage.getItem("admin")!=="true"){  
-alert("Admin only");  
-location.href="auth.html";  
-}  
-
-function logout(){  
-localStorage.removeItem("admin");  
-location.href="auth.html";  
-}  
-
-let editDoc=null;  
-let allOrders=[];
+// LOGOUT
+function logout(){
+localStorage.removeItem("admin");
+location.href="auth.html";
+}
 
 // ================= PRODUCTS =================
 
-function loadProducts(){  
+let editDoc=null;
+
+function loadProducts(){
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
@@ -115,6 +117,7 @@ Category: ${f.category?.stringValue || "toy"}<br>
 });
 }
 
+// ADD / UPDATE PRODUCT
 function addProduct(){
 
 if(editDoc){
@@ -150,15 +153,17 @@ category:{stringValue:pcat.value}
 }).then(()=>location.reload());
 }
 
+// EDIT
 function editProduct(doc,name,price,img,cat){
 pname.value=name;
 pprice.value=price;
 pimg.value=img;
-pcat.value=cat||"toy";
+pcat.value=cat || "toy";
 editDoc=doc;
 alert("Edit and press Add");
 }
 
+// DELETE
 function deleteProduct(doc){
 fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());
@@ -166,11 +171,41 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 
 // ================= ORDERS =================
 
-function renderOrders(list){
+// 🔔 ADMIN NOTIFICATION
+let lastAdminCount = 0;
+
+function adminNotify(list){
+
+if(lastAdminCount === 0){
+lastAdminCount = list.length;
+return;
+}
+
+if(list.length > lastAdminCount){
+alert("🛒 New Order Received!");
+}
+
+lastAdminCount = list.length;
+}
+
+function loadOrders(){
+
+fetch(URL+"/orders")
+.then(r=>r.json())
+.then(d=>{
+
+let list = d.documents||[];
+
+// 🔔 CALL
+adminNotify(list);
+
+let total=0;
+let pendingCount=0;
 
 orders.innerHTML="";
 
 list.forEach(doc=>{
+
 let f=doc.fields;
 let name=doc.name;
 
@@ -178,6 +213,9 @@ let amount=parseInt(f.amount?.integerValue||0);
 let status=f.status?.stringValue||"pending";
 let step=f.statusStep?.stringValue||"Pending";
 let orderId=f.orderId?.stringValue||"N/A";
+
+if(status==="approved") total+=amount;
+if(status==="pending") pendingCount++;
 
 orders.innerHTML+=`
 <div class="card">
@@ -203,59 +241,17 @@ Status: ${status}<br>
 
 </div>
 `;
+
 });
-
-}
-
-// 🔥 LOAD ORDERS (UNCHANGED LOGIC)
-function loadOrders(){
-
-fetch(URL+"/orders")
-.then(r=>r.json())
-.then(d=>{
-
-allOrders = d.documents || [];
-
-let total=0;
-let pendingCount=0;
-
-allOrders.forEach(doc=>{
-let f=doc.fields;
-let amount=parseInt(f.amount?.integerValue||0);
-let status=f.status?.stringValue||"pending";
-
-if(status==="approved") total+=amount;
-if(status==="pending") pendingCount++;
-});
-
-renderOrders(allOrders);
 
 sales.innerText=total;
-ordersCount.innerText=allOrders.length;
+ordersCount.innerText=list.length;
 pending.innerText=pendingCount;
 
 });
 }
 
-// 🔥 SEARCH (SAFE FILTER ONLY)
-document.getElementById("searchOrder").addEventListener("input",function(){
-
-let val = this.value.trim();
-
-if(!val){
-renderOrders(allOrders);
-return;
-}
-
-let filtered = allOrders.filter(doc=>{
-return doc.fields.orderId?.stringValue === val;
-});
-
-renderOrders(filtered);
-
-});
-
-// 🔥 STATUS UPDATE (UNCHANGED)
+// STATUS UPDATE
 function update(doc,status){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
 method:"PATCH",
@@ -266,7 +262,7 @@ fields:{status:{stringValue:status}}
 }).then(()=>location.reload());
 }
 
-// 🔥 STEP UPDATE (UNCHANGED)
+// STEP UPDATE
 function updateStep(doc,value){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
 method:"PATCH",
@@ -277,6 +273,9 @@ fields:{statusStep:{stringValue:value}}
 });
 }
 
+// 🔥 AUTO REFRESH (REALTIME FEEL)
+setInterval(loadOrders,3000);
+
 // INIT
 loadProducts();
 loadOrders();
@@ -286,7 +285,7 @@ if ("serviceWorker" in navigator) {
 navigator.serviceWorker.register("sw.js");
 }
 
-</script>  
+</script>
 
-</body>  
+</body>
 </html>
