@@ -15,6 +15,7 @@ body{margin:0;font-family:sans-serif;background:#e0f2fe;}
 button{padding:8px 12px;border:none;background:#0ea5e9;color:white;border-radius:8px;}
 input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5px;}
 .topbar{display:flex;gap:5px;margin-bottom:15px;flex-wrap:wrap;}
+.cartBox{position:fixed;bottom:0;left:0;right:0;background:white;padding:10px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ccc;}
 </style>
 </head>
 
@@ -22,14 +23,11 @@ input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5p
 
 <div class="header">
 <b>Shop</b>
-<div>
-🛒
-</div>
+<div onclick="location.href='cart.html'">🛒</div>
 </div>
 
 <div class="container">
 
-<!-- 🔥 TOP FILTER BAR -->
 <div class="topbar">
 <input id="search" placeholder="Search product...">
 
@@ -39,7 +37,6 @@ input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5p
 <option value="high">High to Low</option>
 </select>
 
-<!-- 🔥 NEW CATEGORY -->
 <select id="category">
 <option value="all">All products</option>
 <option value="clothing">clothing</option>
@@ -57,11 +54,40 @@ input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5p
 
 </div>
 
+<!-- 🔥 CART BAR -->
+<div class="cartBox">
+<span id="cartCount">0 items</span>
+<button onclick="location.href='checkout.html'">Checkout</button>
+</div>
+
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-// 🔥 UPDATED LOAD FUNCTION (FILTER + SEARCH + SORT)
+let cart = JSON.parse(localStorage.getItem("cart")) || [];
+
+// 🔥 ADD TO CART (FIXED)
+function addCart(name,price){
+
+let found = cart.find(i=>i.name===name);
+
+if(found){
+found.qty++;
+}else{
+cart.push({name,price,qty:1});
+}
+
+localStorage.setItem("cart",JSON.stringify(cart));
+updateCartUI();
+}
+
+// 🔥 CART UI
+function updateCartUI(){
+let total = cart.reduce((a,b)=>a+b.qty,0);
+document.getElementById("cartCount").innerText = total + " items";
+}
+
+// 🔥 LOAD PRODUCTS (WITH CATEGORY)
 function loadProducts(){
 
 fetch(URL+"/products")
@@ -76,7 +102,7 @@ let catVal = document.getElementById("category").value;
 
 products.innerHTML="";
 
-// 🔍 FILTER
+// FILTER
 data = data.filter(doc=>{
 let f = doc.fields;
 let name = f.name.stringValue.toLowerCase();
@@ -85,7 +111,7 @@ let cat = f.category?.stringValue || "toy";
 return name.includes(searchVal) && (catVal==="all" || cat===catVal);
 });
 
-// 🔃 SORT
+// SORT
 data.sort((a,b)=>{
 let pa = parseInt(a.fields.price.integerValue);
 let pb = parseInt(b.fields.price.integerValue);
@@ -95,7 +121,7 @@ if(sortVal==="high") return pb-pa;
 return 0;
 });
 
-// 🎯 RENDER
+// RENDER
 data.forEach(doc=>{
 let f=doc.fields;
 
@@ -112,11 +138,12 @@ products.innerHTML+=`
 });
 }
 
-// 🔥 CATEGORY AUTO RELOAD
+// CATEGORY AUTO RELOAD
 document.getElementById("category").addEventListener("change",loadProducts);
 
-// 🔥 INITIAL LOAD
+// INIT
 loadProducts();
+updateCartUI();
 
 // SW
 if ("serviceWorker" in navigator) {
