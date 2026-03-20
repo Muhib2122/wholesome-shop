@@ -2,59 +2,38 @@
 <html>
 <head>
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cart</title>
 
 <style>
-body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-
-.header{
-background:#0ea5e9;
-color:white;
-padding:10px;
-display:flex;
-align-items:center;
-gap:10px;
-}
-
-.header img{
-width:35px;height:35px;border-radius:50%;
-}
-
-.container{padding:15px;}
+body{margin:0;font-family:sans-serif;background:#e0f2fe;padding:15px;}
 
 .card{
 background:white;
-padding:15px;
-border-radius:12px;
-}
-
-.row{
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
 display:flex;
-justify-content:space-between;
 align-items:center;
-padding:10px 0;
-border-bottom:1px solid #eee;
+justify-content:space-between;
 }
 
-.qty button{
-padding:4px 8px;
+button{
+padding:5px 10px;
+border:none;
+border-radius:6px;
 background:#0ea5e9;
 color:white;
-border:none;
-border-radius:5px;
+}
+
+.qty{
+display:flex;
+align-items:center;
+gap:5px;
 }
 
 .total{
+font-size:18px;
 font-weight:bold;
-margin-top:10px;
-}
-
-.checkout{
-width:100%;
-padding:12px;
-background:#16a34a;
-color:white;
-border:none;
-border-radius:8px;
 margin-top:10px;
 }
 </style>
@@ -62,69 +41,130 @@ margin-top:10px;
 
 <body>
 
-<div class="header">
-<img src="myshop.jpg">
-<b>Your Cart</b>
+<h2>Your Cart</h2>
+
+<div id="cartBox"></div>
+
+<div class="total">
+Total: <span id="total">0</span> BDT
 </div>
 
-<div class="container">
-<div class="card" id="cartBox"></div>
-</div>
+<br>
+
+<button onclick="checkout()">Checkout</button>
 
 <script>
 
-let cart = JSON.parse(localStorage.getItem("cart")||"[]");
+let raw = JSON.parse(localStorage.getItem("cart")||"[]");
 
-function renderCart(){
+// 🔥 GROUP WITH QTY
+let cart = [];
+
+raw.forEach(item=>{
+
+let price = parseInt(item.price) || 0;
+
+let existing = cart.find(i=>i.name===item.name);
+
+if(existing){
+existing.qty++;
+}else{
+cart.push({
+name:item.name,
+price:price,
+image:item.image,
+qty:1
+});
+}
+
+});
+
+let cartBox = document.getElementById("cartBox");
+
+// 🔥 RENDER
+function render(){
 
 cartBox.innerHTML="";
 
-if(cart.length==0){
-cartBox.innerHTML="<h3>Cart Empty</h3>";
-return;
-}
+let sum=0;
 
-let total=0;
+cart.forEach((item,index)=>{
 
-cart.forEach((p,i)=>{
-total+=p.price*p.qty;
+let itemTotal = item.price * item.qty;
+sum += itemTotal;
 
 cartBox.innerHTML+=`
-<div class="row">
-<div>${p.name}</div>
+<div class="card">
+
+<div>
+<b>${item.name}</b><br>
+${item.price} BDT
+</div>
 
 <div class="qty">
-<button onclick="minus(${i})">➖</button>
-${p.qty}
-<button onclick="plus(${i})">➕</button>
-<button onclick="removeItem(${i})">❌</button>
+<button onclick="dec(${index})">-</button>
+${item.qty}
+<button onclick="inc(${index})">+</button>
 </div>
 
-<div>${p.price*p.qty}</div>
+<div>
+${itemTotal} BDT<br>
+<button onclick="removeItem(${index})">❌</button>
+</div>
+
 </div>
 `;
+
 });
 
-let vat=Math.floor(total*0.05);
-let final=total+vat;
+// TOTAL SAFE
+document.getElementById("total").innerText = sum;
 
-cartBox.innerHTML+=`
-<hr>
-<div class="total">Total: ${final} BDT</div>
-<button class="checkout" onclick="location.href='checkout.html'">Checkout</button>
-`;
+// 🔥 SAVE BACK (flatten)
+let save=[];
+cart.forEach(i=>{
+for(let k=0;k<i.qty;k++){
+save.push({
+name:i.name,
+price:i.price,
+image:i.image
+});
+}
+});
+
+localStorage.setItem("cart",JSON.stringify(save));
+
 }
 
-function plus(i){cart[i].qty++;save();}
-function minus(i){if(cart[i].qty>1)cart[i].qty--;save();}
-function removeItem(i){cart.splice(i,1);save();}
-
-function save(){
-localStorage.setItem("cart",JSON.stringify(cart));
-renderCart();
+// ➕
+function inc(i){
+cart[i].qty++;
+render();
 }
 
-renderCart();
+// ➖
+function dec(i){
+cart[i].qty--;
+
+if(cart[i].qty<=0){
+cart.splice(i,1);
+}
+
+render();
+}
+
+// ❌
+function removeItem(i){
+cart.splice(i,1);
+render();
+}
+
+// checkout unchanged
+function checkout(){
+location.href="checkout.html";
+}
+
+render();
 
 </script>
 
