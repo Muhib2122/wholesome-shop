@@ -9,32 +9,105 @@
 
 <style>
 body{margin:0;font-family:sans-serif;background:#e0f2fe;}
-.header{background:#0ea5e9;color:white;padding:10px;display:flex;justify-content:space-between;align-items:center;}
+
+.header{
+background:#0ea5e9;
+color:white;
+padding:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+}
+
+.header-left{
+display:flex;
+align-items:center;
+gap:10px;
+}
+
+.header-right{
+display:flex;
+gap:10px;
+align-items:center;
+}
+
 .container{padding:15px;}
-.card{background:white;padding:10px;margin-bottom:15px;border-radius:15px;}
-button{padding:8px 12px;border:none;background:#0ea5e9;color:white;border-radius:8px;}
-input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5px;}
-.topbar{display:flex;gap:5px;margin-bottom:15px;flex-wrap:wrap;}
-.cartBox{position:fixed;bottom:0;left:0;right:0;background:white;padding:10px;display:flex;justify-content:space-between;align-items:center;border-top:1px solid #ccc;}
+
+.card{
+background:white;
+padding:10px;
+margin-bottom:10px;
+border-radius:10px;
+}
+
+button{
+padding:6px 10px;
+border:none;
+border-radius:6px;
+background:#0ea5e9;
+color:white;
+}
+
+input,select{
+padding:8px;
+border-radius:6px;
+border:1px solid #ccc;
+}
+
+.topbar{
+display:flex;
+gap:10px;
+margin-bottom:10px;
+flex-wrap:wrap;
+}
+
+.cartbar{
+position:fixed;
+bottom:0;
+left:0;
+right:0;
+background:white;
+padding:10px;
+display:flex;
+justify-content:space-between;
+align-items:center;
+box-shadow:0 -2px 5px rgba(0,0,0,0.1);
+}
 </style>
 </head>
 
 <body>
 
+<!-- HEADER -->
 <div class="header">
+
+<div class="header-left">
+<img src="myshop.jpg" width="40">
 <b>Shop</b>
-<div onclick="location.href='cart.html'">🛒</div>
+</div>
+
+<div class="header-right">
+
+<!-- 🔥 NEW: MY ORDERS BUTTON -->
+<button onclick="goOrders()">📦 My Orders</button>
+
+<!-- EXISTING CART ICON -->
+<span onclick="goCart()">🛒</span>
+
+</div>
+
 </div>
 
 <div class="container">
 
+<!-- SEARCH + SORT + CATEGORY -->
 <div class="topbar">
 <input id="search" placeholder="Search product...">
 
 <select id="sort">
 <option value="">Sort</option>
-<option value="low">Low to High</option>
-<option value="high">High to Low</option>
+<option value="low">Price Low</option>
+<option value="high">Price High</option>
 </select>
 
 <select id="category">
@@ -54,101 +127,93 @@ input,select{padding:8px;border-radius:8px;border:1px solid #ccc;margin-right:5p
 
 </div>
 
-<!-- 🔥 CART BAR -->
-<div class="cartBox">
+<!-- CART BAR -->
+<div class="cartbar">
 <span id="cartCount">0 items</span>
-<button onclick="location.href='checkout.html'">Checkout</button>
+<button onclick="checkout()">Checkout</button>
 </div>
 
 <script>
 
 const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/databases/(default)/documents";
 
-let cart = JSON.parse(localStorage.getItem("cart")) || [];
+let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
-// 🔥 ADD TO CART (FIXED)
-function addCart(name,price){
-
-let found = cart.find(i=>i.name===name);
-
-if(found){
-found.qty++;
-}else{
-cart.push({name,price,qty:1});
+// 🔥 NEW FUNCTION (ONLY ADD)
+function goOrders(){
+location.href="myorders.html";
 }
 
+// EXISTING
+function goCart(){
+location.href="cart.html";
+}
+
+function checkout(){
+location.href="checkout.html";
+}
+
+function addToCart(name,price,image){
+cart.push({name,price,image});
 localStorage.setItem("cart",JSON.stringify(cart));
-updateCartUI();
+updateCart();
 }
 
-// 🔥 CART UI
-function updateCartUI(){
-let total = cart.reduce((a,b)=>a+b.qty,0);
-document.getElementById("cartCount").innerText = total + " items";
+function updateCart(){
+cartCount.innerText=cart.length+" items";
 }
 
-// 🔥 LOAD PRODUCTS (WITH CATEGORY)
 function loadProducts(){
 
 fetch(URL+"/products")
 .then(r=>r.json())
 .then(d=>{
 
-let data = d.documents || [];
-
-let searchVal = document.getElementById("search").value.toLowerCase();
-let sortVal = document.getElementById("sort").value;
-let catVal = document.getElementById("category").value;
-
 products.innerHTML="";
 
-// FILTER
-data = data.filter(doc=>{
-let f = doc.fields;
-let name = f.name.stringValue.toLowerCase();
-let cat = f.category?.stringValue || "toy";
+let list=d.documents||[];
 
-return name.includes(searchVal) && (catVal==="all" || cat===catVal);
+let searchVal=search.value.toLowerCase();
+let sortVal=sort.value;
+let catVal=category.value;
+
+list=list.filter(doc=>{
+let f=doc.fields;
+
+let name=f.name.stringValue.toLowerCase();
+let cat=f.category?.stringValue||"toy";
+
+return name.includes(searchVal) &&
+(catVal==="all" || cat===catVal);
 });
 
-// SORT
-data.sort((a,b)=>{
-let pa = parseInt(a.fields.price.integerValue);
-let pb = parseInt(b.fields.price.integerValue);
+if(sortVal==="low"){
+list.sort((a,b)=>a.fields.price.integerValue - b.fields.price.integerValue);
+}
+if(sortVal==="high"){
+list.sort((a,b)=>b.fields.price.integerValue - a.fields.price.integerValue);
+}
 
-if(sortVal==="low") return pa-pb;
-if(sortVal==="high") return pb-pa;
-return 0;
-});
-
-// RENDER
-data.forEach(doc=>{
+list.forEach(doc=>{
 let f=doc.fields;
 
 products.innerHTML+=`
 <div class="card">
-<img src="${f.image.stringValue}" width="100%">
-<h3>${f.name.stringValue}</h3>
-<p>${f.price.integerValue} BDT</p>
-<button onclick="addCart('${f.name.stringValue}',${f.price.integerValue})">Add</button>
+<img src="${f.image.stringValue}" width="100"><br>
+<b>${f.name.stringValue}</b><br>
+${f.price.integerValue} BDT<br>
+<button onclick="addToCart('${f.name.stringValue}',${f.price.integerValue},'${f.image.stringValue}')">Add</button>
 </div>
 `;
 });
 
+updateCart();
+
 });
+
 }
 
-// CATEGORY AUTO RELOAD
-document.getElementById("category").addEventListener("change",loadProducts);
-
-// INIT
 loadProducts();
-updateCartUI();
-
-// SW
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("sw.js");
-}
 
 </script>
 
