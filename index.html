@@ -88,10 +88,13 @@ box-shadow:0 -2px 5px rgba(0,0,0,0.1);
 
 <div class="header-right">
 
-<!-- 🔥 NEW: MY ORDERS BUTTON -->
+<!-- EXISTING -->
 <button onclick="goOrders()">📦 My Orders</button>
 
-<!-- EXISTING CART ICON -->
+<!-- 🔥 NEW SETTINGS BUTTON -->
+<button onclick="location.href='settings.html'">⚙️</button>
+
+<!-- EXISTING -->
 <span onclick="goCart()">🛒</span>
 
 </div>
@@ -139,12 +142,11 @@ const URL="https://firestore.googleapis.com/v1/projects/wholesome-shop-f4d0f/dat
 
 let cart = JSON.parse(localStorage.getItem("cart")||"[]");
 
-// 🔥 NEW FUNCTION (ONLY ADD)
+// EXISTING
 function goOrders(){
 location.href="myorders.html";
 }
 
-// EXISTING
 function goCart(){
 location.href="cart.html";
 }
