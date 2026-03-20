@@ -69,6 +69,11 @@ input,select{width:100%;padding:8px;margin:5px 0;border-radius:6px;border:1px so
 <!-- ORDERS -->
 <div class="section">
 <h3>Orders</h3>
+
+<!-- 🔎 SEARCH (ONLY ADD) -->
+<input id="searchOrder" placeholder="Search Order ID">
+<button onclick="searchOrders()">Search</button>
+
 <div id="orders"></div>
 </div>
 
@@ -84,7 +89,6 @@ alert("Admin only");
 location.href="auth.html";
 }
 
-// LOGOUT
 function logout(){
 localStorage.removeItem("admin");
 location.href="auth.html";
@@ -117,7 +121,6 @@ Category: ${f.category?.stringValue || "toy"}<br>
 });
 }
 
-// ADD / UPDATE PRODUCT
 function addProduct(){
 
 if(editDoc){
@@ -153,7 +156,6 @@ category:{stringValue:pcat.value}
 }).then(()=>location.reload());
 }
 
-// EDIT
 function editProduct(doc,name,price,img,cat){
 pname.value=name;
 pprice.value=price;
@@ -163,7 +165,6 @@ editDoc=doc;
 alert("Edit and press Add");
 }
 
-// DELETE
 function deleteProduct(doc){
 fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 .then(()=>location.reload());
@@ -171,22 +172,21 @@ fetch("https://firestore.googleapis.com/v1/"+doc,{method:"DELETE"})
 
 // ================= ORDERS =================
 
-// 🔔 ADMIN NOTIFICATION
+// 🔔 NOTIFICATION
 let lastAdminCount = 0;
 
 function adminNotify(list){
-
-if(lastAdminCount === 0){
-lastAdminCount = list.length;
+if(lastAdminCount===0){
+lastAdminCount=list.length;
 return;
 }
-
-if(list.length > lastAdminCount){
+if(list.length>lastAdminCount){
 alert("🛒 New Order Received!");
 }
-
-lastAdminCount = list.length;
+lastAdminCount=list.length;
 }
+
+let allOrders = [];
 
 function loadOrders(){
 
@@ -194,10 +194,31 @@ fetch(URL+"/orders")
 .then(r=>r.json())
 .then(d=>{
 
-let list = d.documents||[];
+let list=d.documents||[];
 
-// 🔔 CALL
 adminNotify(list);
+
+allOrders=list;
+
+renderOrders(list);
+
+});
+}
+
+// 🔎 SEARCH
+function searchOrders(){
+let val=searchOrder.value.toLowerCase();
+
+let filtered=allOrders.filter(doc=>{
+let id=doc.fields.orderId?.stringValue||"";
+return id.toLowerCase().includes(val);
+});
+
+renderOrders(filtered);
+}
+
+// 🔥 RENDER
+function renderOrders(list){
 
 let total=0;
 let pendingCount=0;
@@ -241,17 +262,15 @@ Status: ${status}<br>
 
 </div>
 `;
-
 });
 
 sales.innerText=total;
 ordersCount.innerText=list.length;
 pending.innerText=pendingCount;
 
-});
 }
 
-// STATUS UPDATE
+// UPDATE
 function update(doc,status){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=status",{
 method:"PATCH",
@@ -262,7 +281,6 @@ fields:{status:{stringValue:status}}
 }).then(()=>location.reload());
 }
 
-// STEP UPDATE
 function updateStep(doc,value){
 fetch("https://firestore.googleapis.com/v1/"+doc+"?updateMask.fieldPaths=statusStep",{
 method:"PATCH",
@@ -273,7 +291,7 @@ fields:{statusStep:{stringValue:value}}
 });
 }
 
-// 🔥 AUTO REFRESH (REALTIME FEEL)
+// AUTO REFRESH
 setInterval(loadOrders,3000);
 
 // INIT
